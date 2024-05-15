@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "3759701935",
+    "project_id": "unibond-e4f44",
+    "storage_bucket": "unibond-e4f44.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:3759701935:android:3f0840f5854de28067f95a",
+        "android_client_info": {
+          "package_name": "com.example.unibond"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxEl6FQ2HKIcaRL-4ecP4U9_7ZFb0Tkto"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
