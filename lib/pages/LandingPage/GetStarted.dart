@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:unibond/pages/Register/Register.dart';
 import 'package:unibond/widgets/styledButton.dart';
 
 class GetStarted extends StatelessWidget {
@@ -30,7 +31,13 @@ class GetStarted extends StatelessWidget {
               StyledButton(
                 btnWidth: double.infinity,
                 btnText: 'Get Started',
-                onClick: () {},
+                onClick: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => Register(),
+                    ),
+                  );
+                },
                 noShadow: true,
               )
             ],
