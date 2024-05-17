@@ -64,12 +64,14 @@ class Login extends StatelessWidget {
                 child: Column(
                   children: [
                     StyledTextFormField(
+                        obscureText: false,
                         controller: emailController,
                         hintText: 'Enter your email'),
                     const SizedBox(
                       height: 20,
                     ),
                     StyledTextFormField(
+                        obscureText: true,
                         controller: passwordController,
                         hintText: 'Enter your password'),
                     const SizedBox(

@@ -1,6 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:unibond/pages/LandingPage/GetStarted.dart';
+import 'package:unibond/pages/Login/Login.dart';
+import 'package:unibond/provider/AuthModel.dart';
 
 class SpashScreen extends StatefulWidget {
   const SpashScreen({super.key});
@@ -15,13 +19,35 @@ class _SpashScreenState extends State<SpashScreen> {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     Future.delayed(const Duration(seconds: 3), () {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (BuildContext context) {
-          return const GetStarted();
-        }),
-        (route) => false,
-      );
+      _navigateBasedOnAuthState().then((response) {
+        if (response == true) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (BuildContext context) {
+              return const Login();
+            }),
+            (route) => false,
+          );
+        } else {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (BuildContext context) {
+              return const GetStarted();
+            }),
+            (route) => false,
+          );
+        }
+      });
     });
+  }
+
+  Future<bool> _navigateBasedOnAuthState() async {
+    await Future.delayed(const Duration(seconds: 3));
+
+    final authProvider = Provider.of<AuthModel>(context, listen: false);
+    if (authProvider.user == null) {
+      return false;
+    } else {
+      return true;
+    }
   }
 
   @override

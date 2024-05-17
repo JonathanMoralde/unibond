@@ -4,15 +4,18 @@ class StyledTextFormField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final TextInputType? keyboardType;
+  final bool obscureText;
   const StyledTextFormField(
       {super.key,
       required this.controller,
       required this.hintText,
+      required this.obscureText,
       this.keyboardType});
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      obscureText: obscureText,
       style: const TextStyle(fontFamily: "Roboto", fontWeight: FontWeight.w400),
       controller: controller,
       validator: (value) {
