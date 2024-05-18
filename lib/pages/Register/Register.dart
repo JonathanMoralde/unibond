@@ -24,12 +24,22 @@ class _RegisterState extends State<Register> {
   bool isLoading = false;
 
   @override
+  void dispose() {
+    fullNameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     void handleSubmit() async {
       setState(() {
         isLoading = true;
       });
       final authProvider = context.read<AuthModel>();
+
       if (registrationFormKey.currentState?.validate() ?? false) {
         if (passwordController.text.trim() !=
             confirmPasswordController.text.trim()) {

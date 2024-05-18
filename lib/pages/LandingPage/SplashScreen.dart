@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/pages/LandingPage/GetStarted.dart';
 import 'package:unibond/pages/Login/Login.dart';
+import 'package:unibond/pages/MyProfile/MyProfile.dart';
 import 'package:unibond/provider/AuthModel.dart';
 
 class SpashScreen extends StatefulWidget {
@@ -20,10 +21,11 @@ class _SpashScreenState extends State<SpashScreen> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
     Future.delayed(const Duration(seconds: 3), () {
       _navigateBasedOnAuthState().then((response) {
+        print(response);
         if (response == true) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (BuildContext context) {
-              return const Login();
+              return const MyProfile();
             }),
             (route) => false,
           );
@@ -40,9 +42,13 @@ class _SpashScreenState extends State<SpashScreen> {
   }
 
   Future<bool> _navigateBasedOnAuthState() async {
+    // initialize the provider first before delay
+    final authProvider = Provider.of<AuthModel>(context, listen: false);
+
     await Future.delayed(const Duration(seconds: 3));
 
-    final authProvider = Provider.of<AuthModel>(context, listen: false);
+    print('authProvider');
+    print(authProvider.user);
     if (authProvider.user == null) {
       return false;
     } else {

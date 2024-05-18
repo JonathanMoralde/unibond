@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/pages/LandingPage/SplashScreen.dart';
 import 'package:unibond/provider/AuthModel.dart';
+import 'package:unibond/provider/EditProfileModel.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,6 +13,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthModel()),
+        ChangeNotifierProvider(create: (_) => EditProfileModel()),
       ],
       child: const MyApp(),
     ),
@@ -28,6 +30,12 @@ class MyApp extends StatelessWidget {
       title: 'UniBond',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          backgroundColor: Color(0xff00B0FF),
+          elevation: 4.0,
+          shadowColor: Colors.black,
+        ),
         textTheme: GoogleFonts.poppinsTextTheme(),
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff00B0FF)),
         scaffoldBackgroundColor: const Color(0xffFAF2F2),

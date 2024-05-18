@@ -10,6 +10,10 @@ class AuthModel extends ChangeNotifier {
   User? get user => _user;
 
   AuthModel() {
+    _initializeUser();
+  }
+
+  Future<void> _initializeUser() async {
     _firebaseAuth.authStateChanges().listen(_onAuthStateChanged);
   }
 
@@ -81,6 +85,41 @@ class AuthModel extends ChangeNotifier {
 
   // sign out
   Future<void> signOut() async {
-    await _firebaseAuth.signOut();
+    try {
+      await _firebaseAuth.signOut().then((_) {
+        Fluttertoast.showToast(
+          msg: 'Logged out successfully!',
+          backgroundColor: Colors.green,
+          textColor: Colors.black,
+        );
+      });
+    } catch (e) {
+      print(e);
+      Fluttertoast.showToast(
+        msg: 'Failed to log out, please try again!',
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+    }
+  }
+
+  // for forgot pass
+  Future<void> sendPasswordResetLink(String email) async {
+    try {
+      await _firebaseAuth.sendPasswordResetEmail(email: email).then((_) {
+        Fluttertoast.showToast(
+          msg: 'Password reset link sent!',
+          backgroundColor: Colors.green,
+          textColor: Colors.black,
+        );
+      });
+    } catch (e) {
+      print(e);
+      Fluttertoast.showToast(
+        msg: 'Failed to send password reset link, please try again!',
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+    }
   }
 }
