@@ -4,7 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/pages/LandingPage/SplashScreen.dart';
 import 'package:unibond/provider/AuthModel.dart';
+import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/provider/EditProfileModel.dart';
+import 'package:unibond/provider/ProfileModel.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +16,8 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthModel()),
         ChangeNotifierProvider(create: (_) => EditProfileModel()),
+        ChangeNotifierProvider(create: (_) => ProfileModel()),
+        ChangeNotifierProvider(create: (_) => NavigationModel()),
       ],
       child: const MyApp(),
     ),

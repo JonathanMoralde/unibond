@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/pages/MyProfile/MyProfile.dart';
 import 'package:unibond/provider/AuthModel.dart';
 import 'package:unibond/provider/EditProfileModel.dart';
 import 'package:unibond/widgets/Profile/BioContainer.dart';
@@ -76,6 +77,12 @@ class _EditProfileState extends State<EditProfile> {
         setState(() {
           isLoading = false;
         });
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (BuildContext context) => const MyProfile(),
+          ),
+        );
       });
     }
 
@@ -97,23 +104,13 @@ class _EditProfileState extends State<EditProfile> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
                   child: Column(
                     children: [
-                      // const SizedBox(
-                      //   width: double.infinity,
-                      //   child: Text(
-                      //     'Jonathan Moralde',
-                      //     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      //   ),
-                      // ),
-                      // const SizedBox(
-                      //   height: 30,
-                      // ),
                       Row(
                         children: [
                           Container(
                             width:
-                                100, // double the maxRadius to cover the entire CircleAvatar
+                                120, // double the maxRadius to cover the entire CircleAvatar
                             height:
-                                100, // double the maxRadius to cover the entire CircleAvatar
+                                120, // double the maxRadius to cover the entire CircleAvatar
                             decoration: BoxDecoration(
                               boxShadow: [
                                 BoxShadow(
@@ -134,12 +131,12 @@ class _EditProfileState extends State<EditProfile> {
                             child: _image != null
                                 ? CircleAvatar(
                                     backgroundImage: FileImage(_image!),
-                                    maxRadius: 50,
+                                    maxRadius: 60,
                                   )
                                 : const CircleAvatar(
                                     backgroundImage: AssetImage(
                                         'lib/assets/default_profile_pic.png'),
-                                    maxRadius: 50,
+                                    maxRadius: 60,
                                   ),
                           ),
                           const SizedBox(
@@ -183,7 +180,9 @@ class _EditProfileState extends State<EditProfile> {
                       const SizedBox(
                         height: 30,
                       ),
-                      const Interestcontainer(),
+                      Interestcontainer(
+                        title: 'Select',
+                      ),
                       const SizedBox(
                         height: 30,
                       ),

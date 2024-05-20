@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:unibond/pages/LandingPage/GetStarted.dart';
 import 'package:unibond/pages/Login/Login.dart';
 import 'package:unibond/pages/MyProfile/MyProfile.dart';
+import 'package:unibond/pages/MainLayout.dart';
 import 'package:unibond/provider/AuthModel.dart';
 
 class SpashScreen extends StatefulWidget {
@@ -25,7 +26,7 @@ class _SpashScreenState extends State<SpashScreen> {
         if (response == true) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (BuildContext context) {
-              return const MyProfile();
+              return const MainLayout();
             }),
             (route) => false,
           );

@@ -4,7 +4,8 @@ import 'package:unibond/provider/EditProfileModel.dart';
 import 'package:unibond/widgets/Profile/InterestButton.dart';
 
 class Interestcontainer extends StatefulWidget {
-  const Interestcontainer({super.key});
+  final String title;
+  const Interestcontainer({super.key, required this.title});
 
   @override
   State<Interestcontainer> createState() => _InterestcontainerState();
@@ -49,8 +50,8 @@ class _InterestcontainerState extends State<Interestcontainer> {
                   borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16))),
-              child: const Text(
-                'Select Interests',
+              child: Text(
+                '${widget.title} Interests',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 textAlign: TextAlign.center,
               ),
