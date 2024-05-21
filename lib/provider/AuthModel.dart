@@ -122,4 +122,33 @@ class AuthModel extends ChangeNotifier {
       );
     }
   }
+
+  Future<bool> checkExistingUserDetails() async {
+    try {
+      final DocumentSnapshot<Map<String, dynamic>> result =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user!.uid)
+              .get();
+
+      final userDetails = result.data();
+
+      // Check if any of the fields is not empty
+      if (userDetails != null) {
+        final interests = userDetails['interests'] as List?;
+        final bio = userDetails['bio'] as String?;
+        final profilePic = userDetails['profile_pic'] as String?;
+
+        // Return true if any of the fields is not empty
+        return (interests != null && interests.isNotEmpty) ||
+            (bio != null && bio.isNotEmpty) ||
+            (profilePic != null && profilePic.isNotEmpty);
+      }
+
+      return false;
+    } catch (e) {
+      print(e);
+      return false;
+    }
+  }
 }

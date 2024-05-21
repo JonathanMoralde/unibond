@@ -18,15 +18,16 @@ class _MyProfileState extends State<MyProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text(
-      //     'My Profile',
-      //     style: TextStyle(fontWeight: FontWeight.bold),
-      //   ),
-      // ),
       body: Consumer2<ProfileModel, AuthModel>(
           builder: (context, profileModel, authModel, child) {
         final userDetails = profileModel.userDetails;
+
+        final List<String> interests = (userDetails['interests'] != null
+                ? userDetails['interests'] as List<dynamic>
+                : [])
+            .map((interests) {
+          return interests.toString();
+        }).toList();
 
         return SafeArea(
           child: SingleChildScrollView(
@@ -120,6 +121,8 @@ class _MyProfileState extends State<MyProfile> {
                   ),
                   Interestcontainer(
                     title: "My",
+                    isDisplayOnly: true,
+                    options: interests,
                   ),
                 ],
               ),

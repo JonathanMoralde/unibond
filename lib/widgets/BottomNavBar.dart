@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:unibond/pages/Events/Events.dart';
-import 'package:unibond/pages/Messages/Messages.dart';
-import 'package:unibond/pages/MyProfile/MyProfile.dart';
-import 'package:unibond/pages/Notifications/Notifications.dart';
-import 'package:unibond/pages/Settings/Settings.dart';
 import 'package:unibond/provider/NavigationModel.dart';
 
 class BottomNavBar extends StatefulWidget {

@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/pages/Login/Login.dart';
-import 'package:unibond/pages/MyProfile/MyProfile.dart';
 import 'package:unibond/provider/AuthModel.dart';
 import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';

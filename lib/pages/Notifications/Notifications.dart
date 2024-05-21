@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:unibond/widgets/BottomNavBar.dart';
 
 class Notifications extends StatelessWidget {
   const Notifications({super.key});

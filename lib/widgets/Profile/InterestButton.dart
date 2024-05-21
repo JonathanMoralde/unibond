@@ -4,13 +4,11 @@ import 'package:unibond/provider/EditProfileModel.dart';
 
 class InterestButton extends StatefulWidget {
   final String btnName;
-  final void Function() onTap;
+  final void Function()? onTap;
+  final bool isAdd;
 
-  const InterestButton({
-    super.key,
-    required this.btnName,
-    required this.onTap,
-  });
+  const InterestButton(
+      {super.key, required this.btnName, this.onTap, required this.isAdd});
 
   @override
   State<InterestButton> createState() => _InterestButtonState();
@@ -26,9 +24,9 @@ class _InterestButtonState extends State<InterestButton> {
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: value.selectedInterests.contains(widget.btnName)
+            color: (value.selectedInterests.contains(widget.btnName)
                 ? const Color(0xffFF6E00)
-                : Colors.white,
+                : Colors.white),
             border: Border.all(
               color: value.selectedInterests.contains(widget.btnName)
                   ? const Color(0xffFF6E00)
@@ -38,10 +36,22 @@ class _InterestButtonState extends State<InterestButton> {
               Radius.circular(16),
             ),
           ),
-          child: Text(
-            widget.btnName,
-            style: const TextStyle(fontSize: 16),
-          ),
+          child: widget.isAdd
+              ? Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.add),
+                    Text(
+                      widget.btnName,
+                      style: const TextStyle(fontSize: 16),
+                    )
+                  ],
+                )
+              : Text(
+                  widget.btnName,
+                  style: const TextStyle(fontSize: 16),
+                ),
         ),
       );
     });

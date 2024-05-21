@@ -7,12 +7,14 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class EditProfileModel extends ChangeNotifier {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _firebaseStorage = FirebaseStorage.instance;
 
   List<String> setSelectedInterests = [];
 
   List<String> get selectedInterests => setSelectedInterests;
+
+  List<String> setOptions = [];
+  List<String> get options => setOptions;
 
   TextEditingController bioController = TextEditingController();
 
@@ -73,6 +75,43 @@ class EditProfileModel extends ChangeNotifier {
     } catch (e) {
       print(e);
       print('unable to save interests');
+    }
+  }
+
+  Future<void> fetchInterestsOptions() async {
+    try {
+      final DocumentSnapshot result = await FirebaseFirestore.instance
+          .collection('interests')
+          .doc('options')
+          .get();
+
+      final data = result.data() as Map<String, dynamic>?;
+      if (data != null) {
+        setOptions = [...List<String>.from(data['options'] ?? [])];
+      }
+      print(setOptions);
+      notifyListeners();
+    } catch (e) {
+      print(e);
+      print('unable to fetch interests');
+    }
+  }
+
+  Future<void> addNewOptions(String newInterest) async {
+    if (options.contains(newInterest)) {
+      Fluttertoast.showToast(msg: 'Interest already in the list');
+      return;
+    }
+    try {
+      await FirebaseFirestore.instance
+          .collection('interests')
+          .doc('options')
+          .update({
+        'options': FieldValue.arrayUnion([newInterest])
+      });
+    } catch (e) {
+      print(e);
+      print('unable to add new interest');
     }
   }
 }

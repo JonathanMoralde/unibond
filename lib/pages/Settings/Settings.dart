@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:unibond/widgets/BottomNavBar.dart';
 
 class Settings extends StatelessWidget {
   const Settings({super.key});

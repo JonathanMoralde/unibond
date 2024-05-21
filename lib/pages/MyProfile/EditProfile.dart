@@ -21,6 +21,20 @@ class EditProfile extends StatefulWidget {
 class _EditProfileState extends State<EditProfile> {
   bool isLoading = false;
   File? _image;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch interests options once when the widget is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final editProfileProvider = context.read<EditProfileModel>();
+      editProfileProvider.fetchInterestsOptions();
+      setState(() {
+        _isInitialized = true;
+      });
+    });
+  }
 
   Future _getImageFromGallery() async {
     final pickedImage =
@@ -95,6 +109,8 @@ class _EditProfileState extends State<EditProfile> {
       ),
       body: Consumer2<EditProfileModel, AuthModel>(
           builder: (context, EditProfileModel, AuthModel, child) {
+        // fetch options
+        // EditProfileModel.fetchInterestsOptions();
         return Stack(
           children: [
             SafeArea(
@@ -180,9 +196,13 @@ class _EditProfileState extends State<EditProfile> {
                       const SizedBox(
                         height: 30,
                       ),
-                      Interestcontainer(
-                        title: 'Select',
-                      ),
+                      if (!_isInitialized) CircularProgressIndicator(),
+                      if (_isInitialized)
+                        Interestcontainer(
+                          title: 'Select',
+                          isDisplayOnly: false,
+                          options: EditProfileModel.options,
+                        ),
                       const SizedBox(
                         height: 30,
                       ),
