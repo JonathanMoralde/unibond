@@ -20,6 +20,7 @@ class StyledButton extends StatelessWidget {
   final double? textSize;
   final bool? isBorder;
   final EdgeInsetsGeometry? padding;
+  final Color? borderColor;
 
   const StyledButton(
       {super.key,
@@ -36,7 +37,8 @@ class StyledButton extends StatelessWidget {
       this.iconOnRight,
       this.textSize,
       this.isBorder,
-      this.padding});
+      this.padding,
+      this.borderColor});
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +92,7 @@ class StyledButton extends StatelessWidget {
               elevation: noShadow == true ? 0 : 2,
               shape: RoundedRectangleBorder(
                   borderRadius: borderRadius ?? BorderRadius.circular(50)),
-              backgroundColor: btnColor ?? Color(0xff00B0FF),
+              backgroundColor: btnColor ?? const Color(0xff00B0FF),
               foregroundColor: textColor ?? Colors.white,
               textStyle: TextStyle(
                   // letterSpacing: 1,
@@ -99,7 +101,7 @@ class StyledButton extends StatelessWidget {
                   fontFamily: "Roboto"),
               side: isBorder != null
                   ? BorderSide(
-                      color: Color(0xff00B0FF),
+                      color: borderColor ?? const Color(0xff00B0FF),
                     )
                   : null),
           child: Row(
@@ -128,7 +130,7 @@ class StyledButton extends StatelessWidget {
             padding: padding != null ? padding : null,
             side: isBorder != null
                 ? BorderSide(
-                    color: Color(0xff00B0FF),
+                    color: borderColor ?? const Color(0xff00B0FF),
                   )
                 : null,
 

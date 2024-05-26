@@ -9,13 +9,14 @@ class Interestcontainer extends StatefulWidget {
   final String title;
   final List<String> options;
   final bool isDisplayOnly;
+  final Color? headerColor;
 
-  const Interestcontainer({
-    super.key,
-    required this.title,
-    required this.options,
-    required this.isDisplayOnly,
-  });
+  const Interestcontainer(
+      {super.key,
+      required this.title,
+      required this.options,
+      required this.isDisplayOnly,
+      this.headerColor});
 
   @override
   State<Interestcontainer> createState() => _InteresttcntainerState();
@@ -72,9 +73,9 @@ class _InteresttcntainerState extends State<Interestcontainer> {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 16),
               width: double.infinity,
-              decoration: const BoxDecoration(
-                  color: Color(0xffFF6E00),
-                  borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                  color: widget.headerColor ?? const Color(0xffFF6E00),
+                  borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16))),
               child: Text(

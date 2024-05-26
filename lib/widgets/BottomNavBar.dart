@@ -34,7 +34,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext Bcontext) {
     return Consumer<NavigationModel>(builder: (context, value, child) {
       return BottomNavigationBar(
         type: BottomNavigationBarType.fixed,

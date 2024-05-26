@@ -130,7 +130,7 @@ class _MyProfileState extends State<MyProfile> {
           ),
         );
       }),
-      drawer: SideMenu(pages: pages),
+      // drawer: SideMenu(pages: pages),
     );
   }
 }

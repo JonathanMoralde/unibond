@@ -2,6 +2,7 @@
 // used for adding pages in sideMenu.dart
 import 'package:flutter/material.dart';
 import 'package:unibond/pages/Events/Events.dart';
+import 'package:unibond/pages/Messages/Chats.dart';
 import 'package:unibond/pages/Messages/Messages.dart';
 import 'package:unibond/pages/Notifications/Notifications.dart';
 import 'package:unibond/pages/Settings/Settings.dart';
@@ -20,7 +21,7 @@ class SideMenuPage {
 List<SideMenuPage> pages = [
   SideMenuPage(
       name: "Messages",
-      page: const Messages(),
+      page: const Chats(),
       icon: const Icon(Icons.chat_bubble)),
   SideMenuPage(
       name: "Notifications",

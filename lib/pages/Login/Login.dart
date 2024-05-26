@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:unibond/pages/ForgotPass/ForgotPass.dart';
 import 'package:unibond/pages/MainLayout.dart';
 import 'package:unibond/pages/MyProfile/EditProfile.dart';
-import 'package:unibond/pages/MyProfile/MyProfile.dart';
 import 'package:unibond/pages/Register/Register.dart';
 import 'package:unibond/provider/AuthModel.dart';
 import 'package:unibond/widgets/styledButton.dart';
