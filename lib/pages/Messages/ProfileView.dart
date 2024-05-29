@@ -4,7 +4,8 @@ import 'package:unibond/widgets/Profile/InterestContainer.dart';
 import 'package:unibond/widgets/styledButton.dart';
 
 class ProfileView extends StatefulWidget {
-  const ProfileView({super.key});
+  final Map<String, dynamic> userData;
+  const ProfileView({super.key, required this.userData});
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
@@ -13,6 +14,9 @@ class ProfileView extends StatefulWidget {
 class _ProfileViewState extends State<ProfileView> {
   @override
   Widget build(BuildContext context) {
+    List<dynamic> dynamicList = widget.userData['interests'];
+    List<String> interestList =
+        dynamicList.map((item) => item.toString()).toList();
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xffFF6814),
@@ -47,11 +51,19 @@ class _ProfileViewState extends State<ProfileView> {
                           width: 2.0, // Border width
                         ),
                       ),
-                      child: const CircleAvatar(
-                        backgroundImage:
-                            AssetImage('lib/assets/default_profile_pic.png'),
-                        maxRadius: 60,
-                      )),
+                      child: widget.userData['profile_pic'] != null &&
+                              (widget.userData['profile_pic'] as String)
+                                  .isNotEmpty
+                          ? CircleAvatar(
+                              backgroundImage:
+                                  NetworkImage(widget.userData['profile_pic']),
+                              maxRadius: 25,
+                            )
+                          : const CircleAvatar(
+                              backgroundImage: AssetImage(
+                                  'lib/assets/default_profile_pic.png'),
+                              maxRadius: 25,
+                            )),
                   const SizedBox(
                     width: 20,
                   ),
@@ -60,7 +72,7 @@ class _ProfileViewState extends State<ProfileView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Loading...',
+                          widget.userData['full_name'] ?? 'Loading...',
                           style: TextStyle(
                               fontSize: 24, fontWeight: FontWeight.bold),
                           softWrap: true,
@@ -70,7 +82,7 @@ class _ProfileViewState extends State<ProfileView> {
                           height: 10,
                         ),
                         Text(
-                          'Loading...',
+                          widget.userData['bio'] ?? "Loading...",
                           style: TextStyle(fontSize: 12),
                           softWrap: true,
                           overflow: TextOverflow.visible,
@@ -128,11 +140,12 @@ class _ProfileViewState extends State<ProfileView> {
               const SizedBox(
                 height: 30,
               ),
-              const Interestcontainer(
-                headerColor: Color(0xff00B0FF),
-                title: "His",
+              Interestcontainer(
+                headerColor: const Color(0xff00B0FF),
+                title:
+                    '${widget.userData['full_name'].toString().split(' ')[0]}\'s',
                 isDisplayOnly: true,
-                options: ['test', 'test'],
+                options: interestList,
               ),
             ],
           ),

@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
+import 'package:unibond/main.dart';
+import 'package:unibond/provider/ProfileModel.dart';
 
 class AuthModel extends ChangeNotifier {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -87,6 +91,8 @@ class AuthModel extends ChangeNotifier {
   Future<void> signOut() async {
     try {
       await _firebaseAuth.signOut().then((_) {
+        _user = null;
+        notifyListeners();
         Fluttertoast.showToast(
           msg: 'Logged out successfully!',
           backgroundColor: Colors.green,

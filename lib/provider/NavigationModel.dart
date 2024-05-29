@@ -7,4 +7,9 @@ class NavigationModel extends ChangeNotifier {
     currentIndex = newIndex;
     notifyListeners();
   }
+
+  void resetState() {
+    currentIndex = 4;
+    notifyListeners();
+  }
 }

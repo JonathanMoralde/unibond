@@ -1,8 +1,11 @@
 //preconfigured with pageObject.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/main.dart';
 import 'package:unibond/pages/Login/Login.dart';
 import 'package:unibond/provider/AuthModel.dart';
+import 'package:unibond/provider/EditProfileModel.dart';
+import 'package:unibond/provider/FriendsModel.dart';
 import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
 import 'package:unibond/widgets/drawer/pageObject.dart';
@@ -133,6 +136,15 @@ class SideMenu extends StatelessWidget {
               ),
               onTap: () {
                 authModel.signOut().then((_) {
+                  Provider.of<EditProfileModel>(context, listen: false)
+                      .resetState();
+                  Provider.of<ProfileModel>(context, listen: false)
+                      .resetState();
+                  Provider.of<NavigationModel>(context, listen: false)
+                      .resetState();
+                  Provider.of<FriendsModel>(context, listen: false)
+                      .resetState();
+
                   Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(
                           builder: (BuildContext context) => const Login()),

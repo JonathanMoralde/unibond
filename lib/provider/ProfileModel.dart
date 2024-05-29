@@ -32,4 +32,9 @@ class ProfileModel extends ChangeNotifier {
       print('Error fetching user details: $e');
     }
   }
+
+  void resetState() {
+    _userDetails = {};
+    notifyListeners();
+  }
 }

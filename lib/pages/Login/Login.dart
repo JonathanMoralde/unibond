@@ -6,6 +6,7 @@ import 'package:unibond/pages/MainLayout.dart';
 import 'package:unibond/pages/MyProfile/EditProfile.dart';
 import 'package:unibond/pages/Register/Register.dart';
 import 'package:unibond/provider/AuthModel.dart';
+import 'package:unibond/provider/ProfileModel.dart';
 import 'package:unibond/widgets/styledButton.dart';
 import 'package:unibond/widgets/styledTextFormField.dart';
 
@@ -51,6 +52,9 @@ class _LoginState extends State<Login> {
               isLoading = false;
             });
             if (response) {
+              Provider.of<ProfileModel>(context, listen: false)
+                  .fetchUserDetails(authProvider.user!);
+
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(
                     builder: (BuildContext context) => const MainLayout()),

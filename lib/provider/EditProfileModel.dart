@@ -114,4 +114,11 @@ class EditProfileModel extends ChangeNotifier {
       print('unable to add new interest');
     }
   }
+
+  void resetState() {
+    setSelectedInterests = [];
+    setOptions = [];
+    bioController.clear();
+    notifyListeners();
+  }
 }

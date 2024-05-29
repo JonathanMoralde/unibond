@@ -7,6 +7,7 @@ import 'package:unibond/pages/Messages/Groups.dart';
 import 'package:unibond/pages/Messages/Messages.dart';
 import 'package:unibond/pages/MyProfile/MyProfile.dart';
 import 'package:unibond/pages/Notifications/Notifications.dart';
+import 'package:unibond/provider/FriendsModel.dart';
 import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/pages/Settings/Settings.dart' as SettingsPage;
 import 'package:unibond/widgets/BottomNavBar.dart';
@@ -28,6 +29,18 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
     super.initState();
     // Initialize the TabController with the initial length and vsync
     _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
+
+    _tabController?.addListener(_handleTabSelection);
+  }
+
+  void _handleTabSelection() {
+    if (_tabController?.index == 2) {
+      // Only fetch data if not initialized
+      final friendsModel = Provider.of<FriendsModel>(context, listen: false);
+      if (!friendsModel.isInitialized) {
+        friendsModel.fetchFriendSuggestions();
+      }
+    }
   }
 
   @override

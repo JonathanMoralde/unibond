@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/pages/MainLayout.dart';
 import 'package:unibond/pages/MyProfile/MyProfile.dart';
 import 'package:unibond/provider/AuthModel.dart';
 import 'package:unibond/provider/EditProfileModel.dart';
+import 'package:unibond/provider/ProfileModel.dart';
 import 'package:unibond/widgets/Profile/BioContainer.dart';
 import 'package:unibond/widgets/Profile/InterestContainer.dart';
 import 'package:unibond/widgets/styledButton.dart';
@@ -83,6 +85,14 @@ class _EditProfileState extends State<EditProfile> {
         isLoading = true;
       });
       insertDetails().whenComplete(() {
+        final authProvider = context.read<AuthModel>();
+        final editProfileProvider = context.read<EditProfileModel>();
+        final profileProvider = context.read<ProfileModel>();
+
+        editProfileProvider.resetState();
+
+        profileProvider.fetchUserDetails(authProvider.user!);
+
         Fluttertoast.showToast(
           msg: 'Account details were saved!',
           backgroundColor: Colors.green,
@@ -94,7 +104,7 @@ class _EditProfileState extends State<EditProfile> {
 
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (BuildContext context) => const MyProfile(),
+            builder: (BuildContext context) => const MainLayout(),
           ),
         );
       });
