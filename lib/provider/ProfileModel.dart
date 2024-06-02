@@ -33,6 +33,11 @@ class ProfileModel extends ChangeNotifier {
     }
   }
 
+  void removeFriend(String friendUid) {
+    userDetails['friends'].remove(friendUid);
+    notifyListeners();
+  }
+
   void resetState() {
     _userDetails = {};
     notifyListeners();

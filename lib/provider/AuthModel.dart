@@ -43,6 +43,7 @@ class AuthModel extends ChangeNotifier {
           'email': email,
           'uid': uid,
           'friends': [],
+          'friend_requests': [],
           'interests': [],
           'bio': '',
           'profile_pic': '',

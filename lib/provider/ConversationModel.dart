@@ -1,0 +1,151 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+class ConversationModel extends ChangeNotifier {
+  String? _chatDocId;
+  String? get chatDocId => _chatDocId;
+
+  String formatDateTime(DateTime timeReceived) {
+    DateTime now = DateTime.now();
+
+    DateTime dateToday = DateTime(now.year, now.month, now.day);
+    DateTime dateReceived =
+        DateTime(timeReceived.year, timeReceived.month, timeReceived.day);
+
+    bool isSameDate = dateToday.isAtSameMomentAs(dateReceived);
+
+    if (isSameDate) {
+      return DateFormat('hh:mm a').format(timeReceived);
+    } else if (timeReceived.isAfter(now.subtract(const Duration(days: 6)))) {
+      return DateFormat('EEE \'at\' hh:mm a').format(timeReceived);
+    } else if (timeReceived
+        .isAfter(DateTime(now.year - 1, now.month, now.day))) {
+      return DateFormat('MMM d \'at\' hh:mm a').format(timeReceived);
+    } else {
+      return DateFormat('MM/dd/yy \'at\' hh:mm a').format(timeReceived);
+    }
+  }
+
+  void setChatDocId(String? docId) {
+    _chatDocId = docId;
+    notifyListeners();
+  }
+
+  String generateConversationId(String uid1, String uid2) {
+    List<String> ids = [uid1, uid2];
+    ids.sort();
+    return ids.join('_');
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> fetchDoc(String friendUid) {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    final result = FirebaseFirestore.instance
+        .collection('chats')
+        .where(
+          "composite_id",
+          isEqualTo: generateConversationId(uid, friendUid),
+        )
+        .snapshots();
+
+    return result;
+  }
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> fetchMessages() {
+    if (chatDocId == null) {
+      // Return an empty stream if chatDocId is null
+      return Stream<QuerySnapshot<Map<String, dynamic>>>.empty();
+    }
+
+    return FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chatDocId)
+        .collection('messages')
+        .orderBy('timestamp', descending: true)
+        .snapshots();
+  }
+
+  Future<void> sendMessage(String message, String friendUid) async {
+    if (message.isNotEmpty) {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+
+      try {
+        if (chatDocId != null) {
+          // ! =========== IF CHAT ALREADY EXIST ==================
+          DocumentReference chatDoc =
+              FirebaseFirestore.instance.collection('chats').doc(chatDocId);
+
+          CollectionReference messagesCollection =
+              chatDoc.collection('messages');
+
+          Timestamp timeSent = Timestamp.now();
+
+          await messagesCollection.add({
+            'is_read': false,
+            'message_text': message,
+            'receiver_id': friendUid,
+            'sender_id': uid,
+            'timestamp': timeSent,
+          });
+
+          await chatDoc.update({
+            'latest_chat_message': message,
+            'latest_chat_user': uid,
+            'latest_timestamp': timeSent,
+          });
+
+          print('message sent successfully');
+          // sendNotification('message');
+        } else {
+          // ! ========== IF CHAT IS A NEW CONVERSATION ==========
+          try {
+            CollectionReference chatsCollection =
+                FirebaseFirestore.instance.collection('chats');
+
+            Timestamp timeSent = Timestamp.now();
+
+            // Create a new chat document and get its reference
+            DocumentReference newChatDocRef = await chatsCollection.add({
+              'users_id': [uid, friendUid],
+              'composite_id': generateConversationId(uid, friendUid),
+              'latest_chat_message': message,
+              'latest_chat_user': uid,
+              'latest_timestamp': timeSent,
+            });
+
+            // Get the ID of the newly created chat document
+            String newChatDocId = newChatDocRef.id;
+
+            // Create a messages subcollection for the new chat
+            CollectionReference messagesCollection =
+                newChatDocRef.collection('messages');
+
+            // Add the initial message to the messages subcollection
+            await messagesCollection.add({
+              'is_read': false,
+              'message_text': message,
+              'receiver_id': friendUid,
+              'sender_id': uid,
+              'timestamp': timeSent,
+            });
+
+            _chatDocId = newChatDocId;
+            notifyListeners();
+
+            // sendNotification('message');
+          } catch (e) {
+            print("error sending message, line 81: $e");
+          }
+        }
+      } catch (e) {
+        print("error sending msg, line 85 $e");
+      }
+
+      // chatTextFieldController.clear();
+
+      // !======== SEND A NOTIF=================
+    }
+  }
+}

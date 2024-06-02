@@ -51,6 +51,11 @@ class StyledButton extends StatelessWidget {
           onPressed: onClick,
           style: ElevatedButton.styleFrom(
             padding: padding != null ? padding : null,
+            side: isBorder != null
+                ? BorderSide(
+                    color: borderColor ?? const Color(0xff00B0FF),
+                  )
+                : null,
 
             // fixedSize: const Size(250, 32),
             elevation: noShadow == true ? 0 : 2,
@@ -71,13 +76,17 @@ class StyledButton extends StatelessWidget {
                   children: [
                     Text(
                       btnText,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       secondText!,
                     )
                   ],
                 )
-              : Text(btnText),
+              : Text(
+                  btnText,
+                  overflow: TextOverflow.ellipsis,
+                ),
         ),
       );
     } else if (btnIcon != null && iconOnRight != null && iconOnRight == true) {

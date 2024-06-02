@@ -15,6 +15,8 @@ class StyledTextFormField extends StatelessWidget {
   final double? height;
   final Color? fillColor;
   final IconData? prefixIcon;
+  final int? maxLines;
+  final int? minLines;
 
   const StyledTextFormField(
       {super.key,
@@ -31,7 +33,9 @@ class StyledTextFormField extends StatelessWidget {
       this.height,
       this.width,
       this.fillColor,
-      this.prefixIcon});
+      this.prefixIcon,
+      this.maxLines,
+      this.minLines});
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +43,8 @@ class StyledTextFormField extends StatelessWidget {
       width: width,
       height: height,
       child: TextFormField(
+        minLines: minLines ?? 1,
+        maxLines: maxLines ?? 1,
         readOnly: isReadOnly ?? false,
         obscureText: obscureText,
         style: TextStyle(

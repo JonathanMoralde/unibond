@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/pages/LandingPage/SplashScreen.dart';
 import 'package:unibond/provider/AuthModel.dart';
+import 'package:unibond/provider/ConversationModel.dart';
 import 'package:unibond/provider/FriendsModel.dart';
 import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/provider/EditProfileModel.dart';
@@ -20,6 +21,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ProfileModel()),
         ChangeNotifierProvider(create: (_) => NavigationModel()),
         ChangeNotifierProvider(create: (_) => FriendsModel()),
+        ChangeNotifierProvider(create: (_) => ConversationModel()),
       ],
       child: const MyApp(),
     ),

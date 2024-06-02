@@ -68,6 +68,8 @@ class _LoginState extends State<Login> {
               );
             }
           });
+        }).catchError((e) {
+          print('error occured: $e');
         });
       } else {
         Fluttertoast.showToast(
