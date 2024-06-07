@@ -1,7 +1,11 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/model/IndividualMessage.dart';
 import 'package:unibond/provider/ConversationModel.dart';
@@ -24,6 +28,7 @@ class Conversation extends StatefulWidget {
 
 class _ConversationState extends State<Conversation> {
   final chatController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,7 +97,8 @@ class _ConversationState extends State<Conversation> {
                     msg = snapshot.data!.docs.map((messageDoc) {
                       return IndividualMessage(
                         msgDocId: messageDoc.id,
-                        messageText: messageDoc['message_text'],
+                        content: messageDoc['content'],
+                        type: messageDoc['type'],
                         receiverId: messageDoc['receiver_id'],
                         senderId: messageDoc['sender_id'],
                         timestamp: messageDoc['timestamp'],
@@ -188,7 +194,8 @@ class _ConversationState extends State<Conversation> {
                                     constraints: BoxConstraints(
                                       maxWidth:
                                           MediaQuery.sizeOf(context).width *
-                                              0.80,
+                                              0.60,
+                                      // 0.80,
                                     ),
                                     child: Container(
                                       decoration: BoxDecoration(
@@ -209,12 +216,64 @@ class _ConversationState extends State<Conversation> {
                                       ),
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 8, horizontal: 16),
-                                      child: Text(
-                                        msg[index].messageText,
-                                        style: const TextStyle(
-                                          color: Colors.black,
-                                        ),
-                                      ),
+                                      child: msg[index].type == 'text'
+                                          ? Text(
+                                              msg[index].content,
+                                              style: const TextStyle(
+                                                color: Colors.black,
+                                              ),
+                                            )
+                                          : GestureDetector(
+                                              onTap: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        Scaffold(
+                                                      appBar: AppBar(
+                                                        leading:
+                                                            GestureDetector(
+                                                                onTap: () {
+                                                                  Navigator.pop(
+                                                                      context);
+                                                                },
+                                                                child: Icon(Icons
+                                                                    .close)),
+                                                        actions: [
+                                                          IconButton(
+                                                              icon: const Icon(
+                                                                  Icons
+                                                                      .save_alt),
+                                                              onPressed: () {
+                                                                conversationModel
+                                                                    .saveImage(msg[
+                                                                            index]
+                                                                        .content);
+                                                              }
+                                                              // _saveImage(msg[
+                                                              //         index]
+                                                              //     .content),
+                                                              ),
+                                                        ],
+                                                      ),
+                                                      body: PhotoView(
+                                                        imageProvider:
+                                                            NetworkImage(
+                                                                msg[index]
+                                                                    .content),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                child: CachedNetworkImage(
+                                                    imageUrl:
+                                                        msg[index].content),
+                                              ),
+                                            ),
                                     ),
                                   ),
                                   const SizedBox(
@@ -244,10 +303,36 @@ class _ConversationState extends State<Conversation> {
                       Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             IconButton(
-                              onPressed: () {},
+                              onPressed: () async {
+                                final ImagePicker picker = ImagePicker();
+                                XFile? image = await picker.pickImage(
+                                    source: ImageSource.camera);
+
+                                if (image != null) {
+                                  conversationModel.sendImage(
+                                      File(image.path), widget.friendUid);
+                                }
+                              },
                               icon: const Icon(Icons.camera_alt),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                            IconButton(
+                              onPressed: () async {
+                                final ImagePicker picker = ImagePicker();
+                                final List<XFile> images = await picker
+                                    .pickMultiImage(imageQuality: 70);
+                                if (images.isNotEmpty) {
+                                  for (final image in images) {
+                                    conversationModel.sendImage(
+                                        File(image.path), widget.friendUid);
+                                  }
+                                }
+                              },
+                              icon: const Icon(Icons.image),
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
                             ),
