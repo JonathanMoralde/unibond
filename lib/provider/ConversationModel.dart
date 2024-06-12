@@ -253,4 +253,9 @@ class ConversationModel extends ChangeNotifier {
       Fluttertoast.showToast(msg: 'Failed to save image: $e');
     }
   }
+
+  void resetState() {
+    _chatDocId = null;
+    notifyListeners();
+  }
 }

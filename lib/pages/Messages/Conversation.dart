@@ -63,7 +63,7 @@ class _ConversationState extends State<Conversation> {
           IconButton(
             onPressed: () {},
             icon: const Icon(
-              Icons.video_call,
+              Icons.videocam,
               color: Colors.black,
             ),
             padding: EdgeInsets.zero,
@@ -122,31 +122,6 @@ class _ConversationState extends State<Conversation> {
                             // ===================== Time Display =====================
                             DateTime timeReceived =
                                 msg[index].timestamp.toDate();
-                            // DateTime now = DateTime.now();
-
-                            // DateTime dateToday =
-                            //     DateTime(now.year, now.month, now.day);
-                            // DateTime dateReceived = DateTime(timeReceived.year,
-                            //     timeReceived.month, timeReceived.day);
-
-                            // bool isSameDate =
-                            //     dateToday.isAtSameMomentAs(dateReceived);
-
-                            // String formattedDateTime = (isSameDate)
-                            //     ? DateFormat('hh:mm a').format(timeReceived)
-                            //     : (timeReceived.isAfter(
-                            //         now.subtract(const Duration(days: 6)),
-                            //       ))
-                            //         ? DateFormat('EEE \'at\' hh:mm a')
-                            //             .format(timeReceived)
-                            //         : (timeReceived.isAfter(
-                            //             DateTime(
-                            //                 now.year - 1, now.month, now.day),
-                            //           ))
-                            //             ? DateFormat('MMM d \'at\' hh:mm a')
-                            //                 .format(timeReceived)
-                            //             : DateFormat('MM/dd/yy \'at\' hh:mm a')
-                            //                 .format(timeReceived);
                             String formattedDateTime =
                                 conversationModel.formatDateTime(timeReceived);
                             // ========================================================
@@ -197,84 +172,82 @@ class _ConversationState extends State<Conversation> {
                                               0.60,
                                       // 0.80,
                                     ),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: isCurrentUser
-                                            ? const Color(0xffFF8C36)
-                                            : const Color(0xff6ECDF7),
-                                        borderRadius: BorderRadius.only(
-                                            topLeft: !isCurrentUser
-                                                ? const Radius.circular(0)
-                                                : const Radius.circular(32),
-                                            topRight: isCurrentUser
-                                                ? const Radius.circular(0)
-                                                : const Radius.circular(32),
-                                            bottomLeft:
-                                                const Radius.circular(32),
-                                            bottomRight:
-                                                const Radius.circular(32)),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8, horizontal: 16),
-                                      child: msg[index].type == 'text'
-                                          ? Text(
+                                    child: msg[index].type == 'text'
+                                        ? Container(
+                                            decoration: BoxDecoration(
+                                              color: isCurrentUser
+                                                  ? const Color(0xffFF8C36)
+                                                  : const Color(0xff6ECDF7),
+                                              borderRadius: BorderRadius.only(
+                                                  topLeft: !isCurrentUser
+                                                      ? const Radius.circular(0)
+                                                      : const Radius.circular(
+                                                          32),
+                                                  topRight: isCurrentUser
+                                                      ? const Radius.circular(0)
+                                                      : const Radius.circular(
+                                                          32),
+                                                  bottomLeft:
+                                                      const Radius.circular(32),
+                                                  bottomRight:
+                                                      const Radius.circular(
+                                                          32)),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 8, horizontal: 16),
+                                            child: Text(
                                               msg[index].content,
                                               style: const TextStyle(
                                                 color: Colors.black,
                                               ),
-                                            )
-                                          : GestureDetector(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        Scaffold(
-                                                      appBar: AppBar(
-                                                        leading:
-                                                            GestureDetector(
-                                                                onTap: () {
-                                                                  Navigator.pop(
-                                                                      context);
-                                                                },
-                                                                child: Icon(Icons
-                                                                    .close)),
-                                                        actions: [
-                                                          IconButton(
-                                                              icon: const Icon(
-                                                                  Icons
-                                                                      .save_alt),
-                                                              onPressed: () {
-                                                                conversationModel
-                                                                    .saveImage(msg[
-                                                                            index]
-                                                                        .content);
-                                                              }
-                                                              // _saveImage(msg[
-                                                              //         index]
-                                                              //     .content),
-                                                              ),
-                                                        ],
-                                                      ),
-                                                      body: PhotoView(
-                                                        imageProvider:
-                                                            NetworkImage(
-                                                                msg[index]
-                                                                    .content),
-                                                      ),
+                                            ),
+                                          )
+                                        : GestureDetector(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      Scaffold(
+                                                    appBar: AppBar(
+                                                      leading: GestureDetector(
+                                                          onTap: () {
+                                                            Navigator.pop(
+                                                                context);
+                                                          },
+                                                          child: Icon(
+                                                              Icons.close)),
+                                                      actions: [
+                                                        IconButton(
+                                                            icon: const Icon(
+                                                                Icons.save_alt),
+                                                            onPressed: () {
+                                                              conversationModel
+                                                                  .saveImage(msg[
+                                                                          index]
+                                                                      .content);
+                                                            }),
+                                                      ],
+                                                    ),
+                                                    body: PhotoView(
+                                                      imageProvider:
+                                                          NetworkImage(
+                                                              msg[index]
+                                                                  .content),
                                                     ),
                                                   ),
-                                                );
-                                              },
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(16),
-                                                child: CachedNetworkImage(
-                                                    imageUrl:
-                                                        msg[index].content),
-                                              ),
+                                                ),
+                                              );
+                                            },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: const Color(
+                                                          0xff00B0FF))),
+                                              child: CachedNetworkImage(
+                                                  imageUrl: msg[index].content),
                                             ),
-                                    ),
+                                          ),
                                   ),
                                   const SizedBox(
                                     height: 4.0,

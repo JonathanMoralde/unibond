@@ -4,8 +4,11 @@ import 'package:provider/provider.dart';
 import 'package:unibond/main.dart';
 import 'package:unibond/pages/Login/Login.dart';
 import 'package:unibond/provider/AuthModel.dart';
+import 'package:unibond/provider/ConversationModel.dart';
+import 'package:unibond/provider/CreateGroupChatModel.dart';
 import 'package:unibond/provider/EditProfileModel.dart';
 import 'package:unibond/provider/FriendsModel.dart';
+import 'package:unibond/provider/GroupModel.dart';
 import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
 import 'package:unibond/widgets/drawer/pageObject.dart';
@@ -144,6 +147,11 @@ class SideMenu extends StatelessWidget {
                       .resetState();
                   Provider.of<FriendsModel>(context, listen: false)
                       .resetState();
+                  Provider.of<CreateGroupChatModel>(context, listen: false)
+                      .reset();
+                  Provider.of<ConversationModel>(context, listen: false)
+                      .resetState();
+                  Provider.of<GroupModel>(context, listen: false).resetState();
 
                   Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(

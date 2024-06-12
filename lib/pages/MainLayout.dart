@@ -8,6 +8,7 @@ import 'package:unibond/pages/Messages/Messages.dart';
 import 'package:unibond/pages/MyProfile/MyProfile.dart';
 import 'package:unibond/pages/Notifications/Notifications.dart';
 import 'package:unibond/provider/FriendsModel.dart';
+import 'package:unibond/provider/GroupModel.dart';
 import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/pages/Settings/Settings.dart' as SettingsPage;
 import 'package:unibond/widgets/BottomNavBar.dart';
@@ -39,6 +40,14 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
       final friendsModel = Provider.of<FriendsModel>(context, listen: false);
       if (!friendsModel.isInitialized) {
         friendsModel.fetchFriendSuggestions();
+      }
+    }
+
+    if (_tabController?.index == 1) {
+      final groupModel = Provider.of<GroupModel>(context, listen: false);
+
+      if (!groupModel.isInitialized) {
+        groupModel.fetchGroups();
       }
     }
   }

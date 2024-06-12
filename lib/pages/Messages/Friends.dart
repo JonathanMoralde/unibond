@@ -21,7 +21,6 @@ class Friends extends StatefulWidget {
 }
 
 class _FriendsState extends State<Friends> {
-  final searchController = TextEditingController();
   final scrollController = ScrollController();
 
   @override
@@ -135,62 +134,6 @@ class _FriendsState extends State<Friends> {
                 ),
               ),
             ),
-            // Row(
-            //   children: [
-            //     Container(
-            //         width:
-            //             50, // double the maxRadius to cover the entire CircleAvatar
-            //         height:
-            //             50, // double the maxRadius to cover the entire CircleAvatar
-            //         decoration: BoxDecoration(
-            //           boxShadow: [
-            //             BoxShadow(
-            //               color: Colors.black
-            //                   .withOpacity(0.20), // Shadow color with opacity
-            //               spreadRadius: 0, // Spread radius
-            //               blurRadius: 3, // Blur radius
-            //               offset: const Offset(
-            //                   0, 3), // Offset in x and y directions
-            //             ),
-            //           ],
-            //           shape: BoxShape.circle,
-            //           border: Border.all(
-            //             color: const Color(0xff00B0FF), // Border color
-            //             width: 2.0, // Border width
-            //           ),
-            //         ),
-            //         child: userDetails['profile_pic'] != null &&
-            //                 (userDetails['profile_pic'] as String).isNotEmpty
-            //             ? CircleAvatar(
-            //                 backgroundImage:
-            //                     NetworkImage(userDetails['profile_pic']),
-            //                 maxRadius: 25,
-            //               )
-            //             : const CircleAvatar(
-            //                 backgroundImage: AssetImage(
-            //                     'lib/assets/default_profile_pic.png'),
-            //                 maxRadius: 25,
-            //               )),
-            //     const SizedBox(
-            //       width: 10,
-            //     ),
-            //     Expanded(
-            //       child: StyledTextFormField(
-            //         prefixIcon: Icons.search,
-            //         fillColor: const Color(0xffD9D9D9),
-            //         controller: searchController,
-            //         hintText: 'Search',
-            //         hintSize: 14,
-            //         obscureText: false,
-            //         paddingBottom: 0,
-            //         paddingTop: 0,
-            //         paddingLeft: 16,
-            //         paddingRight: 16,
-            //         height: 35,
-            //       ),
-            //     )
-            //   ],
-            // ),
             const SizedBox(
               height: 20,
             ),
@@ -296,7 +239,6 @@ class _FriendsState extends State<Friends> {
                   },
                 ),
               ),
-
             if (friendsModel.activeDisplay == 'friends')
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -364,7 +306,6 @@ class _FriendsState extends State<Friends> {
                   ),
                 ),
               ),
-
             if (friendsModel.activeDisplay == 'requests')
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
