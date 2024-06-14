@@ -118,6 +118,7 @@ class CreateGroupChatModel extends ChangeNotifier {
           descriptionController.text.isNotEmpty) {
         // if (userDoc.exists) {
         final String userName = _userDetails['full_name'];
+        final String userProfPic = _userDetails['profile_pic'];
 
         final storageRef = FirebaseStorage.instance.ref().child(
             'group_chat/${nameController.text}/group_pic/${DateTime.now().microsecondsSinceEpoch}.jpg');
@@ -151,7 +152,9 @@ class CreateGroupChatModel extends ChangeNotifier {
           'content': '$userName created the group',
           'sender_id': userUid,
           'timestamp': timeSent,
-          'type': 'notify'
+          'type': 'notify',
+          'sender_name': userName,
+          'sender_profile_pic': userProfPic,
         });
         // }
       }

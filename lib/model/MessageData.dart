@@ -1,20 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class MessageData {
-  final String docId;
-  final String incomingId; //id of shop
-  final String shopName;
-  final String? shopHours;
-  final Timestamp latestChatTime;
-  final String latestChatUser;
+  final String chatDocId;
+  final String compositeId;
   final String latestChatMsg;
+  final String latestChatUser;
+  final Timestamp latestTimestamp;
+  final String incomindId;
+  final String userName;
+  final String userProfPic;
+  final bool isRead;
 
   MessageData(
-      {required this.docId,
-      required this.incomingId,
-      required this.shopName,
-      this.shopHours,
-      required this.latestChatTime,
+      {required this.chatDocId,
+      required this.compositeId,
+      required this.latestChatMsg,
       required this.latestChatUser,
-      required this.latestChatMsg});
+      required this.latestTimestamp,
+      required this.incomindId,
+      required this.isRead,
+      required this.userName,
+      required this.userProfPic});
 }

@@ -102,6 +102,7 @@ class _ConversationState extends State<Conversation> {
                         receiverId: messageDoc['receiver_id'],
                         senderId: messageDoc['sender_id'],
                         timestamp: messageDoc['timestamp'],
+                        isRead: messageDoc['is_read'],
                       );
                     }).toList();
                   }
@@ -125,6 +126,13 @@ class _ConversationState extends State<Conversation> {
                             String formattedDateTime =
                                 conversationModel.formatDateTime(timeReceived);
                             // ========================================================
+
+                            // Mark message as read if it's for the current user and not yet read
+                            if (!isCurrentUser && msg[index].isRead == false) {
+                              conversationModel.markMessageAsRead(
+                                  conversationModel.chatDocId!,
+                                  msg[index].msgDocId);
+                            }
 
                             final List<Widget> listTileContent = [
                               isCurrentUser

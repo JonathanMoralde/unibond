@@ -143,11 +143,11 @@ class _SettingsState extends State<Settings> {
                       const SizedBox(
                         height: 20,
                       ),
-                      StyledTextFormField(
-                          controller: passwordController,
-                          hintText: '',
-                          isReadOnly: true,
-                          obscureText: true),
+                      // StyledTextFormField(
+                      //     controller: passwordController,
+                      //     hintText: '',
+                      //     isReadOnly: true,
+                      //     obscureText: true),
                     ],
                   ))
                 ],

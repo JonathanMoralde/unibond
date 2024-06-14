@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/pages/LandingPage/SplashScreen.dart';
 import 'package:unibond/provider/AuthModel.dart';
+import 'package:unibond/provider/ChatsModel.dart';
 import 'package:unibond/provider/ConversationModel.dart';
 import 'package:unibond/provider/CreateGroupChatModel.dart';
 import 'package:unibond/provider/FriendsModel.dart';
@@ -30,6 +31,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => GroupModel()),
         ChangeNotifierProvider(create: (_) => GroupConversationModel()),
         ChangeNotifierProvider(create: (_) => GroupChatDetailsModel()),
+        ChangeNotifierProvider(create: (_) => ChatsModel()),
       ],
       child: const MyApp(),
     ),

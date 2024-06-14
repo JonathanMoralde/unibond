@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/pages/Messages/GroupChatDetails.dart';
 import 'package:unibond/pages/Messages/GroupConversation.dart';
 import 'package:unibond/provider/GroupChatDetailsModel.dart';
+import 'package:unibond/provider/GroupConversationModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
 
 class GroupCard extends StatefulWidget {

@@ -254,6 +254,19 @@ class ConversationModel extends ChangeNotifier {
     }
   }
 
+  Future<void> markMessageAsRead(String chatDocId, String messageDocId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatDocId)
+          .collection('messages')
+          .doc(messageDocId)
+          .update({'is_read': true});
+    } catch (e) {
+      print("Error marking message as read: $e");
+    }
+  }
+
   void resetState() {
     _chatDocId = null;
     notifyListeners();
