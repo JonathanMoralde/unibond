@@ -6,7 +6,9 @@ import 'package:unibond/pages/LandingPage/SplashScreen.dart';
 import 'package:unibond/provider/AuthModel.dart';
 import 'package:unibond/provider/ChatsModel.dart';
 import 'package:unibond/provider/ConversationModel.dart';
+import 'package:unibond/provider/CreateEventModel.dart';
 import 'package:unibond/provider/CreateGroupChatModel.dart';
+import 'package:unibond/provider/EventsModel.dart';
 import 'package:unibond/provider/FriendsModel.dart';
 import 'package:unibond/provider/GroupChatDetailsModel.dart';
 import 'package:unibond/provider/GroupConversationModel.dart';
@@ -32,6 +34,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => GroupConversationModel()),
         ChangeNotifierProvider(create: (_) => GroupChatDetailsModel()),
         ChangeNotifierProvider(create: (_) => ChatsModel()),
+        ChangeNotifierProvider(create: (_) => CreateEventModel()),
+        ChangeNotifierProvider(create: (_) => EventsModel()),
       ],
       child: const MyApp(),
     ),

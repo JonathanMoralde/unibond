@@ -84,6 +84,7 @@ class MessageCard extends StatelessWidget {
                     Text(
                       userName,
                       style: TextStyle(fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     SizedBox(
                       height: 5,
