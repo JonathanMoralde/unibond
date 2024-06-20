@@ -213,16 +213,35 @@ class _FriendsState extends State<Friends> {
                             .contains(
                                 friendsModel.friendSuggestions[index]['uid']),
                         onCancel: () async {
-                          friendsModel.cancelRequest(
-                              friendsModel.friendSuggestions[index]['uid']);
+                          friendsModel
+                              .cancelRequest(
+                                  friendsModel.friendSuggestions[index]['uid'])
+                              .then((_) {
+                            friendsModel.removeNotification(
+                                friendsModel.friendSuggestions[index]['uid']);
+                          });
                         },
                         onConnect: () async {
-                          friendsModel.addFriend(
-                              friendsModel.friendSuggestions[index]['uid']);
+                          friendsModel
+                              .addFriend(
+                                  friendsModel.friendSuggestions[index]['uid'])
+                              .then((_) {
+                            friendsModel.addFriendNofitication(
+                                profileModel.userDetails['uid'],
+                                profileModel.userDetails['full_name'],
+                                friendsModel.friendSuggestions[index]['uid']);
+                          });
                         },
                         onAccept: () async {
-                          friendsModel.confirmRequest(
-                              friendsModel.friendSuggestions[index]['uid']);
+                          friendsModel
+                              .confirmRequest(
+                                  friendsModel.friendSuggestions[index]['uid'])
+                              .then((_) {
+                            friendsModel.confirmFriendNofitication(
+                                profileModel.userDetails['uid'],
+                                profileModel.userDetails['full_name'],
+                                friendsModel.friendSuggestions[index]['uid']);
+                          });
                         },
                         userName: friendsModel.friendSuggestions[index]
                             ['full_name'],

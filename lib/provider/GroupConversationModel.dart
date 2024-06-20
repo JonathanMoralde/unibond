@@ -184,6 +184,55 @@ class GroupConversationModel extends ChangeNotifier {
     }
   }
 
+  Future<void> messageNotification(
+      String groupName, List<String> groupMembersUid) async {
+    final userUid = FirebaseAuth.instance.currentUser!.uid;
+    // final Timestamp today = Timestamp.now();
+
+    final DateTime now = DateTime.now();
+    final DateTime startOfDay = DateTime(now.year, now.month, now.day);
+    final Timestamp startOfDayTimestamp = Timestamp.fromDate(startOfDay);
+    try {
+      // Query to check if a notification has been sent today for a message
+      QuerySnapshot<Map<String, dynamic>> existingNotification =
+          await FirebaseFirestore.instance
+              .collection('notification')
+              .where('group_name', isEqualTo: groupName)
+              .where('is_message', isEqualTo: true)
+              .where('dateTime', isGreaterThanOrEqualTo: startOfDayTimestamp)
+              .get();
+
+      if (existingNotification.docs.isEmpty) {
+        // If no notification has been sent for a message today, proceed with sending a new notification
+
+        // Rest of your existing message sending logic
+
+        for (final uid in groupMembersUid) {
+          if (uid != userUid) {
+            // After sending the message, create a notification
+            await FirebaseFirestore.instance.collection('notification').add({
+              'chat_doc_id': chatDocId ?? '',
+              'dateTime': Timestamp.now(),
+              'is_friend_request': false,
+              'is_friend_accept': false,
+              'is_event': false,
+              'is_group': true,
+              'is_message': true,
+              'is_read': false,
+              'group_name': groupName,
+              'notif_msg': 'has new messages. Tap to view!',
+              'receiver_uid': uid,
+            });
+          }
+        }
+      } else {
+        print("Notification already sent for a message today");
+      }
+    } catch (e) {
+      print("error sending notification, line 309: $e");
+    }
+  }
+
   void resetState() {
     _chatDocId = null;
     notifyListeners();

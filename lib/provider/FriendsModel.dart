@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 
 class FriendsModel extends ChangeNotifier {
   String activeDisplay = 'suggestion';
@@ -143,8 +144,6 @@ class FriendsModel extends ChangeNotifier {
       await FirebaseFirestore.instance.collection('users').doc(friendUid).set({
         'requests': FieldValue.arrayUnion([userUid])
       }, SetOptions(merge: true)).then((_) {
-        // setFriendSuggestions
-        //     .removeWhere((suggestions) => suggestions['uid'] == friendUid);
         _requestsList.add(friendUid);
         notifyListeners();
 
@@ -301,6 +300,72 @@ class FriendsModel extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       print("error removing friend: $e");
+    }
+  }
+
+  Future<void> addFriendNofitication(
+      String fromUid, String fromName, String receiverUid) async {
+    try {
+      await FirebaseFirestore.instance.collection('notification').add({
+        'chat_doc_id': '',
+        'dateTime': Timestamp.now(),
+        'from_uid': fromUid,
+        'from_name': fromName,
+        'is_friend_request': true,
+        'is_friend_accept': false,
+        'is_event': false,
+        'is_message': false,
+        'is_group': false,
+        'is_read': false,
+        'notif_msg': 'sent a friend request.',
+        'receiver_uid': receiverUid,
+      });
+    } catch (e) {
+      print('error sending notification: $e');
+    }
+  }
+
+  Future<void> confirmFriendNofitication(
+      String fromUid, String fromName, String receiverUid) async {
+    try {
+      await FirebaseFirestore.instance.collection('notification').add({
+        'chat_doc_id': '',
+        'dateTime': Timestamp.now(),
+        'from_uid': fromUid,
+        'from_name': fromName,
+        'is_friend_request': false,
+        'is_friend_accept': true,
+        'is_event': false,
+        'is_message': false,
+        'is_group': false,
+        'is_read': false,
+        'notif_msg': 'accepted your friend request.',
+        'receiver_uid': receiverUid,
+      });
+    } catch (e) {
+      print('error sending notification: $e');
+    }
+  }
+
+  Future<void> removeNotification(String userUid) async {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('notification')
+          .where('from_uid', isEqualTo: uid)
+          .where('receiver_uid', isEqualTo: userUid)
+          .where('is_friend_request', isEqualTo: true)
+          .get();
+
+      // Iterate over each document and delete it
+      for (QueryDocumentSnapshot doc in querySnapshot.docs) {
+        await FirebaseFirestore.instance
+            .collection('notification')
+            .doc(doc.id)
+            .delete();
+      }
+    } catch (e) {
+      print('failed to remove notification for canceling friend request: $e');
     }
   }
 

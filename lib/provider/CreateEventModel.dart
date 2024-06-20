@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:unibond/model/EventsData.dart';
 
 class CreateEventModel extends ChangeNotifier {
   List<DropdownMenuItem<String>> _groupOptions = [];
@@ -31,7 +33,7 @@ class CreateEventModel extends ChangeNotifier {
     }
   }
 
-  Future<void> insertEvent(
+  Future<String> insertEvent(
       String eventName,
       DateTime date,
       String time,
@@ -40,17 +42,74 @@ class CreateEventModel extends ChangeNotifier {
       String description,
       int selectedColorValue) async {
     try {
-      await FirebaseFirestore.instance.collection('events').doc().set({
+      // Create a new document reference with a unique ID
+      DocumentReference docRef =
+          FirebaseFirestore.instance.collection('events').doc();
+
+      // Set the document data
+      await docRef.set({
         'event_name': eventName,
         'event_date': date,
         'event_time': time,
         'location': location,
         'group_name': groupName,
         'description': description,
-        'color': selectedColorValue
+        'color': selectedColorValue,
       });
+
+      // Get the generated document ID
+      String docId = docRef.id;
+
+      return docId;
     } catch (e) {
       print('error inserting event $e');
+    }
+
+    return '';
+  }
+
+  Future<void> newEventNotification(IndivEvents eventData) async {
+    // final Timestamp today = Timestamp.now();
+
+    try {
+      QuerySnapshot<Map<String, dynamic>> result = await FirebaseFirestore
+          .instance
+          .collection('groups')
+          .where('group_name', isEqualTo: eventData.groupName)
+          .get();
+
+      if (result.docs.isNotEmpty) {
+        final groupData = result.docs.first.data() as Map<String, dynamic>;
+        final members = (groupData['members'] as List<dynamic>)
+            .map((e) => e.toString())
+            .toList();
+
+        for (final uid in members) {
+          // After sending the message, create a notification
+          await FirebaseFirestore.instance.collection('notification').add({
+            'chat_doc_id': '',
+            'dateTime': Timestamp.now(),
+            'group_name': eventData.groupName,
+            'description': eventData.description,
+            'eventDate': eventData.eventDate,
+            'eventName': eventData.eventName,
+            'eventDocId': eventData.eventDocId,
+            'location': eventData.location,
+            'color': eventData.color,
+            'is_friend_request': false,
+            'is_friend_accept': false,
+            'is_event': true,
+            'is_group': false,
+            'is_message': true,
+            'is_read': false,
+            'notif_msg':
+                'has new event on ${DateFormat('MMMM dd, yyyy').format(DateTime(eventData.eventDate.year, eventData.eventDate.month + 0, eventData.eventDate.day))}. Tap to view details!',
+            'receiver_uid': uid,
+          });
+        }
+      }
+    } catch (e) {
+      print("error sending notification, line 309: $e");
     }
   }
 }

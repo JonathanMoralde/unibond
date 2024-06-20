@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/model/EventsData.dart';
 import 'package:unibond/provider/CreateEventModel.dart';
 import 'package:unibond/provider/EventsModel.dart';
 
@@ -64,7 +65,17 @@ class _CreateEventState extends State<CreateEvent> {
                         selectedGroup!,
                         descriptionController.text,
                         colors[currentColorIndex].value)
-                    .then((_) {
+                    .then((docId) {
+                  Provider.of<CreateEventModel>(context, listen: false)
+                      .newEventNotification(IndivEvents(
+                          description: descriptionController.text,
+                          eventDate: selectedDateTime!,
+                          eventDocId: docId,
+                          eventName: nameController.text,
+                          eventTime: formatTimeOfDay(selectedTime!),
+                          groupName: selectedGroup!,
+                          location: locationController.text,
+                          color: colors[currentColorIndex].value));
                   Fluttertoast.showToast(msg: 'Successfully created the event');
 
                   Navigator.pop(context);

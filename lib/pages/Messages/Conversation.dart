@@ -308,8 +308,16 @@ class _ConversationState extends State<Conversation> {
                                     .pickMultiImage(imageQuality: 70);
                                 if (images.isNotEmpty) {
                                   for (final image in images) {
-                                    conversationModel.sendImage(
-                                        File(image.path), widget.friendUid);
+                                    conversationModel
+                                        .sendImage(
+                                            File(image.path), widget.friendUid)
+                                        .then((_) {
+                                      conversationModel.messageNotification(
+                                          profileModel.userDetails['uid'],
+                                          profileModel.userDetails['full_name'],
+                                          widget.friendUid,
+                                          true);
+                                    });
                                   }
                                 }
                               },
@@ -329,8 +337,16 @@ class _ConversationState extends State<Conversation> {
                             ),
                             IconButton(
                               onPressed: () {
-                                conversationModel.sendMessage(
-                                    chatController.text, widget.friendUid);
+                                conversationModel
+                                    .sendMessage(
+                                        chatController.text, widget.friendUid)
+                                    .then((_) {
+                                  conversationModel.messageNotification(
+                                      profileModel.userDetails['uid'],
+                                      profileModel.userDetails['full_name'],
+                                      widget.friendUid,
+                                      false);
+                                });
                                 chatController.clear();
                               },
                               icon: const Icon(Icons.send),

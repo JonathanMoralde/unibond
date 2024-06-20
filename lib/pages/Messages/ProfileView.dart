@@ -124,13 +124,19 @@ class _ProfileViewState extends State<ProfileView> {
                                 friendsModel.requestsList
                                     .contains(userData['uid'])
                             ? 'Cancel Request'
-                            : ((profileModel.userDetails['friends']
+                            : (profileModel.userDetails['requests']
                                         as List<dynamic>)
                                     .map((e) => e.toString())
                                     .toList()
-                                    .contains(userData['uid']))
-                                ? 'Disconnect'
-                                : 'Connect',
+                                    .contains(userData['uid'])
+                                ? 'Accept'
+                                : ((profileModel.userDetails['friends']
+                                            as List<dynamic>)
+                                        .map((e) => e.toString())
+                                        .toList()
+                                        .contains(userData['uid']))
+                                    ? 'Disconnect'
+                                    : 'Connect',
                         btnIcon: (userData['requests'] as List<dynamic>)
                                     .map((e) => e.toString())
                                     .toList()
@@ -155,31 +161,66 @@ class _ProfileViewState extends State<ProfileView> {
                                     .contains(userData['uid'])
                             ? () {
                                 setState(() {
-                                  friendsModel.cancelRequest(userData['uid']);
+                                  friendsModel
+                                      .cancelRequest(userData['uid'])
+                                      .then((_) {
+                                    friendsModel
+                                        .removeNotification(userData['uid']);
+                                  });
                                 });
                               }
-                            : (((profileModel.userDetails['friends']
+                            : (profileModel.userDetails['requests']
                                         as List<dynamic>)
                                     .map((e) => e.toString())
                                     .toList()
-                                    .contains(userData['uid']))
+                                    .contains(userData['uid'])
                                 ? () {
-                                    print('clicked disconnect');
-                                    // print(userData['friends']);
-                                    friendsModel.removeFriend(userData['uid']);
-                                    profileModel.removeFriend(userData['uid']);
-                                    // setState(() {
-                                    //   (userData['friends'] as List<dynamic>)
-                                    //       .map((e) => e.toString())
-                                    //       .toList()
-                                    //       .remove(
-                                    //           profileModel.userDetails['uid']);
-                                    // });
-                                    // print(userData['friends']);
+                                    friendsModel
+                                        .confirmRequest(userData['uid'])
+                                        .then((_) {
+                                      friendsModel.confirmFriendNofitication(
+                                          profileModel.userDetails['uid'],
+                                          profileModel.userDetails['full_name'],
+                                          userData['uid']);
+                                    }).then((_) {
+                                      profileModel
+                                          .removeRequest(userData['uid']);
+
+                                      profileModel.addfriend(userData['uid']);
+                                    });
                                   }
-                                : () {
-                                    friendsModel.addFriend(userData['uid']);
-                                  }),
+                                : (((profileModel.userDetails['friends']
+                                            as List<dynamic>)
+                                        .map((e) => e.toString())
+                                        .toList()
+                                        .contains(userData['uid']))
+                                    ? () {
+                                        print('clicked disconnect');
+                                        // print(userData['friends']);
+                                        friendsModel
+                                            .removeFriend(userData['uid']);
+                                        profileModel
+                                            .removeFriend(userData['uid']);
+                                        // setState(() {
+                                        //   (userData['friends'] as List<dynamic>)
+                                        //       .map((e) => e.toString())
+                                        //       .toList()
+                                        //       .remove(
+                                        //           profileModel.userDetails['uid']);
+                                        // });
+                                        // print(userData['friends']);
+                                      }
+                                    : () {
+                                        friendsModel
+                                            .addFriend(userData['uid'])
+                                            .then((_) {
+                                          friendsModel.addFriendNofitication(
+                                              profileModel.userDetails['uid'],
+                                              profileModel
+                                                  .userDetails['full_name'],
+                                              userData['uid']);
+                                        });
+                                      }),
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),

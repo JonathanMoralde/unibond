@@ -56,7 +56,9 @@ class _EventsState extends State<Events> {
                       eventsModel.toggleCalendar();
                     },
                     child: Icon(
-                      Icons.format_align_left,
+                      eventsModel.isCalendar
+                          ? Icons.event
+                          : Icons.format_align_left,
                       color: eventsModel.isCalendar
                           ? Color(0xffFF6814)
                           : Colors.black,
@@ -112,117 +114,236 @@ class _EventsState extends State<Events> {
                 height: 20,
               ),
               if (!eventsModel.isCalendar)
-                for (final event in eventsModel.eventsList)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // DATE
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.10,
-                        child: Column(
-                          // crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              event.eventDate.day.toString(),
-                              style: TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.w900),
-                            ),
-                            Text(
-                              DateFormat('EEE').format(event.eventDate),
-                            ),
-                          ],
-                        ),
-                      ),
+                // for (final event in eventsModel.eventsList)
+                //   Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     crossAxisAlignment: CrossAxisAlignment.start,
+                //     children: [
+                //       // DATE
+                //       SizedBox(
+                //         width: MediaQuery.of(context).size.width * 0.10,
+                //         child: Column(
+                //           // crossAxisAlignment: CrossAxisAlignment.start,
+                //           children: [
+                //             Text(
+                //               event.eventDate.day.toString(),
+                //               style: TextStyle(
+                //                   fontSize: 18, fontWeight: FontWeight.w900),
+                //             ),
+                //             Text(
+                //               DateFormat('EEE').format(event.eventDate),
+                //             ),
+                //           ],
+                //         ),
+                //       ),
 
-                      const SizedBox(
-                        width: 16,
-                      ),
+                //       const SizedBox(
+                //         width: 16,
+                //       ),
 
-                      // EVENT CARD
-                      Expanded(
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  left: BorderSide(color: Colors.black),
+                //       // EVENT CARD
+                //       Expanded(
+                //         child: Stack(
+                //           clipBehavior: Clip.none,
+                //           children: [
+                //             Container(
+                //               decoration: BoxDecoration(
+                //                 border: Border(
+                //                   left: BorderSide(color: Colors.black),
+                //                 ),
+                //               ),
+                //               // width: MediaQuery.of(context).size.width * 0.75,
+                //               padding: EdgeInsets.only(left: 16),
+                //               child: Column(
+                //                 children: [
+                //                   for (final indivEvent in event.events)
+                //                     // INDIV EVENT
+                //                     Column(
+                //                       children: [
+                //                         InkWell(
+                //                           onTap: () {
+                //                             Navigator.of(context).push(
+                //                               MaterialPageRoute(
+                //                                 builder:
+                //                                     (BuildContext context) =>
+                //                                         EventDetails(
+                //                                             eventData:
+                //                                                 indivEvent),
+                //                               ),
+                //                             );
+                //                           },
+                //                           borderRadius:
+                //                               BorderRadius.circular(8),
+                //                           child: Container(
+                //                             padding: EdgeInsets.all(8),
+                //                             decoration: BoxDecoration(
+                //                                 border: Border.all(
+                //                                     color: Colors.black),
+                //                                 color: Color(indivEvent.color),
+                //                                 borderRadius:
+                //                                     BorderRadius.circular(8)),
+                //                             child: Row(
+                //                               mainAxisAlignment:
+                //                                   MainAxisAlignment
+                //                                       .spaceBetween,
+                //                               children: [
+                //                                 Text(
+                //                                     '${indivEvent.eventName} (${indivEvent.eventTime})'),
+                //                                 Icon(Icons.chevron_right)
+                //                               ],
+                //                             ),
+                //                           ),
+                //                         ),
+                //                         if ((eventsModel.eventsList
+                //                                     .indexOf(event) !=
+                //                                 eventsModel.eventsList.length -
+                //                                     1) ||
+                //                             (event.events.indexOf(indivEvent) !=
+                //                                 event.events.length - 1))
+                //                           const SizedBox(height: 20)
+                //                       ],
+                //                     ),
+                //                 ],
+                //               ),
+                //             ),
+
+                //             // DOT
+                //             Positioned(
+                //               top: 10, // Adjusted position from top
+                //               left: -2, // Adjusted position from left
+                //               child: Container(
+                //                 decoration: BoxDecoration(
+                //                   color: Colors.black,
+                //                   borderRadius: BorderRadius.circular(50),
+                //                 ),
+                //                 height: 5,
+                //                 width: 5,
+                //               ),
+                //             ),
+                //           ],
+                //         ),
+                //       )
+                //     ],
+                //   ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: eventsModel.eventsList.length,
+                    itemBuilder: (context, index) {
+                      final event = eventsModel.eventsList[index];
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // DATE
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.10,
+                            child: Column(
+                              children: [
+                                Text(
+                                  event.eventDate.day.toString(),
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w900),
                                 ),
-                              ),
-                              // width: MediaQuery.of(context).size.width * 0.75,
-                              padding: EdgeInsets.only(left: 16),
-                              child: Column(
-                                children: [
-                                  for (final indivEvent in event.events)
-                                    // INDIV EVENT
-                                    Column(
-                                      children: [
-                                        InkWell(
-                                          onTap: () {
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (BuildContext context) =>
+                                Text(
+                                  DateFormat('EEE').format(event.eventDate),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          // EVENT CARD
+                          Expanded(
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      left: BorderSide(color: Colors.black),
+                                    ),
+                                  ),
+                                  padding: EdgeInsets.only(left: 16),
+                                  child: Column(
+                                    children: List.generate(
+                                      event.events.length,
+                                      (eventIndex) {
+                                        final indivEvent =
+                                            event.events[eventIndex];
+                                        return Column(
+                                          children: [
+                                            InkWell(
+                                              onTap: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (BuildContext
+                                                            context) =>
                                                         EventDetails(
                                                             eventData:
                                                                 indivEvent),
+                                                  ),
+                                                );
+                                              },
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              child: Container(
+                                                padding: EdgeInsets.all(8),
+                                                decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      color: Colors.black),
+                                                  color:
+                                                      Color(indivEvent.color),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  children: [
+                                                    Text(
+                                                        '${indivEvent.eventName} (${indivEvent.eventTime})'),
+                                                    Icon(Icons.chevron_right)
+                                                  ],
+                                                ),
                                               ),
-                                            );
-                                          },
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          child: Container(
-                                            padding: EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                                border: Border.all(
-                                                    color: Colors.black),
-                                                color: Color(indivEvent.color),
-                                                borderRadius:
-                                                    BorderRadius.circular(8)),
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Text(
-                                                    '${indivEvent.eventName} (${indivEvent.eventTime})'),
-                                                Icon(Icons.chevron_right)
-                                              ],
                                             ),
-                                          ),
-                                        ),
-                                        if ((eventsModel.eventsList
-                                                    .indexOf(event) !=
-                                                eventsModel.eventsList.length -
-                                                    1) ||
-                                            (event.events.indexOf(indivEvent) !=
-                                                event.events.length - 1))
-                                          const SizedBox(height: 20)
-                                      ],
+                                            if ((eventsModel.eventsList
+                                                        .indexOf(event) !=
+                                                    eventsModel
+                                                            .eventsList.length -
+                                                        1) ||
+                                                (event.events
+                                                        .indexOf(indivEvent) !=
+                                                    event.events.length - 1))
+                                              const SizedBox(height: 20)
+                                          ],
+                                        );
+                                      },
                                     ),
-                                ],
-                              ),
-                            ),
-
-                            // DOT
-                            Positioned(
-                              top: 10, // Adjusted position from top
-                              left: -2, // Adjusted position from left
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.black,
-                                  borderRadius: BorderRadius.circular(50),
+                                  ),
                                 ),
-                                height: 5,
-                                width: 5,
-                              ),
+                                // DOT
+                                Positioned(
+                                  top: 10, // Adjusted position from top
+                                  left: -2, // Adjusted position from left
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.black,
+                                      borderRadius: BorderRadius.circular(50),
+                                    ),
+                                    height: 5,
+                                    width: 5,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      )
-                    ],
+                          ),
+                        ],
+                      );
+                    },
                   ),
+                ),
 
               if (eventsModel.isCalendar)
                 TableCalendar<IndivEvents>(

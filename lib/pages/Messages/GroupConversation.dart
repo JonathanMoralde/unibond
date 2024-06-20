@@ -360,10 +360,18 @@ class _GroupConversationState extends State<GroupConversation> {
                   ),
                   IconButton(
                     onPressed: () {
-                      groupConversationModel.sendMessage(
-                          chatController.text,
-                          profileModel.userDetails['full_name'],
-                          profileModel.userDetails['profile_pic']);
+                      groupConversationModel
+                          .sendMessage(
+                              chatController.text,
+                              profileModel.userDetails['full_name'],
+                              profileModel.userDetails['profile_pic'])
+                          .then((_) {
+                        groupConversationModel.messageNotification(
+                            widget.groupData['group_name'],
+                            (widget.groupData['members'] as List<dynamic>)
+                                .map((e) => e.toString())
+                                .toList());
+                      });
                       chatController.clear();
                     },
                     icon: const Icon(Icons.send),

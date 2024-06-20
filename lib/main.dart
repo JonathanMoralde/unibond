@@ -15,6 +15,7 @@ import 'package:unibond/provider/GroupConversationModel.dart';
 import 'package:unibond/provider/GroupModel.dart';
 import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/provider/EditProfileModel.dart';
+import 'package:unibond/provider/NotificationModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
 
 Future<void> main() async {
@@ -36,6 +37,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ChatsModel()),
         ChangeNotifierProvider(create: (_) => CreateEventModel()),
         ChangeNotifierProvider(create: (_) => EventsModel()),
+        ChangeNotifierProvider(create: (_) => NotificationModel()),
       ],
       child: const MyApp(),
     ),
@@ -60,7 +62,8 @@ class MyApp extends StatelessWidget {
         ),
         textTheme: GoogleFonts.poppinsTextTheme(),
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff00B0FF)),
-        scaffoldBackgroundColor: const Color(0xffFAF2F2),
+        scaffoldBackgroundColor: Colors.grey.shade100,
+        // canvasColor: Colors.white,
         useMaterial3: true,
       ),
       home: const SpashScreen(),
