@@ -7,62 +7,65 @@ class NotificationModel extends ChangeNotifier {
   List<Map<String, dynamic>> _notifications = [];
   List<Map<String, dynamic>> get notifications => _notifications;
 
-  Future<void> fetchNotif() async {
+  DocumentSnapshot? _lastDocument;
+  bool _hasMore = true;
+  bool get hasMore => _hasMore;
+  static const int _perPage = 10;
+
+  Future<void> fetchNotif({bool loadMore = false}) async {
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
-      var querySnapshot = await FirebaseFirestore.instance
+      Query query = FirebaseFirestore.instance
           .collection("notification")
           .where("receiver_uid", isEqualTo: uid)
           .orderBy('dateTime', descending: true)
-          .get();
+          .limit(_perPage);
 
-      List<Map<String, dynamic>> tempNotifications =
-          []; // Temporary list to store fetched data
+      if (loadMore && _lastDocument != null) {
+        query = query.startAfterDocument(_lastDocument!);
+      }
 
-      querySnapshot.docs.forEach((doc) {
-        Map<String, dynamic> tempData = doc.data();
+      var querySnapshot = await query.get();
+
+      if (querySnapshot.docs.length < _perPage) {
+        _hasMore = false;
+      }
+
+      List<Map<String, dynamic>> tempNotifications = [];
+
+      for (var doc in querySnapshot.docs) {
+        Map<String, dynamic> tempData = doc.data() as Map<String, dynamic>;
         tempData['docId'] = doc.id;
+        if (tempData['is_group'] || tempData['is_event']) {
+          final result = await FirebaseFirestore.instance
+              .collection('groups')
+              .where('group_name', isEqualTo: tempData['group_name'])
+              .get();
 
+          tempData['pic'] = result.docs.first.data()['group_pic'];
+          tempData['group_data'] = result.docs.first.data();
+        } else {
+          final result = await FirebaseFirestore.instance
+              .collection('users')
+              .where('uid', isEqualTo: tempData['from_uid'])
+              .get();
+
+          tempData['pic'] = result.docs.first.data()['profile_pic'];
+        }
         tempNotifications.add(tempData);
-      });
+      }
 
-      // Fetching shopData for each notification
-      // for (var notification in tempNotifications) {
-      //   var serviceProviderSnapshot = await FirebaseFirestore.instance
-      //       .collection("service_provider")
-      //       .doc(notification[
-      //           'from_uid']) // Assuming user_doc_id is the ID in service_provider
-      //       .get();
+      if (loadMore) {
+        _notifications.addAll(tempNotifications);
+      } else {
+        _notifications = tempNotifications;
+      }
 
-      //   if (serviceProviderSnapshot.exists) {
-      //     var serviceProviderData = serviceProviderSnapshot.data();
-      //     // Accessing service_provider_name
-      //     var serviceProviderName =
-      //         serviceProviderData!['service_provider_name'];
+      if (querySnapshot.docs.isNotEmpty) {
+        _lastDocument = querySnapshot.docs.last;
+      }
 
-      //     notification['service_provider_name'] = serviceProviderName;
-      //   } else {
-      //     // ! FETCH USER INSTEAD
-      //     var userQuery = await FirebaseFirestore.instance
-      //         .collection('users')
-      //         .where('uid', isEqualTo: notification['from_uid'])
-      //         .get();
-
-      //     if (userQuery.docs.isNotEmpty) {
-      //       String userName = userQuery.docs.first.get("name");
-
-      //       notification['service_provider_name'] = userName;
-      //     }
-      //   }
-      // }
-
-      // Update the state with the fetched data
-      // setState(() {
-      //   isLoading = false;
-      //   notifications = tempNotifications;
-      // });
-      _notifications = tempNotifications;
       notifyListeners();
     } catch (e) {
       print("Error fetching notifications: $e");
@@ -106,5 +109,20 @@ class NotificationModel extends ChangeNotifier {
     } catch (e) {
       print(e);
     }
+  }
+
+  Future<Map<String, dynamic>> fetchUserData(String uid) async {
+    try {
+      final result = await FirebaseFirestore.instance
+          .collection('users')
+          .where('uid', isEqualTo: uid)
+          .get();
+
+      return result.docs.first.data();
+    } catch (e) {
+      print('failed to fetch user data $e');
+    }
+
+    return {};
   }
 }

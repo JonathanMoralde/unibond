@@ -2,19 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/model/EventsData.dart';
+import 'package:unibond/pages/Events/EventDetails.dart';
+import 'package:unibond/pages/Messages/Conversation.dart';
+import 'package:unibond/pages/Messages/GroupConversation.dart';
+import 'package:unibond/pages/Messages/ProfileView.dart';
+import 'package:unibond/provider/FriendsModel.dart';
 import 'package:unibond/provider/NotificationModel.dart';
 
-class NotifcationCard extends StatelessWidget {
+class NotifcationCard extends StatefulWidget {
   final String? chatDocId;
   final bool isMessage;
   final bool isFriendRequest;
+  final bool isFriendAccept;
   final bool isGroup;
+  final bool isEvent;
+  final IndivEvents? eventData;
   final String? fromUid;
   final String fromName;
   final Timestamp dateTime;
   final bool isRead;
   final String docId;
   final String notifMsg;
+  final String? img;
+  final Map<String, dynamic>? groupData;
 
   const NotifcationCard(
       {super.key,
@@ -26,106 +37,213 @@ class NotifcationCard extends StatelessWidget {
       required this.docId,
       required this.isMessage,
       required this.isGroup,
+      required this.isEvent,
+      this.eventData,
       required this.isFriendRequest,
-      required this.notifMsg});
+      required this.isFriendAccept,
+      required this.notifMsg,
+      this.img,
+      this.groupData});
+
+  @override
+  State<NotifcationCard> createState() => _NotifcationCardState();
+}
+
+class _NotifcationCardState extends State<NotifcationCard> {
+  late bool notifRead;
+
+  @override
+  void initState() {
+    super.initState();
+    setState(() {
+      notifRead = widget.isRead;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
-          child: Divider(
-            height: 1,
-          ),
-        ),
         Container(
-          color: isRead ? Colors.transparent : Colors.blue[100],
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: notifRead ? Colors.transparent : Colors.blue[100],
+          ),
           child: Column(
             children: [
               const SizedBox(
                 height: 10,
               ),
-              Align(
-                alignment: Alignment.center,
-                child: FractionallySizedBox(
-                  widthFactor: 0.78,
-                  child: GestureDetector(
-                    onTap: () {
-                      // updateReadStatus();
+              GestureDetector(
+                onTap: () {
+                  Provider.of<NotificationModel>(context, listen: false)
+                      .updateReadStatus(widget.docId)
+                      .then((_) {
+                    setState(() {
+                      notifRead = true;
+                    });
+                  });
 
-                      // if (isMessage == true &&
-                      //     isRate == false &&
-                      //     isAgreement == false) {
-                      //   // Navigator.of(context).push(
-                      //   //   MaterialPageRoute(
-                      //   //     builder: (BuildContext context) => Conversation(
-                      //   //       docId: chatDocId,
-                      //   //       shopId: fromUid,
-                      //   //       shopName: shopName,
-                      //   //     ),
-                      //   //   ),
-                      //   // );
-                      // } else if (isRate == true &&
-                      //     isMessage == false &&
-                      //     isAgreement == false) {
-                      //   print("rate");
-                      //   // TODO NAVIGATE TO VIEW SHOP'S RATING & REVIEW
-                      // } else {
-                      //   print('agreement');
-                      //   // TODO NAVIGATE TO CONVERSATION PAGE
-                      // }
-                    },
-                    child: Row(
-                      children: [
-                        // Image/Icon
-                        const CircleAvatar(
-                          backgroundImage:
-                              AssetImage('images/default_profile_pic.png'),
-                          maxRadius: 30,
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
+                  print('event: ${widget.isEvent}');
+                  print('group: ${widget.isGroup}');
+                  print('message: ${widget.isMessage}');
+                  print('fried request: ${widget.isFriendRequest}');
+                  print('accepted: ${widget.isFriendAccept}');
 
-                        // Column
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // SHOP NAME
-                            Text(
-                              fromName ?? "Loading...",
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge!
-                                  .copyWith(color: Colors.black),
-                            ),
+                  if (widget.isEvent == true &&
+                      widget.isGroup == false &&
+                      widget.isMessage == false &&
+                      widget.isFriendRequest == false &&
+                      widget.isFriendAccept == false) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                            EventDetails(eventData: widget.eventData!),
+                      ),
+                    );
+                  } else if (widget.isEvent == false &&
+                      widget.isGroup == true &&
+                      widget.isMessage == false &&
+                      widget.isFriendRequest == false &&
+                      widget.isFriendAccept == false) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                            GroupConversation(groupData: widget.groupData!),
+                      ),
+                    );
+                  } else if (widget.isEvent == false &&
+                      widget.isGroup == false &&
+                      widget.isMessage == true &&
+                      widget.isFriendRequest == false &&
+                      widget.isFriendAccept == false) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => Conversation(
+                            friendName: widget.fromName,
+                            friendUid: widget.fromUid!),
+                      ),
+                    );
+                  } else if (widget.isEvent == false &&
+                      widget.isGroup == false &&
+                      widget.isMessage == false &&
+                      widget.isFriendRequest == true &&
+                      widget.isFriendAccept == false) {
+                    Provider.of<NotificationModel>(context, listen: false)
+                        .fetchUserData(widget.fromUid!)
+                        .then((userData) {
+                      Provider.of<FriendsModel>(context, listen: false)
+                          .viewProfile(userData);
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) => ProfileView()));
+                    });
+                  } else {
+                    Provider.of<NotificationModel>(context, listen: false)
+                        .fetchUserData(widget.fromUid!)
+                        .then((userData) {
+                      Provider.of<FriendsModel>(context, listen: false)
+                          .viewProfile(userData);
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) => ProfileView()));
+                    });
+                  }
 
-                            // messaged you
-                            Text(
-                              notifMsg,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge!
-                                  .copyWith(color: Colors.black),
-                            ),
-
-                            // timestamp
-                            Text(
-                              Provider.of<NotificationModel>(context,
-                                      listen: false)
-                                  .formatDateTime(dateTime),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall!
-                                  .copyWith(color: Colors.grey[700]),
-                            )
-                          ],
-                        )
-                      ],
+                  // if (isMessage == true &&
+                  //     isRate == false &&
+                  //     isAgreement == false) {
+                  //   // Navigator.of(context).push(
+                  //   //   MaterialPageRoute(
+                  //   //     builder: (BuildContext context) => Conversation(
+                  //   //       docId: chatDocId,
+                  //   //       shopId: fromUid,
+                  //   //       shopName: shopName,
+                  //   //     ),
+                  //   //   ),
+                  //   // );
+                  // } else if (isRate == true &&
+                  //     isMessage == false &&
+                  //     isAgreement == false) {
+                  //   print("rate");
+                  //   // TODO NAVIGATE TO VIEW SHOP'S RATING & REVIEW
+                  // } else {
+                  //   print('agreement');
+                  //   // TODO NAVIGATE TO CONVERSATION PAGE
+                  // }
+                },
+                child: Row(
+                  children: [
+                    // Image/Icon
+                    widget.img != null && (widget.img as String).isNotEmpty
+                        ? CircleAvatar(
+                            backgroundImage: NetworkImage(widget.img!),
+                            maxRadius: 30,
+                          )
+                        : const CircleAvatar(
+                            backgroundImage: AssetImage(
+                                'lib/assets/default_profile_pic.png'),
+                            maxRadius: 30,
+                          ),
+                    const SizedBox(
+                      width: 10,
                     ),
-                  ),
+
+                    // Column
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // SHOP NAME
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: widget.fromName,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors
+                                        .black, // Add color to match theme
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' ${widget.notifMsg}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors
+                                        .black, // Add color to match theme
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // messaged you
+                          // Text(
+                          //   notifMsg,
+                          //   style: Theme.of(context)
+                          //       .textTheme
+                          //       .bodyLarge!
+                          //       .copyWith(color: Colors.black),
+                          // ),
+
+                          const SizedBox(
+                            height: 5,
+                          ),
+
+                          // timestamp
+                          Text(
+                            Provider.of<NotificationModel>(context,
+                                    listen: false)
+                                .formatDateTime(widget.dateTime),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade700,
+                            ),
+                          )
+                        ],
+                      ),
+                    )
+                  ],
                 ),
               ),
               const SizedBox(
