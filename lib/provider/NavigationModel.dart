@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class NavigationModel extends ChangeNotifier {
@@ -11,5 +13,24 @@ class NavigationModel extends ChangeNotifier {
   void resetState() {
     currentIndex = 4;
     notifyListeners();
+  }
+
+  String? lastCallId;
+
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchCalls() {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    final result = FirebaseFirestore.instance
+        .collection('calls')
+        .where('called_uid', isEqualTo: uid)
+        .where('active', isEqualTo: true)
+        .snapshots();
+
+    return result;
+  }
+
+  void setLastCallId(String id) {
+    lastCallId = id;
+    // notifyListeners();
   }
 }

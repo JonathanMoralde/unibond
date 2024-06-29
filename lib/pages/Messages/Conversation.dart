@@ -1,15 +1,22 @@
 import 'dart:io';
 
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/model/CallModel.dart';
 import 'package:unibond/model/IndividualMessage.dart';
+import 'package:unibond/pages/Messages/CallPage.dart';
 import 'package:unibond/provider/ConversationModel.dart';
+import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
+import 'package:unibond/utils/NotificationService.dart';
 import 'package:unibond/widgets/styledTextFormField.dart';
 
 class Conversation extends StatefulWidget {
@@ -61,7 +68,33 @@ class _ConversationState extends State<Conversation> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () async {
+              // VIDEO CALL
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (BuildContext context) {
+                  return CallPage(
+                    call: CallModel(
+                        accepted: null,
+                        active: null,
+                        called: widget.friendUid,
+                        caller:
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['uid'],
+                        callerName:
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['full_name'],
+                        channel:
+                            '${Provider.of<ProfileModel>(context, listen: false).userDetails['uid']}-${widget.friendUid}', //localuseruid-frienduid
+                        // channel: 'test', //localuseruid-frienduid
+                        connected: null,
+                        id: null,
+                        rejected: null),
+                  );
+                }),
+              );
+              // }
+            },
             icon: const Icon(
               Icons.videocam,
               color: Colors.black,
@@ -70,7 +103,31 @@ class _ConversationState extends State<Conversation> {
             constraints: const BoxConstraints(),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () async {
+              // AUDIO CALL
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (BuildContext context) {
+                  return CallPage(
+                    call: CallModel(
+                        accepted: null,
+                        active: null,
+                        called: widget.friendUid,
+                        caller:
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['uid'],
+                        callerName:
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['full_name'],
+                        channel:
+                            '${Provider.of<ProfileModel>(context, listen: false).userDetails['uid']}-${widget.friendUid}',
+                        connected: null,
+                        id: null,
+                        rejected: null),
+                  );
+                }),
+              );
+            },
             icon: const Icon(
               Icons.call,
               color: Colors.black,

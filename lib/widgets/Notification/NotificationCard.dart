@@ -147,28 +147,6 @@ class _NotifcationCardState extends State<NotifcationCard> {
                           builder: (BuildContext context) => ProfileView()));
                     });
                   }
-
-                  // if (isMessage == true &&
-                  //     isRate == false &&
-                  //     isAgreement == false) {
-                  //   // Navigator.of(context).push(
-                  //   //   MaterialPageRoute(
-                  //   //     builder: (BuildContext context) => Conversation(
-                  //   //       docId: chatDocId,
-                  //   //       shopId: fromUid,
-                  //   //       shopName: shopName,
-                  //   //     ),
-                  //   //   ),
-                  //   // );
-                  // } else if (isRate == true &&
-                  //     isMessage == false &&
-                  //     isAgreement == false) {
-                  //   print("rate");
-                  //   // TODO NAVIGATE TO VIEW SHOP'S RATING & REVIEW
-                  // } else {
-                  //   print('agreement');
-                  //   // TODO NAVIGATE TO CONVERSATION PAGE
-                  // }
                 },
                 child: Row(
                   children: [

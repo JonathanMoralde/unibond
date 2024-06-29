@@ -1,5 +1,8 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/model/CallModel.dart';
 import 'package:unibond/pages/Events/Events.dart';
 import 'package:unibond/pages/Messages/Chats.dart';
 import 'package:unibond/pages/Messages/Friends.dart';
@@ -11,6 +14,8 @@ import 'package:unibond/provider/FriendsModel.dart';
 import 'package:unibond/provider/GroupModel.dart';
 import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/pages/Settings/Settings.dart' as SettingsPage;
+import 'package:unibond/provider/ProfileModel.dart';
+import 'package:unibond/utils/NotificationService.dart';
 import 'package:unibond/widgets/BottomNavBar.dart';
 import 'package:unibond/widgets/drawer/pageObject.dart';
 import 'package:unibond/widgets/drawer/sideMenu.dart';
@@ -32,6 +37,9 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
     _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
 
     _tabController?.addListener(_handleTabSelection);
+
+    // Initialize notifications
+    NotificationService.initializeNotification();
   }
 
   void _handleTabSelection() {
@@ -92,25 +100,90 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
               : null,
         ),
         drawer: SideMenu(pages: pages), // Drawer at the root level
-        body: value.currentIndex == 0
-            ? TabBarView(
-                controller: _tabController!,
-                children: const <Widget>[
-                  Chats(),
-                  Groups(),
-                  Friends(),
-                ],
-              )
-            : IndexedStack(
-                index: value.currentIndex,
-                children: const <Widget>[
-                  Chats(),
-                  Notifications(),
-                  Events(),
-                  SettingsPage.Settings(),
-                  MyProfile(),
-                ],
-              ),
+        body: Stack(
+          children: [
+            value.currentIndex == 0
+                ? TabBarView(
+                    controller: _tabController!,
+                    children: const <Widget>[
+                      Chats(),
+                      Groups(),
+                      Friends(),
+                    ],
+                  )
+                : IndexedStack(
+                    index: value.currentIndex,
+                    children: const <Widget>[
+                      Chats(),
+                      Notifications(),
+                      Events(),
+                      SettingsPage.Settings(),
+                      MyProfile(),
+                    ],
+                  ),
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: value.watchCalls(),
+              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  print(snapshot.data?.docs.first);
+                  var callData = snapshot.data!.docs.first;
+                  var callDataMap =
+                      snapshot.data!.docs.first.data() as Map<String, dynamic>;
+                  var call = CallModel(
+                      id: callData.id,
+                      channel: callDataMap['channel'],
+                      caller: callDataMap['caller_uid'],
+                      callerName: callDataMap['caller_name'],
+                      called: callDataMap['called_uid'],
+                      active: callDataMap['active'],
+                      accepted: callDataMap['accepted'],
+                      rejected: callDataMap['rejected'],
+                      connected: callDataMap['connected']);
+
+                  if (call.id != value.lastCallId &&
+                      call.active != null &&
+                      call.active == true &&
+                      call.accepted != null &&
+                      call.accepted == false &&
+                      call.rejected != null &&
+                      call.rejected == false &&
+                      call.connected != null &&
+                      call.connected == false) {
+                    value.setLastCallId(call.id!);
+
+                    // Show notification
+                    NotificationService.showNotification(
+                      title: 'Incoming Call',
+                      body: 'You have an incoming call from ${call.callerName}',
+                      payload: {
+                        'navigate': 'true',
+                        'callId': call.id!,
+                        'channelName': '${call.caller}-${call.called}',
+                        'caller': call.caller,
+                        'callerName': call.callerName,
+                        'called': call.called,
+                      },
+                      actionButtons: [
+                        NotificationActionButton(
+                          key: 'ACCEPT',
+                          label: 'Accept',
+                          actionType: ActionType.Default,
+                        ),
+                        NotificationActionButton(
+                          key: 'REJECT',
+                          label: 'Reject',
+                          actionType: ActionType.Default,
+                        ),
+                      ],
+                    );
+                  }
+                }
+
+                return const SizedBox.shrink();
+              },
+            )
+          ],
+        ),
         bottomNavigationBar: const BottomNavBar(),
       );
     });
