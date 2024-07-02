@@ -1,10 +1,13 @@
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:unibond/model/CallModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:unibond/model/GroupCallModel.dart';
 import 'package:unibond/pages/Messages/CallPage.dart';
+import 'package:unibond/pages/Messages/GroupCallPage.dart';
 
 import '../main.dart'; // Import the file where the GlobalKey is defined
 
@@ -14,18 +17,19 @@ class NotificationService {
       null,
       [
         NotificationChannel(
-          channelGroupKey: 'high_importance_channel',
-          channelKey: 'high_importance_channel',
-          channelName: 'Basic notifications',
-          channelDescription: 'Notification channel for basic tests',
-          defaultColor: const Color(0xFF9D50DD),
-          ledColor: Colors.white,
-          importance: NotificationImportance.Max,
-          channelShowBadge: true,
-          onlyAlertOnce: true,
-          playSound: true,
-          criticalAlerts: true,
-        )
+            channelGroupKey: 'high_importance_channel',
+            channelKey: 'high_importance_channel',
+            channelName: 'Basic notifications',
+            channelDescription: 'Notification channel for basic tests',
+            defaultColor: const Color(0xFF9D50DD),
+            ledColor: Colors.white,
+            importance: NotificationImportance.Max,
+            channelShowBadge: true,
+            // onlyAlertOnce: true,
+            // playSound: true,
+            // criticalAlerts: true,
+            defaultRingtoneType: DefaultRingtoneType.Ringtone,
+            enableVibration: true)
       ],
       channelGroups: [
         NotificationChannelGroup(
@@ -48,7 +52,7 @@ class NotificationService {
       onActionReceivedMethod: onActionReceivedMethod,
       onNotificationCreatedMethod: onNotificationCreatedMethod,
       onNotificationDisplayedMethod: onNotificationDisplayedMethod,
-      onDismissActionReceivedMethod: onDismissActionReceivedMethod,
+      // onDismissActionReceivedMethod: onDismissActionReceivedMethod,
     );
   }
 
@@ -62,10 +66,10 @@ class NotificationService {
     debugPrint('onNotificationDisplayedMethod');
   }
 
-  static Future<void> onDismissActionReceivedMethod(
-      ReceivedAction receivedAction) async {
-    debugPrint('onDismissActionReceivedMethod');
-  }
+  // static Future<void> onDismissActionReceivedMethod(
+  //     ReceivedAction receivedAction) async {
+  //   debugPrint('onDismissActionReceivedMethod');
+  // }
 
   static Future<void> onActionReceivedMethod(
       ReceivedAction receivedAction) async {
@@ -74,36 +78,85 @@ class NotificationService {
 
     if (payload["navigate"] == "true") {
       if (receivedAction.buttonKeyPressed == 'ACCEPT') {
-        // Accept call
-        FirebaseFirestore.instance
-            .collection('calls')
-            .doc(payload['callId'])
-            .update({'accepted': true});
+        if (payload['groupName'] == null) {
+          // Accept call
+          FirebaseFirestore.instance
+              .collection('calls')
+              .doc(payload['callId'])
+              .update({'accepted': true});
 
-        // Navigate to CallPage using the global navigator key
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (context) => CallPage(
-              call: CallModel(
-                id: payload['callId'],
-                caller: payload['caller'] ?? '',
-                callerName: payload['callerName'] ?? '',
-                called: payload['called'] ?? '',
-                channel: payload['channelName'] ?? '',
-                active: true,
-                accepted: true,
-                rejected: false,
-                connected: false,
+          // Navigate to CallPage using the global navigator key
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => CallPage(
+                call: CallModel(
+                    id: payload['callId'],
+                    caller: payload['caller'] ?? '',
+                    callerName: payload['callerName'] ?? '',
+                    called: payload['called'] ?? '',
+                    channel: payload['channelName'] ?? '',
+                    active: true,
+                    accepted: true,
+                    rejected: false,
+                    connected: false,
+                    isVideoCall:
+                        payload['isVideoCall']?.toLowerCase() == 'true'),
               ),
             ),
-          ),
-        );
+          );
+        } else {
+          // / Accept call
+          FirebaseFirestore.instance
+              .collection('group_calls')
+              .doc(payload['callId'])
+              .update({
+            'joined':
+                FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid])
+          });
+
+          final joinedList = payload['joined']!.split(',');
+          final rejectedList = payload['rejected']!.split(',');
+          final membersList = payload['members']!.split(',');
+
+          // Navigate to CallPage using the global navigator key
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => GroupCallPage(
+                chatDocId: payload['chatDocId'] ?? '',
+                userUid: FirebaseAuth.instance.currentUser!.uid,
+                call: GroupCallModel(
+                    id: payload['callId'],
+                    caller: payload['caller'] ?? '',
+                    callerName: payload['callerName'] ?? '',
+                    channel: payload['channelName'] ?? '',
+                    active: true,
+                    groupName: payload['groupName'] ?? '',
+                    joined: joinedList,
+                    rejected: rejectedList,
+                    members: membersList,
+                    isVideoCall:
+                        payload['isVideoCall']?.toLowerCase() == 'true'),
+              ),
+            ),
+          );
+        }
       } else if (receivedAction.buttonKeyPressed == 'REJECT') {
-        // Reject call
-        FirebaseFirestore.instance
-            .collection('calls')
-            .doc(payload['callId'])
-            .update({'rejected': true});
+        if (payload['groupName'] == null) {
+          // Reject call
+          FirebaseFirestore.instance
+              .collection('calls')
+              .doc(payload['callId'])
+              .update({'rejected': true});
+        } else {
+          // Reject call
+          FirebaseFirestore.instance
+              .collection('group_calls')
+              .doc(payload['callId'])
+              .update({
+            'rejected':
+                FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid])
+          });
+        }
       }
     }
   }
@@ -135,6 +188,8 @@ class NotificationService {
         category: category,
         payload: payload,
         bigPicture: bigPicture,
+        wakeUpScreen: true,
+        autoDismissible: false,
       ),
       actionButtons: actionButtons,
       schedule: scheduled

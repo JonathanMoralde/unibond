@@ -40,12 +40,17 @@ class _CallPageState extends State<CallPage> {
     setState(() {
       callId = widget.call.id;
     });
-    getToken().then((_) {
-      initAgora().then((_) {
-        if (callId == null) {
-          makeCall();
-        }
-      });
+    // getToken().then((_) {
+    //   initAgora().then((_) {
+    //     if (callId == null) {
+    //       makeCall();
+    //     }
+    //   });
+    // });
+    initAgora().then((_) {
+      if (callId == null) {
+        makeCall();
+      }
     });
   }
 
@@ -57,10 +62,10 @@ class _CallPageState extends State<CallPage> {
     setState(() {
       client = AgoraClient(
         agoraConnectionData: AgoraConnectionData(
-          appId: appId,
-          channelName: widget.call.channel,
-          tempToken: token,
-        ),
+            appId: appId,
+            channelName: widget.call.channel,
+            // tempToken: token,
+            tokenUrl: 'https://unibond-token-server.onrender.com'),
         agoraEventHandlers: AgoraRtcEventHandlers(
           onJoinChannelSuccess: (connection, uid) {
             print('\x1B[31mlocal user joined: $uid\x1B[0m');
@@ -108,7 +113,7 @@ class _CallPageState extends State<CallPage> {
                   .doc(callId)
                   .update({'active': false, 'connected': false});
             }
-            Navigator.pop(context);
+            // Navigator.pop(context);
           },
         ),
         agoraRtmChannelEventHandler: AgoraRtmChannelEventHandler(
@@ -119,7 +124,7 @@ class _CallPageState extends State<CallPage> {
                   .doc(callId)
                   .update({'active': false, 'connected': false});
             }
-            Navigator.pop(context);
+            // Navigator.pop(context);
           },
         ),
       );
@@ -131,6 +136,9 @@ class _CallPageState extends State<CallPage> {
     } catch (e) {
       print('\x1B[31mfaled to initialize: $e\x1B[0m');
     }
+    client!.sessionController.updateUserVideo(
+        uid: client!.agoraConnectionData.uid ?? 0,
+        videoDisabled: !widget.call.isVideoCall);
   }
 
   Future<void> getToken() async {
@@ -161,6 +169,7 @@ class _CallPageState extends State<CallPage> {
       'accepted': false,
       'rejected': false,
       'connected': false,
+      'is_video_call': widget.call.isVideoCall
     });
   }
 
@@ -168,7 +177,9 @@ class _CallPageState extends State<CallPage> {
   Widget build(BuildContext context) {
     print('\x1B[31mlocla user joined: $isLocalUserJoined\x1B[0m');
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+      ),
       body: SafeArea(
         child: Stack(
           children: [

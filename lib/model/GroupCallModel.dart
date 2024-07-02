@@ -1,24 +1,24 @@
-class CallModel {
+class GroupCallModel {
   String? id;
   String channel;
   String caller;
   String callerName;
-  String called;
+  String groupName;
   bool? active;
-  bool? accepted;
-  bool? rejected;
-  bool? connected;
+  List<String> members;
+  List<String> joined;
+  List<String> rejected;
   bool isVideoCall;
-  CallModel({
+  GroupCallModel({
     required this.id,
     required this.channel,
     required this.caller,
     required this.callerName,
-    required this.called,
+    required this.groupName,
     required this.active,
-    required this.accepted,
+    required this.members,
+    required this.joined,
     required this.rejected,
-    required this.connected,
     required this.isVideoCall,
   });
 }

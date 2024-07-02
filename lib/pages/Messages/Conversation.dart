@@ -69,6 +69,8 @@ class _ConversationState extends State<Conversation> {
         actions: [
           IconButton(
             onPressed: () async {
+              // TODO CHECK FIRST IF FRIEND IS IN ANOTHER CALL
+              // TODO FRIEND IS ALREADY CALLLING
               // VIDEO CALL
               await Navigator.push(
                 context,
@@ -89,7 +91,8 @@ class _ConversationState extends State<Conversation> {
                         // channel: 'test', //localuseruid-frienduid
                         connected: null,
                         id: null,
-                        rejected: null),
+                        rejected: null,
+                        isVideoCall: true),
                   );
                 }),
               );
@@ -123,7 +126,8 @@ class _ConversationState extends State<Conversation> {
                             '${Provider.of<ProfileModel>(context, listen: false).userDetails['uid']}-${widget.friendUid}',
                         connected: null,
                         id: null,
-                        rejected: null),
+                        rejected: null,
+                        isVideoCall: false),
                   );
                 }),
               );

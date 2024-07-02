@@ -40,19 +40,19 @@ class _LoginState extends State<Login> {
       final authProvider = context.read<AuthModel>();
 
       if (loginFormKey.currentState?.validate() ?? false) {
-        authProvider
+        await authProvider
             .loginUser(
                 emailController.text.trim(), passwordController.text.trim())
-            .then((_) {
+            .then((_) async {
           emailController.clear();
           passwordController.clear();
 
-          authProvider.checkExistingUserDetails().then((response) {
+          await authProvider.checkExistingUserDetails().then((response) async {
             setState(() {
               isLoading = false;
             });
             if (response) {
-              Provider.of<ProfileModel>(context, listen: false)
+              await Provider.of<ProfileModel>(context, listen: false)
                   .fetchUserDetails(authProvider.user!);
 
               Navigator.of(context).pushAndRemoveUntil(

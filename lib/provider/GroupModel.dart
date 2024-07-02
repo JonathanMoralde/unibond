@@ -69,6 +69,7 @@ class GroupModel extends ChangeNotifier {
           final QuerySnapshot<Map<String, dynamic>> nonMemberResult =
               await nonMemberQuery.get();
           if (nonMemberResult.docs.isNotEmpty) {
+            print('line 72');
             _lastNonMemberDocument = nonMemberResult.docs.last;
 
             final nonMemberGroups = nonMemberResult.docs
@@ -128,6 +129,8 @@ class GroupModel extends ChangeNotifier {
     _groupList = [];
     _lastMemberDocument = null;
     _lastNonMemberDocument = null;
+    _hasMoreData = true;
+    _isFetching = false;
     notifyListeners();
   }
 }

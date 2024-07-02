@@ -3,13 +3,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/pages/MainLayout.dart';
 import 'package:unibond/provider/CreateGroupChatModel.dart';
+import 'package:unibond/provider/GroupModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
 import 'package:unibond/widgets/styledButton.dart';
 import 'package:unibond/widgets/styledTextFormField.dart';
 
 class CreateGroupChat extends StatefulWidget {
-  const CreateGroupChat({super.key});
+  final bool? isEdit;
+  final Map<String, dynamic>? groupData;
+  const CreateGroupChat({super.key, this.isEdit, this.groupData});
 
   @override
   State<CreateGroupChat> createState() => _CreateGroupChatState();
@@ -17,6 +21,8 @@ class CreateGroupChat extends StatefulWidget {
 
 class _CreateGroupChatState extends State<CreateGroupChat> {
   final scrollController = ScrollController();
+
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -46,21 +52,81 @@ class _CreateGroupChatState extends State<CreateGroupChat> {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          GestureDetector(
-            onTap: () {
-              Provider.of<CreateGroupChatModel>(context, listen: false)
-                  .createGroupChat(
-                      Provider.of<ProfileModel>(context, listen: false)
-                          .userDetails);
-            },
-            child: const Padding(
-              padding: EdgeInsets.only(right: 16.0),
-              child: Text(
-                'CREATE',
-                style: TextStyle(fontWeight: FontWeight.bold),
+          if (!isLoading && widget.isEdit == null)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  isLoading = true;
+                });
+                Provider.of<CreateGroupChatModel>(context, listen: false)
+                    .createGroupChat(
+                        Provider.of<ProfileModel>(context, listen: false)
+                            .userDetails)
+                    .then((_) {
+                  Provider.of<GroupModel>(context, listen: false).resetState();
+
+                  Future.delayed(Duration(seconds: 2), () {
+                    Provider.of<GroupModel>(context, listen: false)
+                        .fetchGroups();
+                  });
+
+                  setState(() {
+                    isLoading = false;
+                  });
+                });
+              },
+              child: const Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                child: Text(
+                  'CREATE',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
-          )
+          if (isLoading)
+            const Padding(
+              padding: EdgeInsets.only(right: 16.0),
+              child: CircularProgressIndicator(),
+            ),
+          if (widget.isEdit != null && widget.isEdit == true && !isLoading)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  isLoading = true;
+                });
+                Provider.of<CreateGroupChatModel>(context, listen: false)
+                    .editGroup(
+                        Provider.of<ProfileModel>(context, listen: false)
+                            .userDetails,
+                        widget.groupData!)
+                    .then((_) {
+                  Provider.of<GroupModel>(context, listen: false).resetState();
+
+                  Future.delayed(Duration(seconds: 2), () {
+                    Provider.of<GroupModel>(context, listen: false)
+                        .fetchGroups();
+
+                    setState(() {
+                      isLoading = false;
+                    });
+
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => MainLayout(),
+                      ),
+                      (route) => false,
+                    );
+                  });
+                });
+              },
+              child: const Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                child: Text(
+                  'SAVE',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
         ],
       ),
       body: Consumer<CreateGroupChatModel>(builder: (context, value, child) {
@@ -136,23 +202,24 @@ class _CreateGroupChatState extends State<CreateGroupChat> {
                           textAlign: TextAlign.center,
                           // style: TextStyle(fontSize: 12),
                           controller: value.nameController,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             isDense: true,
-                            hintText: 'Enter a group name',
+                            hintText:
+                                'Enter ${widget.isEdit != null && widget.isEdit == true ? 'new' : 'a'} group name',
                             // hintStyle: TextStyle(fontSize: 12),
-                            focusedBorder: OutlineInputBorder(
+                            focusedBorder: const OutlineInputBorder(
                                 borderSide:
                                     BorderSide(color: Color(0xff00B0FF)),
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(16))),
-                            border: OutlineInputBorder(
+                            border: const OutlineInputBorder(
                                 borderSide: BorderSide.none,
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(16))),
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your bio';
+                              return 'Please enter group name';
                             }
                             return null;
                           },
@@ -173,16 +240,17 @@ class _CreateGroupChatState extends State<CreateGroupChat> {
                           minLines: 1,
                           maxLines: 4,
                           maxLength: 111,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             isDense: true,
-                            hintText: 'Add a brief description',
+                            hintText:
+                                'Add ${widget.isEdit != null && widget.isEdit == true ? 'new' : 'a'}a brief description',
                             // hintStyle: TextStyle(fontSize: 12),
-                            focusedBorder: OutlineInputBorder(
+                            focusedBorder: const OutlineInputBorder(
                                 borderSide:
                                     BorderSide(color: Color(0xff00B0FF)),
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(16))),
-                            border: OutlineInputBorder(
+                            border: const OutlineInputBorder(
                                 borderSide: BorderSide.none,
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(16))),
@@ -198,101 +266,104 @@ class _CreateGroupChatState extends State<CreateGroupChat> {
                     ],
                   ),
                 ),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                      border: Border.symmetric(
-                          vertical: BorderSide(color: Colors.grey.shade300))),
-                  child: const Text(
-                    "Add member to the group",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                if (widget.isEdit == null)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                        border: Border.symmetric(
+                            vertical: BorderSide(color: Colors.grey.shade300))),
+                    child: const Text(
+                      "Add member to the group",
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey,
+                      ),
                     ),
                   ),
-                ),
-                StyledButton(
-                  btnText: 'Search by name',
-                  onClick: () {},
-                  isBorder: true,
-                  borderColor: Colors.grey.shade300,
-                  noShadow: true,
-                  borderRadius: BorderRadius.circular(0),
-                  btnColor: const Color(0xffE4ECEF),
-                  textColor: Colors.grey,
-                  btnWidth: double.infinity,
-                  btnIcon: const Icon(Icons.search),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    controller: scrollController,
-                    itemCount: value.memberSuggestions.length +
-                        (value.hasMoreData ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index < value.memberSuggestions.length) {
-                        final user = value.memberSuggestions[index];
-                        final isSelected =
-                            value.selectedUsers.contains(user['uid']);
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xffE4ECEF),
-                            border: Border(
-                              left: BorderSide(color: Colors.grey.shade300),
-                              right: BorderSide(color: Colors.grey.shade300),
-                              bottom: BorderSide(color: Colors.grey.shade300),
-                            ),
-                          ),
-                          child: CheckboxListTile(
-                            title: Row(
-                              children: [
-                                user['profile_pic'] != null &&
-                                        (user['profile_pic'] as String)
-                                            .isNotEmpty
-                                    ? CircleAvatar(
-                                        backgroundImage:
-                                            NetworkImage(user['profile_pic']),
-                                        maxRadius: 20,
-                                      )
-                                    : const CircleAvatar(
-                                        backgroundImage: AssetImage(
-                                            'lib/assets/default_profile_pic.png'),
-                                        maxRadius: 20,
-                                      ),
-                                const SizedBox(
-                                  width: 5,
-                                ),
-                                Expanded(
-                                    child: Text(
-                                  user['full_name'],
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600),
-                                )),
-                              ],
-                            ),
-                            value: isSelected,
-                            onChanged: (bool? selected) {
-                              if (selected == true) {
-                                value.addUser(user['uid']);
-                              } else {
-                                value.removeUser(user['uid']);
-                              }
-                            },
-                          ),
-                        );
-                      } else if (value.hasMoreData) {
-                        // Show a loading indicator if there is more data to fetch
-                        return Center(child: CircularProgressIndicator());
-                      } else {
-                        // No more data to fetch
-                        return SizedBox.shrink();
-                      }
-                    },
+                if (widget.isEdit == null)
+                  StyledButton(
+                    btnText: 'Search by name',
+                    onClick: () {},
+                    isBorder: true,
+                    borderColor: Colors.grey.shade300,
+                    noShadow: true,
+                    borderRadius: BorderRadius.circular(0),
+                    btnColor: const Color(0xffE4ECEF),
+                    textColor: Colors.grey,
+                    btnWidth: double.infinity,
+                    btnIcon: const Icon(Icons.search),
                   ),
-                ),
+                if (widget.isEdit == null)
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: value.memberSuggestions.length +
+                          (value.hasMoreData ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index < value.memberSuggestions.length) {
+                          final user = value.memberSuggestions[index];
+                          final isSelected =
+                              value.selectedUsers.contains(user['uid']);
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xffE4ECEF),
+                              border: Border(
+                                left: BorderSide(color: Colors.grey.shade300),
+                                right: BorderSide(color: Colors.grey.shade300),
+                                bottom: BorderSide(color: Colors.grey.shade300),
+                              ),
+                            ),
+                            child: CheckboxListTile(
+                              title: Row(
+                                children: [
+                                  user['profile_pic'] != null &&
+                                          (user['profile_pic'] as String)
+                                              .isNotEmpty
+                                      ? CircleAvatar(
+                                          backgroundImage:
+                                              NetworkImage(user['profile_pic']),
+                                          maxRadius: 20,
+                                        )
+                                      : const CircleAvatar(
+                                          backgroundImage: AssetImage(
+                                              'lib/assets/default_profile_pic.png'),
+                                          maxRadius: 20,
+                                        ),
+                                  const SizedBox(
+                                    width: 5,
+                                  ),
+                                  Expanded(
+                                      child: Text(
+                                    user['full_name'],
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600),
+                                  )),
+                                ],
+                              ),
+                              value: isSelected,
+                              onChanged: (bool? selected) {
+                                if (selected == true) {
+                                  value.addUser(user['uid']);
+                                } else {
+                                  value.removeUser(user['uid']);
+                                }
+                              },
+                            ),
+                          );
+                        } else if (value.hasMoreData) {
+                          // Show a loading indicator if there is more data to fetch
+                          return Center(child: CircularProgressIndicator());
+                        } else {
+                          // No more data to fetch
+                          return SizedBox.shrink();
+                        }
+                      },
+                    ),
+                  ),
               ],
             ),
           ),

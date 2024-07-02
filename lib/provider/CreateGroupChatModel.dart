@@ -169,6 +169,149 @@ class CreateGroupChatModel extends ChangeNotifier {
     }
   }
 
+  Future<void> editGroup(
+      Map<String, dynamic> _userDetails, Map<String, dynamic> groupData) async {
+    try {
+      // fetch the group uid
+      final groupResult = await FirebaseFirestore.instance
+          .collection('groups')
+          .where('group_name', isEqualTo: groupData['group_name'])
+          .get();
+      final groupId = groupResult.docs.first.id;
+
+      // Upload the image to Firebase Storage
+      final userUid = _userDetails['uid'];
+
+      final String userName = _userDetails['full_name'];
+      final String userProfPic = _userDetails['profile_pic'];
+
+      if (image != null) {
+        final storageRef = FirebaseStorage.instance.ref().child(
+            'group_chat/${nameController.text}/group_pic/${DateTime.now().microsecondsSinceEpoch}.jpg');
+        await storageRef.putFile(File(image!.path));
+
+        // Get the download URL of the uploaded image
+        final imageUrl = await storageRef.getDownloadURL();
+
+        await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(groupId)
+            .update({
+          'group_pic': imageUrl,
+          'latest_chat_message': '$userName changed the group photo',
+          'latest_chat_user': userUid,
+          'latest_timestamp': Timestamp.now(),
+        });
+
+        await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(groupId)
+            .collection('messages')
+            .add({
+          'is_read': false,
+          'content': '$userName changed the group photo',
+          'sender_id': userUid,
+          'timestamp': Timestamp.now(),
+          'type': 'notify',
+          'sender_name': userName,
+          'sender_profile_pic': userProfPic,
+        });
+
+        final query = await FirebaseFirestore.instance
+            .collection('notification')
+            .where('is_group', isEqualTo: true)
+            .where('chat_doc_id', isEqualTo: groupId)
+            .get();
+
+        if (query.docs.isNotEmpty) {
+          for (final doc in query.docs) {
+            await FirebaseFirestore.instance
+                .collection('notification')
+                .doc(doc.id)
+                .update({'group_pic': imageUrl});
+          }
+        }
+      }
+
+      if (nameController.text.isNotEmpty) {
+        await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(groupId)
+            .update({
+          'group_name': nameController.text,
+          'latest_chat_message':
+              '$userName changed the group name to ${nameController.text}',
+          'latest_chat_user': userUid,
+          'latest_timestamp': Timestamp.now(),
+        });
+
+        await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(groupId)
+            .collection('messages')
+            .add({
+          'is_read': false,
+          'content':
+              '$userName changed the group name to ${nameController.text}',
+          'sender_id': userUid,
+          'timestamp': Timestamp.now(),
+          'type': 'notify',
+          'sender_name': userName,
+          'sender_profile_pic': userProfPic,
+        });
+
+        final query = await FirebaseFirestore.instance
+            .collection('notification')
+            .where('is_group', isEqualTo: true)
+            .where('chat_doc_id', isEqualTo: groupId)
+            .get();
+
+        if (query.docs.isNotEmpty) {
+          for (final doc in query.docs) {
+            await FirebaseFirestore.instance
+                .collection('notification')
+                .doc(doc.id)
+                .update({'group_name': nameController.text});
+          }
+        }
+      }
+
+      if (descriptionController.text.isNotEmpty) {
+        await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(groupId)
+            .update({
+          'group_description': descriptionController.text,
+          'latest_chat_message': '$userName changed the group description',
+          'latest_chat_user': userUid,
+          'latest_timestamp': Timestamp.now(),
+        });
+
+        await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(groupId)
+            .collection('messages')
+            .add({
+          'is_read': false,
+          'content': '$userName changed the group description',
+          'sender_id': userUid,
+          'timestamp': Timestamp.now(),
+          'type': 'notify',
+          'sender_name': userName,
+          'sender_profile_pic': userProfPic,
+        });
+      }
+    } catch (e) {
+      print('failed to edit group chat: $e');
+    } finally {
+      nameController.clear();
+      descriptionController.clear();
+      image = null;
+      _selectedUsers = [];
+      notifyListeners();
+    }
+  }
+
   void reset() {
     _selectedUsers = [];
     nameController.clear();

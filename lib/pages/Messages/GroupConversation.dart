@@ -7,7 +7,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/model/GroupCallModel.dart';
 import 'package:unibond/model/GroupIndivMessage.dart';
+import 'package:unibond/pages/Messages/GroupCallPage.dart';
 import 'package:unibond/pages/Messages/GroupChatDetails.dart';
 import 'package:unibond/provider/GroupConversationModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
@@ -65,7 +67,54 @@ class _GroupConversationState extends State<GroupConversation> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              // TODO CHECK IF ALREADY CALLING
+
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => GroupCallPage(
+                    chatDocId: Provider.of<GroupConversationModel>(context,
+                            listen: false)
+                        .chatDocId!,
+                    userUid: Provider.of<ProfileModel>(context, listen: false)
+                        .userDetails['uid'],
+                    call: GroupCallModel(
+                        id: null,
+                        channel: widget.groupData['group_name'],
+                        caller:
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['uid'],
+                        callerName:
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['full_name'],
+                        groupName: widget.groupData['group_name'],
+                        active: true,
+                        members: (widget.groupData['members'] as List<dynamic>)
+                            .map((e) => e.toString())
+                            .toList(),
+                        joined: [
+                          Provider.of<ProfileModel>(context, listen: false)
+                              .userDetails['uid']
+                        ],
+                        rejected: [],
+                        isVideoCall: true),
+                  ),
+                ),
+              );
+
+              final groupConversationModel =
+                  Provider.of<GroupConversationModel>(context, listen: false);
+
+              Future.delayed(Duration(seconds: 3), () {
+                groupConversationModel.sendMessage(
+                    '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a video call',
+                    Provider.of<ProfileModel>(context, listen: false)
+                        .userDetails['full_name'],
+                    Provider.of<ProfileModel>(context, listen: false)
+                        .userDetails['profile_pic'],
+                    'notify');
+              });
+            },
             icon: const Icon(
               Icons.videocam,
               color: Colors.black,
@@ -74,7 +123,52 @@ class _GroupConversationState extends State<GroupConversation> {
             constraints: const BoxConstraints(),
           ),
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (BuildContext context) => GroupCallPage(
+                    chatDocId: Provider.of<GroupConversationModel>(context,
+                            listen: false)
+                        .chatDocId!,
+                    userUid: Provider.of<ProfileModel>(context, listen: false)
+                        .userDetails['uid'],
+                    call: GroupCallModel(
+                        id: null,
+                        channel: widget.groupData['group_name'],
+                        caller:
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['uid'],
+                        callerName:
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['full_name'],
+                        groupName: widget.groupData['group_name'],
+                        active: true,
+                        members: (widget.groupData['members'] as List<dynamic>)
+                            .map((e) => e.toString())
+                            .toList(),
+                        joined: [
+                          Provider.of<ProfileModel>(context, listen: false)
+                              .userDetails['uid']
+                        ],
+                        rejected: [],
+                        isVideoCall: false),
+                  ),
+                ),
+              );
+
+              final groupConversationModel =
+                  Provider.of<GroupConversationModel>(context, listen: false);
+
+              Future.delayed(Duration(seconds: 3), () {
+                groupConversationModel.sendMessage(
+                    '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a call',
+                    Provider.of<ProfileModel>(context, listen: false)
+                        .userDetails['full_name'],
+                    Provider.of<ProfileModel>(context, listen: false)
+                        .userDetails['profile_pic'],
+                    'notify');
+              });
+            },
             icon: const Icon(
               Icons.call,
               color: Colors.black,
@@ -364,7 +458,8 @@ class _GroupConversationState extends State<GroupConversation> {
                           .sendMessage(
                               chatController.text,
                               profileModel.userDetails['full_name'],
-                              profileModel.userDetails['profile_pic'])
+                              profileModel.userDetails['profile_pic'],
+                              'text')
                           .then((_) {
                         groupConversationModel.messageNotification(
                             widget.groupData['group_name'],

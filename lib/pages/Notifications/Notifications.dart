@@ -20,6 +20,7 @@ class _NotificationsState extends State<Notifications> {
     super.initState();
     final notificationModel =
         Provider.of<NotificationModel>(context, listen: false);
+
     notificationModel.fetchNotif();
 
     _scrollController.addListener(() {

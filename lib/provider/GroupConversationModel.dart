@@ -89,7 +89,7 @@ class GroupConversationModel extends ChangeNotifier {
   }
 
   Future<void> sendMessage(
-      String message, String userName, String userProfPic) async {
+      String message, String userName, String userProfPic, String type) async {
     if (message.isNotEmpty) {
       final uid = FirebaseAuth.instance.currentUser!.uid;
 
@@ -111,7 +111,7 @@ class GroupConversationModel extends ChangeNotifier {
             'sender_name': userName,
             'sender_profile_pic': userProfPic,
             'timestamp': timeSent,
-            'type': 'text'
+            'type': type
           });
 
           await chatDoc.update({

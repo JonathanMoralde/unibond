@@ -1,8 +1,10 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/model/CallModel.dart';
+import 'package:unibond/model/GroupCallModel.dart';
 import 'package:unibond/pages/Events/Events.dart';
 import 'package:unibond/pages/Messages/Chats.dart';
 import 'package:unibond/pages/Messages/Friends.dart';
@@ -121,67 +123,149 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                       MyProfile(),
                     ],
                   ),
-            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: value.watchCalls(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                  print(snapshot.data?.docs.first);
-                  var callData = snapshot.data!.docs.first;
-                  var callDataMap =
-                      snapshot.data!.docs.first.data() as Map<String, dynamic>;
-                  var call = CallModel(
+            if (FirebaseAuth.instance.currentUser?.uid != null)
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: value.watchCalls(),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                    print(snapshot.data?.docs.first);
+                    var callData = snapshot.data!.docs.first;
+                    var callDataMap = snapshot.data!.docs.first.data()
+                        as Map<String, dynamic>;
+                    var call = CallModel(
+                        id: callData.id,
+                        channel: callDataMap['channel'],
+                        caller: callDataMap['caller_uid'],
+                        callerName: callDataMap['caller_name'],
+                        called: callDataMap['called_uid'],
+                        active: callDataMap['active'],
+                        accepted: callDataMap['accepted'],
+                        rejected: callDataMap['rejected'],
+                        connected: callDataMap['connected'],
+                        isVideoCall: callDataMap['is_video_call']);
+
+                    if (call.id != value.lastCallId &&
+                        call.active != null &&
+                        call.active == true &&
+                        call.accepted != null &&
+                        call.accepted == false &&
+                        call.rejected != null &&
+                        call.rejected == false &&
+                        call.connected != null &&
+                        call.connected == false) {
+                      value.setLastCallId(call.id!);
+
+                      // Show notification
+                      NotificationService.showNotification(
+                        title: 'Incoming Call',
+                        body:
+                            'You have an incoming call from ${call.callerName}',
+                        payload: {
+                          'navigate': 'true',
+                          'callId': call.id!,
+                          'channelName': '${call.caller}-${call.called}',
+                          'caller': call.caller,
+                          'callerName': call.callerName,
+                          'called': call.called,
+                          'isVideoCall': call.isVideoCall.toString()
+                        },
+                        category: NotificationCategory.Call,
+                        actionButtons: [
+                          NotificationActionButton(
+                            key: 'ACCEPT',
+                            label: 'Accept',
+                            actionType: ActionType.Default,
+                          ),
+                          NotificationActionButton(
+                            key: 'REJECT',
+                            label: 'Reject',
+                            actionType: ActionType.Default,
+                          ),
+                        ],
+                      );
+                    }
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
+
+            // TODO ANOTHER STREAMBUILDER FOR GROUP CALLS
+            if (FirebaseAuth.instance.currentUser?.uid != null)
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: value.watchGroupCalls(),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                    print(snapshot.data?.docs.first);
+                    var callData = snapshot.data!.docs.first;
+                    var callDataMap = snapshot.data!.docs.first.data()
+                        as Map<String, dynamic>;
+
+                    var call = GroupCallModel(
                       id: callData.id,
                       channel: callDataMap['channel'],
                       caller: callDataMap['caller_uid'],
                       callerName: callDataMap['caller_name'],
-                      called: callDataMap['called_uid'],
+                      groupName: callDataMap['group_name'],
+                      joined: (callDataMap['joined'] as List<dynamic>)
+                          .map((e) => e.toString())
+                          .toList(),
+                      members: (callDataMap['members'] as List<dynamic>)
+                          .map((e) => e.toString())
+                          .toList(),
                       active: callDataMap['active'],
-                      accepted: callDataMap['accepted'],
-                      rejected: callDataMap['rejected'],
-                      connected: callDataMap['connected']);
-
-                  if (call.id != value.lastCallId &&
-                      call.active != null &&
-                      call.active == true &&
-                      call.accepted != null &&
-                      call.accepted == false &&
-                      call.rejected != null &&
-                      call.rejected == false &&
-                      call.connected != null &&
-                      call.connected == false) {
-                    value.setLastCallId(call.id!);
-
-                    // Show notification
-                    NotificationService.showNotification(
-                      title: 'Incoming Call',
-                      body: 'You have an incoming call from ${call.callerName}',
-                      payload: {
-                        'navigate': 'true',
-                        'callId': call.id!,
-                        'channelName': '${call.caller}-${call.called}',
-                        'caller': call.caller,
-                        'callerName': call.callerName,
-                        'called': call.called,
-                      },
-                      actionButtons: [
-                        NotificationActionButton(
-                          key: 'ACCEPT',
-                          label: 'Accept',
-                          actionType: ActionType.Default,
-                        ),
-                        NotificationActionButton(
-                          key: 'REJECT',
-                          label: 'Reject',
-                          actionType: ActionType.Default,
-                        ),
-                      ],
+                      isVideoCall: callDataMap['is_video_call'],
+                      rejected:
+                          ((callDataMap['rejected'] ?? []) as List<dynamic>)
+                              .map((e) => e.toString())
+                              .toList(),
                     );
-                  }
-                }
 
-                return const SizedBox.shrink();
-              },
-            )
+                    if (call.id != value.lastCallId &&
+                        call.active != null &&
+                        call.active == true &&
+                        !call.rejected.contains(
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['uid'])) {
+                      value.setLastCallId(call.id!);
+
+                      // Show notification
+                      NotificationService.showNotification(
+                        title: 'Incoming Call',
+                        body:
+                            '${call.callerName} started a group call in ${call.groupName}',
+                        payload: {
+                          'navigate': 'true',
+                          'callId': call.id!,
+                          'channelName': call.channel,
+                          'caller': call.caller,
+                          'callerName': call.callerName,
+                          'groupName': call.groupName,
+                          'joined': call.joined.join(','),
+                          'rejeceted': call.rejected.join(','),
+                          'chatDocId': callDataMap['chat_doc_id'],
+                          'isVideoCall': call.isVideoCall.toString()
+                        },
+                        category: NotificationCategory.Call,
+                        actionButtons: [
+                          NotificationActionButton(
+                            key: 'ACCEPT',
+                            label: 'Accept',
+                            actionType: ActionType.Default,
+                          ),
+                          NotificationActionButton(
+                            key: 'REJECT',
+                            label: 'Reject',
+                            actionType: ActionType.Default,
+                          ),
+                        ],
+                      );
+                    }
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              )
           ],
         ),
         bottomNavigationBar: const BottomNavBar(),

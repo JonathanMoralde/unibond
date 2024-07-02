@@ -137,8 +137,8 @@ class SideMenu extends StatelessWidget {
                 'Logout',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              onTap: () {
-                authModel.signOut().then((_) {
+              onTap: () async {
+                await authModel.signOut().then((_) {
                   Provider.of<EditProfileModel>(context, listen: false)
                       .resetState();
                   Provider.of<ProfileModel>(context, listen: false)

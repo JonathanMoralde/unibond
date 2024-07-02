@@ -29,6 +29,19 @@ class NavigationModel extends ChangeNotifier {
     return result;
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> watchGroupCalls() {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    final result = FirebaseFirestore.instance
+        .collection('group_calls')
+        .where('caller_uid', isNotEqualTo: uid)
+        .where('members', arrayContains: uid)
+        .where('active', isEqualTo: true)
+        .snapshots();
+
+    return result;
+  }
+
   void setLastCallId(String id) {
     lastCallId = id;
     // notifyListeners();

@@ -22,14 +22,16 @@ class _GroupCardState extends State<GroupCard> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    Provider.of<GroupChatDetailsModel>(context, listen: false)
+    fetch();
+  }
+
+  Future<void> fetch() async {
+    await Provider.of<GroupChatDetailsModel>(context, listen: false)
         .fetchMembers((widget.groupData['members'] as List<dynamic>)
             .map((e) => e.toString())
             .toList())
         .then((list) {
-      setState(() {
-        membersList = list;
-      });
+      membersList.addAll(list);
     });
   }
 

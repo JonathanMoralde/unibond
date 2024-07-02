@@ -7,6 +7,8 @@ import 'package:unibond/pages/Events/EventDetails.dart';
 import 'package:unibond/pages/Messages/Conversation.dart';
 import 'package:unibond/pages/Messages/GroupConversation.dart';
 import 'package:unibond/pages/Messages/ProfileView.dart';
+import 'package:unibond/provider/ChatsModel.dart';
+import 'package:unibond/provider/ConversationModel.dart';
 import 'package:unibond/provider/FriendsModel.dart';
 import 'package:unibond/provider/NotificationModel.dart';
 
@@ -117,11 +119,15 @@ class _NotifcationCardState extends State<NotifcationCard> {
                       widget.isMessage == true &&
                       widget.isFriendRequest == false &&
                       widget.isFriendAccept == false) {
+                    Provider.of<ConversationModel>(context, listen: false)
+                        .setChatDocId(widget.chatDocId);
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (BuildContext context) => Conversation(
-                            friendName: widget.fromName,
-                            friendUid: widget.fromUid!),
+                          friendName: widget.fromName,
+                          friendUid: widget.fromUid!,
+                          friendProfilePic: widget.img,
+                        ),
                       ),
                     );
                   } else if (widget.isEvent == false &&

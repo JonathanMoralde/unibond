@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/pages/MainLayout.dart';
+import 'package:unibond/pages/Messages/CreateGroupChat.dart';
+import 'package:unibond/pages/Messages/GroupRequests.dart';
 import 'package:unibond/provider/GroupChatDetailsModel.dart';
+import 'package:unibond/provider/GroupModel.dart';
+import 'package:unibond/provider/ProfileModel.dart';
 
 class GroupChatDetails extends StatefulWidget {
   final bool isMember;
@@ -16,12 +22,17 @@ class GroupChatDetails extends StatefulWidget {
 class _GroupChatDetailsState extends State<GroupChatDetails> {
   XFile? image;
 
+  Map<String, dynamic>? groupDataState;
+
   @override
   void initState() {
     super.initState();
+    setState(() {
+      groupDataState = widget.groupData;
+    });
 
     Provider.of<GroupChatDetailsModel>(context, listen: false).fetchMembersData(
-        (widget.groupData['members'] as List<dynamic>)
+        (groupDataState!['members'] as List<dynamic>)
             .map((e) => e.toString())
             .toList());
   }
@@ -32,9 +43,93 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
       appBar: AppBar(
         actions: [
           if (widget.isMember)
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.more_vert),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert), // Icon for the button
+              itemBuilder: (BuildContext context) {
+                List<PopupMenuEntry<String>> items = [];
+
+                // change group pic
+                items.add(
+                  const PopupMenuItem<String>(
+                    value: 'editgroup',
+                    child: Text('Edit Group'),
+                  ),
+                );
+
+                // join request
+                items.add(
+                  const PopupMenuItem<String>(
+                    value: 'joinrequests',
+                    child: Text('Join requests'),
+                  ),
+                );
+
+                // leave group
+                items.add(
+                  const PopupMenuItem<String>(
+                    value: 'leavegroup',
+                    child: Text('Leave group chat'),
+                  ),
+                );
+
+                return items;
+              },
+              onSelected: (String value) {
+                switch (value) {
+                  // Handle additional cases if needed
+                  case 'editgroup':
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => CreateGroupChat(
+                          isEdit: true,
+                          groupData: groupDataState,
+                        ),
+                      ),
+                    );
+                    break;
+                  case 'joinrequests':
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => GroupRequests(
+                          groupName: groupDataState!['group_name'],
+                        ),
+                      ),
+                    );
+                    break;
+                  case 'leavegroup':
+                    if ((groupDataState!['admin'] as List<dynamic>).contains(
+                            Provider.of<ProfileModel>(context, listen: false)
+                                .userDetails['uid']) &&
+                        (groupDataState!['admin'] as List<dynamic>).length ==
+                            1) {
+                      Fluttertoast.showToast(
+                          msg: 'Set a new admin first before leaving group',
+                          gravity: ToastGravity.CENTER);
+                    } else {
+                      Provider.of<GroupChatDetailsModel>(context, listen: false)
+                          .leaveGroup(groupDataState!['group_name'])
+                          .then((_) {
+                        Provider.of<GroupModel>(context, listen: false)
+                            .resetState();
+
+                        Future.delayed(Duration(seconds: 2), () {
+                          Provider.of<GroupModel>(context, listen: false)
+                              .fetchGroups()
+                              .then((_) {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      MainLayout()),
+                              (route) => false,
+                            );
+                          });
+                        });
+                      });
+                    }
+                    break;
+                }
+              },
             ),
           if (!widget.isMember)
             Padding(
@@ -87,12 +182,12 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
                               width: 2.0, // Border width
                             ),
                           ),
-                          child: widget.groupData['group_pic'] != null &&
-                                  (widget.groupData['group_pic'] as String)
+                          child: groupDataState?['group_pic'] != null &&
+                                  (groupDataState?['group_pic'] as String)
                                       .isNotEmpty
                               ? CircleAvatar(
                                   backgroundImage: NetworkImage(
-                                      widget.groupData['group_pic']),
+                                      groupDataState!['group_pic']),
                                   maxRadius: 40,
                                 )
                               : const Icon(
@@ -107,7 +202,7 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
 
                         // GROUP NAME
                         Text(
-                          widget.groupData['group_name'],
+                          groupDataState?['group_name'] ?? '',
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
 
@@ -117,7 +212,7 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
 
                         // GROUP DESCRIPTION
                         Text(
-                          widget.groupData['group_description'],
+                          groupDataState?['group_description'] ?? '',
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -130,7 +225,7 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
                         border: Border.symmetric(
                             vertical: BorderSide(color: Colors.grey.shade300))),
                     child: Text(
-                      "Members in ${widget.groupData['group_name']} (${(widget.groupData['members'] as List<dynamic>).map((e) => e.toString()).toList().length})",
+                      "Members in ${groupDataState!['group_name']} (${(groupDataState!['members'] as List<dynamic>).map((e) => e.toString()).toList().length})",
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -181,14 +276,139 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
                                   fontSize: 16, fontWeight: FontWeight.w600),
                             ),
                           ),
-                          if ((widget.groupData['admin'] as List<dynamic>)
+                          if ((groupDataState!['admin'] as List<dynamic>)
                               .map((e) => e.toString())
                               .toList()
                               .contains(student['uid']))
                             const Text('(admin)'),
+
+                          // IF CURRENT USER IS ADMIN
+                          if ((groupDataState!['admin'] as List<dynamic>)
+                              .map((e) => e.toString())
+                              .toList()
+                              .contains(Provider.of<ProfileModel>(context,
+                                      listen: false)
+                                  .userDetails['uid']))
+                            PopupMenuButton<String>(
+                              icon: const Icon(
+                                  Icons.more_vert), // Icon for the button
+                              itemBuilder: (BuildContext context) {
+                                List<PopupMenuEntry<String>> items = [];
+
+                                // Remove
+                                if (((groupDataState!['admin'] as List<dynamic>)
+                                        .map((e) => e.toString())
+                                        .toList()
+                                        .contains(student['uid'])) &&
+                                    (groupDataState!['admin'] as List<dynamic>)
+                                            .length >
+                                        1) {
+                                  items.add(
+                                    const PopupMenuItem<String>(
+                                      value: 'removeadmin',
+                                      child: Text('Remove Admin'),
+                                    ),
+                                  );
+                                }
+
+                                // Make
+                                if (!((groupDataState!['admin']
+                                        as List<dynamic>)
+                                    .map((e) => e.toString())
+                                    .toList()
+                                    .contains(student['uid']))) {
+                                  items.add(
+                                    const PopupMenuItem<String>(
+                                      value: 'makeadmin',
+                                      child: Text('Make Admin'),
+                                    ),
+                                  );
+                                }
+
+                                // remove member
+                                if (student['uid'] !=
+                                    Provider.of<ProfileModel>(context,
+                                            listen: false)
+                                        .userDetails['uid'])
+                                  items.add(
+                                    const PopupMenuItem<String>(
+                                      value: 'removemember',
+                                      child: Text('Remove Member'),
+                                    ),
+                                  );
+
+                                return items;
+                              },
+                              onSelected: (String value) {
+                                switch (value) {
+                                  // Handle additional cases if needed
+                                  case 'removeadmin':
+                                    groupChatDetailsModel.removeAdmin(
+                                        student['uid'],
+                                        groupDataState!['group_name']);
+                                    setState(() {
+                                      (groupDataState!['admin']
+                                              as List<dynamic>)
+                                          .remove(student['uid']);
+                                    });
+                                    break;
+                                  case 'makeadmin':
+                                    groupChatDetailsModel.makeAdmin(
+                                        student['uid'],
+                                        groupDataState!['group_name']);
+                                    setState(() {
+                                      (groupDataState!['admin']
+                                              as List<dynamic>)
+                                          .add(student['uid']);
+                                    });
+                                    break;
+                                  case 'removemember':
+                                    groupChatDetailsModel.removeMember(
+                                        student['uid'],
+                                        groupDataState!['group_name']);
+                                    groupChatDetailsModel
+                                        .removeMemberinList(student['uid']);
+                                    break;
+                                }
+                              },
+                            ),
                         ],
                       ),
                     ),
+                  InkWell(
+                    onTap: () {},
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xffE4ECEF),
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.grey.shade300,
+                          ),
+                          left: BorderSide(
+                            color: Colors.grey.shade300,
+                          ),
+                          right: BorderSide(
+                            color: Colors.grey.shade300,
+                          ),
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.person_add),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            "Add people",
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w600),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
                   Container(
                     decoration: BoxDecoration(
                         border: Border(

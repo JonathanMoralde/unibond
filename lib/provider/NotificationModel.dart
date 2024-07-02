@@ -15,6 +15,7 @@ class NotificationModel extends ChangeNotifier {
   Future<void> fetchNotif({bool loadMore = false}) async {
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
+      print('fetching $uid');
 
       Query query = FirebaseFirestore.instance
           .collection("notification")
@@ -32,26 +33,44 @@ class NotificationModel extends ChangeNotifier {
         _hasMore = false;
       }
 
+      if (querySnapshot.docs.isEmpty) {
+        _hasMore = false;
+        print("No more notifications to load.");
+        notifyListeners();
+        return;
+      }
+
       List<Map<String, dynamic>> tempNotifications = [];
 
       for (var doc in querySnapshot.docs) {
         Map<String, dynamic> tempData = doc.data() as Map<String, dynamic>;
         tempData['docId'] = doc.id;
         if (tempData['is_group'] || tempData['is_event']) {
-          final result = await FirebaseFirestore.instance
+          final groupResult = await FirebaseFirestore.instance
               .collection('groups')
               .where('group_name', isEqualTo: tempData['group_name'])
               .get();
 
-          tempData['pic'] = result.docs.first.data()['group_pic'];
-          tempData['group_data'] = result.docs.first.data();
+          // tempData['pic'] = groupResult .docs.first.data()['group_pic'];
+          // tempData['group_data'] = groupResult .docs.first.data();
+          if (groupResult.docs.isNotEmpty) {
+            tempData['pic'] = groupResult.docs.first.data()['group_pic'];
+            tempData['group_data'] = groupResult.docs.first.data();
+          } else {
+            print("No group found for group_name: ${tempData['group_name']}");
+          }
         } else {
-          final result = await FirebaseFirestore.instance
+          final userResult = await FirebaseFirestore.instance
               .collection('users')
               .where('uid', isEqualTo: tempData['from_uid'])
               .get();
 
-          tempData['pic'] = result.docs.first.data()['profile_pic'];
+          // tempData['pic'] = userResult .docs.first.data()['profile_pic'];
+          if (userResult.docs.isNotEmpty) {
+            tempData['pic'] = userResult.docs.first.data()['profile_pic'];
+          } else {
+            print("No user found for from_uid: ${tempData['from_uid']}");
+          }
         }
         tempNotifications.add(tempData);
       }
@@ -65,7 +84,6 @@ class NotificationModel extends ChangeNotifier {
       if (querySnapshot.docs.isNotEmpty) {
         _lastDocument = querySnapshot.docs.last;
       }
-
       notifyListeners();
     } catch (e) {
       print("Error fetching notifications: $e");
