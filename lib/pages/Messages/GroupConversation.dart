@@ -16,8 +16,8 @@ import 'package:unibond/provider/ProfileModel.dart';
 import 'package:unibond/widgets/styledTextFormField.dart';
 
 class GroupConversation extends StatefulWidget {
-  final Map<String, dynamic> groupData;
-  const GroupConversation({super.key, required this.groupData});
+  final String groupDocId;
+  const GroupConversation({super.key, required this.groupDocId});
 
   @override
   State<GroupConversation> createState() => _GroupConversationState();
@@ -31,169 +31,233 @@ class _GroupConversationState extends State<GroupConversation> {
     // TODO: implement initState
     super.initState();
     Provider.of<GroupConversationModel>(context, listen: false)
-        .fetchDoc(widget.groupData['group_name']);
+        .setChatDocId(widget.groupDocId);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            widget.groupData['group_pic'] != null &&
-                    (widget.groupData['group_pic'] as String).isNotEmpty
-                ? CircleAvatar(
-                    backgroundImage:
-                        NetworkImage(widget.groupData['group_pic']!),
-                    maxRadius: 15,
+        title: StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('groups')
+                .doc(widget.groupDocId)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Scaffold(
+                    appBar: AppBar(),
+                    body: Center(child: Text('Error: ${snapshot.error}')));
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Scaffold(
+                    appBar: AppBar(),
+                    body: const Center(child: CircularProgressIndicator()));
+              }
+              if (!snapshot.hasData || !snapshot.data!.exists) {
+                return Scaffold(
+                    appBar: AppBar(),
+                    body: const Center(child: Text('Group data not found')));
+              }
+
+              final groupData = snapshot.data!.data() as Map<String, dynamic>;
+
+              return Row(
+                children: [
+                  groupData['group_pic'] != null &&
+                          (groupData['group_pic'] as String).isNotEmpty
+                      ? CircleAvatar(
+                          backgroundImage:
+                              NetworkImage(groupData['group_pic']!),
+                          maxRadius: 15,
+                        )
+                      : const CircleAvatar(
+                          backgroundImage:
+                              AssetImage('lib/assets/default_profile_pic.png'),
+                          maxRadius: 15,
+                        ),
+                  const SizedBox(
+                    width: 5,
+                  ),
+                  Expanded(
+                    child: Text(
+                      groupData['group_name'],
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   )
-                : const CircleAvatar(
-                    backgroundImage:
-                        AssetImage('lib/assets/default_profile_pic.png'),
-                    maxRadius: 15,
-                  ),
-            const SizedBox(
-              width: 5,
-            ),
-            Expanded(
-              child: Text(
-                widget.groupData['group_name'],
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                overflow: TextOverflow.ellipsis,
-              ),
-            )
-          ],
-        ),
+                ],
+              );
+            }),
         actions: [
-          IconButton(
-            onPressed: () {
-              // TODO CHECK IF ALREADY CALLING
+          StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('groups')
+                  .doc(widget.groupDocId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Scaffold(
+                      appBar: AppBar(),
+                      body: Center(child: Text('Error: ${snapshot.error}')));
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Scaffold(
+                      appBar: AppBar(),
+                      body: const Center(child: CircularProgressIndicator()));
+                }
+                if (!snapshot.hasData || !snapshot.data!.exists) {
+                  return Scaffold(
+                      appBar: AppBar(),
+                      body: const Center(child: Text('Group data not found')));
+                }
 
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => GroupCallPage(
-                    chatDocId: Provider.of<GroupConversationModel>(context,
-                            listen: false)
-                        .chatDocId!,
-                    userUid: Provider.of<ProfileModel>(context, listen: false)
-                        .userDetails['uid'],
-                    call: GroupCallModel(
-                        id: null,
-                        channel: widget.groupData['group_name'],
-                        caller:
-                            Provider.of<ProfileModel>(context, listen: false)
-                                .userDetails['uid'],
-                        callerName:
-                            Provider.of<ProfileModel>(context, listen: false)
-                                .userDetails['full_name'],
-                        groupName: widget.groupData['group_name'],
-                        active: true,
-                        members: (widget.groupData['members'] as List<dynamic>)
-                            .map((e) => e.toString())
-                            .toList(),
-                        joined: [
-                          Provider.of<ProfileModel>(context, listen: false)
-                              .userDetails['uid']
-                        ],
-                        rejected: [],
-                        isVideoCall: true),
-                  ),
-                ),
-              );
+                final groupData = snapshot.data!.data() as Map<String, dynamic>;
 
-              final groupConversationModel =
-                  Provider.of<GroupConversationModel>(context, listen: false);
+                return Column(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        // TODO CHECK IF ALREADY CALLING
 
-              Future.delayed(Duration(seconds: 3), () {
-                groupConversationModel.sendMessage(
-                    '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a video call',
-                    Provider.of<ProfileModel>(context, listen: false)
-                        .userDetails['full_name'],
-                    Provider.of<ProfileModel>(context, listen: false)
-                        .userDetails['profile_pic'],
-                    'notify');
-              });
-            },
-            icon: const Icon(
-              Icons.videocam,
-              color: Colors.black,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => GroupCallPage(
-                    chatDocId: Provider.of<GroupConversationModel>(context,
-                            listen: false)
-                        .chatDocId!,
-                    userUid: Provider.of<ProfileModel>(context, listen: false)
-                        .userDetails['uid'],
-                    call: GroupCallModel(
-                        id: null,
-                        channel: widget.groupData['group_name'],
-                        caller:
-                            Provider.of<ProfileModel>(context, listen: false)
-                                .userDetails['uid'],
-                        callerName:
-                            Provider.of<ProfileModel>(context, listen: false)
-                                .userDetails['full_name'],
-                        groupName: widget.groupData['group_name'],
-                        active: true,
-                        members: (widget.groupData['members'] as List<dynamic>)
-                            .map((e) => e.toString())
-                            .toList(),
-                        joined: [
-                          Provider.of<ProfileModel>(context, listen: false)
-                              .userDetails['uid']
-                        ],
-                        rejected: [],
-                        isVideoCall: false),
-                  ),
-                ),
-              );
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => GroupCallPage(
+                              chatDocId: Provider.of<GroupConversationModel>(
+                                      context,
+                                      listen: false)
+                                  .chatDocId!,
+                              userUid: Provider.of<ProfileModel>(context,
+                                      listen: false)
+                                  .userDetails['uid'],
+                              call: GroupCallModel(
+                                  id: null,
+                                  channel: groupData['group_name'],
+                                  caller: Provider.of<ProfileModel>(context,
+                                          listen: false)
+                                      .userDetails['uid'],
+                                  callerName: Provider.of<ProfileModel>(context,
+                                          listen: false)
+                                      .userDetails['full_name'],
+                                  groupName: groupData['group_name'],
+                                  active: true,
+                                  members:
+                                      (groupData['members'] as List<dynamic>)
+                                          .map((e) => e.toString())
+                                          .toList(),
+                                  joined: [
+                                    Provider.of<ProfileModel>(context,
+                                            listen: false)
+                                        .userDetails['uid']
+                                  ],
+                                  rejected: [],
+                                  isVideoCall: true),
+                            ),
+                          ),
+                        );
 
-              final groupConversationModel =
-                  Provider.of<GroupConversationModel>(context, listen: false);
+                        final groupConversationModel =
+                            Provider.of<GroupConversationModel>(context,
+                                listen: false);
 
-              Future.delayed(Duration(seconds: 3), () {
-                groupConversationModel.sendMessage(
-                    '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a call',
-                    Provider.of<ProfileModel>(context, listen: false)
-                        .userDetails['full_name'],
-                    Provider.of<ProfileModel>(context, listen: false)
-                        .userDetails['profile_pic'],
-                    'notify');
-              });
-            },
-            icon: const Icon(
-              Icons.call,
-              color: Colors.black,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (BuildContext context) => GroupChatDetails(
-                    isMember: true,
-                    groupData: widget.groupData,
-                  ),
-                ),
-              );
-            },
-            icon: const Icon(
-              Icons.info,
-              color: Colors.black,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
+                        Future.delayed(Duration(seconds: 3), () {
+                          groupConversationModel.sendMessage(
+                              '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a video call',
+                              Provider.of<ProfileModel>(context, listen: false)
+                                  .userDetails['full_name'],
+                              Provider.of<ProfileModel>(context, listen: false)
+                                  .userDetails['profile_pic'],
+                              'notify');
+                        });
+                      },
+                      icon: const Icon(
+                        Icons.videocam,
+                        color: Colors.black,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => GroupCallPage(
+                              chatDocId: Provider.of<GroupConversationModel>(
+                                      context,
+                                      listen: false)
+                                  .chatDocId!,
+                              userUid: Provider.of<ProfileModel>(context,
+                                      listen: false)
+                                  .userDetails['uid'],
+                              call: GroupCallModel(
+                                  id: null,
+                                  channel: groupData['group_name'],
+                                  caller: Provider.of<ProfileModel>(context,
+                                          listen: false)
+                                      .userDetails['uid'],
+                                  callerName: Provider.of<ProfileModel>(context,
+                                          listen: false)
+                                      .userDetails['full_name'],
+                                  groupName: groupData['group_name'],
+                                  active: true,
+                                  members:
+                                      (groupData['members'] as List<dynamic>)
+                                          .map((e) => e.toString())
+                                          .toList(),
+                                  joined: [
+                                    Provider.of<ProfileModel>(context,
+                                            listen: false)
+                                        .userDetails['uid']
+                                  ],
+                                  rejected: [],
+                                  isVideoCall: false),
+                            ),
+                          ),
+                        );
+
+                        final groupConversationModel =
+                            Provider.of<GroupConversationModel>(context,
+                                listen: false);
+
+                        Future.delayed(Duration(seconds: 3), () {
+                          groupConversationModel.sendMessage(
+                              '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a call',
+                              Provider.of<ProfileModel>(context, listen: false)
+                                  .userDetails['full_name'],
+                              Provider.of<ProfileModel>(context, listen: false)
+                                  .userDetails['profile_pic'],
+                              'notify');
+                        });
+                      },
+                      icon: const Icon(
+                        Icons.call,
+                        color: Colors.black,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => GroupChatDetails(
+                              groupDocId: widget.groupDocId,
+                              isMember: true,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.info,
+                        color: Colors.black,
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                );
+              })
         ],
       ),
       body: Consumer2<GroupConversationModel, ProfileModel>(
@@ -244,13 +308,15 @@ class _GroupConversationState extends State<GroupConversation> {
 
                           final List<Widget> listTileContent = [
                             msg[index].type == 'notify'
-                                ? Text(
+                                ? Expanded(
+                                    child: Text(
                                     msg[index].content,
+                                    textAlign: TextAlign.center,
                                     style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.grey.shade600),
-                                  )
+                                  ))
                                 : isCurrentUser
                                     ? (profileModel.userDetails[
                                                     'profile_pic'] !=
@@ -432,7 +498,6 @@ class _GroupConversationState extends State<GroupConversation> {
                         for (final image in images) {
                           groupConversationModel.sendImage(
                               File(image.path),
-                              widget.groupData['group_name'],
                               profileModel.userDetails['full_name'],
                               profileModel.userDetails['profile_pic']);
                         }
@@ -461,11 +526,7 @@ class _GroupConversationState extends State<GroupConversation> {
                               profileModel.userDetails['profile_pic'],
                               'text')
                           .then((_) {
-                        groupConversationModel.messageNotification(
-                            widget.groupData['group_name'],
-                            (widget.groupData['members'] as List<dynamic>)
-                                .map((e) => e.toString())
-                                .toList());
+                        groupConversationModel.messageNotification();
                       });
                       chatController.clear();
                     },

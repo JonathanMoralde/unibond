@@ -56,6 +56,7 @@ class NotificationModel extends ChangeNotifier {
           if (groupResult.docs.isNotEmpty) {
             tempData['pic'] = groupResult.docs.first.data()['group_pic'];
             tempData['group_data'] = groupResult.docs.first.data();
+            tempData['group_doc_id'] = groupResult.docs.first.id;
           } else {
             print("No group found for group_name: ${tempData['group_name']}");
           }

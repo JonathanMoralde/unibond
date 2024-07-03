@@ -35,32 +35,7 @@ class GroupConversationModel extends ChangeNotifier {
 
   void setChatDocId(String? docId) {
     _chatDocId = docId;
-    notifyListeners();
-  }
-
-  Future<void> fetchDoc(String groupName) async {
-    try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('groups')
-          .where("group_name", isEqualTo: groupName)
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        // Assuming you want the first matching document
-        DocumentSnapshot docSnapshot = querySnapshot.docs.first;
-        String docId = docSnapshot.id;
-
-        _chatDocId = docId;
-        notifyListeners();
-
-        // Use the document ID and data as needed
-        print('Document ID: $docId');
-      } else {
-        print('No document found for the given group name');
-      }
-    } catch (e) {
-      print('Error fetching document: $e');
-    }
+    // notifyListeners();
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> fetchMessages() {
@@ -134,25 +109,30 @@ class GroupConversationModel extends ChangeNotifier {
   }
 
   Future<void> sendImage(
-      File image, String groupName, String userName, String userProfPic) async {
+      File image, String userName, String userProfPic) async {
     try {
-      // Upload the image to Firebase Storage
-      final userUid = FirebaseAuth.instance.currentUser!.uid;
-      final ext = image.path.split('.').last;
-
-      final storageRef = FirebaseStorage.instance.ref().child(
-          'groups/$groupName/${DateTime.now().millisecondsSinceEpoch}.$ext');
-      await storageRef
-          .putFile(image, SettableMetadata(contentType: 'image/$ext'))
-          .then((p0) {
-        print('Data Transferred: ${p0.bytesTransferred / 1000} kb');
-      });
-
-      // Get the download URL of the uploaded image
-      final imageUrl = await storageRef.getDownloadURL();
-
       if (chatDocId != null) {
-        // ! =========== IF CHAT ALREADY EXIST ==================
+        final groupData = await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(chatDocId)
+            .get();
+        final groupDataMap = groupData.data() as Map<String, dynamic>;
+
+        // Upload the image to Firebase Storage
+        final userUid = FirebaseAuth.instance.currentUser!.uid;
+        final ext = image.path.split('.').last;
+
+        final storageRef = FirebaseStorage.instance.ref().child(
+            'groups/${groupDataMap['group_name']}/${DateTime.now().millisecondsSinceEpoch}.$ext');
+        await storageRef
+            .putFile(image, SettableMetadata(contentType: 'image/$ext'))
+            .then((p0) {
+          print('Data Transferred: ${p0.bytesTransferred / 1000} kb');
+        });
+
+        // Get the download URL of the uploaded image
+        final imageUrl = await storageRef.getDownloadURL();
+
         DocumentReference chatDoc =
             FirebaseFirestore.instance.collection('groups').doc(chatDocId);
 
@@ -184,8 +164,7 @@ class GroupConversationModel extends ChangeNotifier {
     }
   }
 
-  Future<void> messageNotification(
-      String groupName, List<String> groupMembersUid) async {
+  Future<void> messageNotification() async {
     final userUid = FirebaseAuth.instance.currentUser!.uid;
     // final Timestamp today = Timestamp.now();
 
@@ -193,40 +172,51 @@ class GroupConversationModel extends ChangeNotifier {
     final DateTime startOfDay = DateTime(now.year, now.month, now.day);
     final Timestamp startOfDayTimestamp = Timestamp.fromDate(startOfDay);
     try {
-      // Query to check if a notification has been sent today for a message
-      QuerySnapshot<Map<String, dynamic>> existingNotification =
-          await FirebaseFirestore.instance
-              .collection('notification')
-              .where('group_name', isEqualTo: groupName)
-              .where('is_message', isEqualTo: true)
-              .where('dateTime', isGreaterThanOrEqualTo: startOfDayTimestamp)
-              .get();
+      if (chatDocId != null) {
+        final groupData = await FirebaseFirestore.instance
+            .collection('groups')
+            .doc(chatDocId)
+            .get();
+        final groupDataMap = groupData.data() as Map<String, dynamic>;
+        final groupMembersUid = (groupDataMap['members'] as List<dynamic>)
+            .map((e) => e.toString())
+            .toList();
 
-      if (existingNotification.docs.isEmpty) {
-        // If no notification has been sent for a message today, proceed with sending a new notification
+        // Query to check if a notification has been sent today for a message
+        QuerySnapshot<Map<String, dynamic>> existingNotification =
+            await FirebaseFirestore.instance
+                .collection('notification')
+                .where('group_name', isEqualTo: groupDataMap['group_name'])
+                .where('is_message', isEqualTo: true)
+                .where('dateTime', isGreaterThanOrEqualTo: startOfDayTimestamp)
+                .get();
 
-        // Rest of your existing message sending logic
+        if (existingNotification.docs.isEmpty) {
+          // If no notification has been sent for a message today, proceed with sending a new notification
 
-        for (final uid in groupMembersUid) {
-          if (uid != userUid) {
-            // After sending the message, create a notification
-            await FirebaseFirestore.instance.collection('notification').add({
-              'chat_doc_id': chatDocId ?? '',
-              'dateTime': Timestamp.now(),
-              'is_friend_request': false,
-              'is_friend_accept': false,
-              'is_event': false,
-              'is_group': true,
-              'is_message': true,
-              'is_read': false,
-              'group_name': groupName,
-              'notif_msg': 'has new messages. Tap to view!',
-              'receiver_uid': uid,
-            });
+          // Rest of your existing message sending logic
+
+          for (final uid in groupMembersUid) {
+            if (uid != userUid) {
+              // After sending the message, create a notification
+              await FirebaseFirestore.instance.collection('notification').add({
+                'chat_doc_id': chatDocId ?? '',
+                'dateTime': Timestamp.now(),
+                'is_friend_request': false,
+                'is_friend_accept': false,
+                'is_event': false,
+                'is_group': true,
+                'is_message': true,
+                'is_read': false,
+                'group_name': groupDataMap['group_name'],
+                'notif_msg': 'has new messages. Tap to view!',
+                'receiver_uid': uid,
+              });
+            }
           }
+        } else {
+          print("Notification already sent for a message today");
         }
-      } else {
-        print("Notification already sent for a message today");
       }
     } catch (e) {
       print("error sending notification, line 309: $e");
@@ -235,6 +225,6 @@ class GroupConversationModel extends ChangeNotifier {
 
   void resetState() {
     _chatDocId = null;
-    notifyListeners();
+    // notifyListeners();
   }
 }

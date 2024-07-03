@@ -5,7 +5,10 @@ import 'package:unibond/model/MessageData.dart';
 
 class ChatsModel extends ChangeNotifier {
   Stream<QuerySnapshot> fetchMessages() {
-    final uid = FirebaseAuth.instance.currentUser!.uid;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return const Stream.empty();
+    }
 
     print(uid);
     return FirebaseFirestore.instance

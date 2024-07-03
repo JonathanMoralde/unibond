@@ -28,6 +28,7 @@ class NotifcationCard extends StatefulWidget {
   final String notifMsg;
   final String? img;
   final Map<String, dynamic>? groupData;
+  final String? groupDocId;
 
   const NotifcationCard(
       {super.key,
@@ -45,7 +46,8 @@ class NotifcationCard extends StatefulWidget {
       required this.isFriendAccept,
       required this.notifMsg,
       this.img,
-      this.groupData});
+      this.groupData,
+      this.groupDocId});
 
   @override
   State<NotifcationCard> createState() => _NotifcationCardState();
@@ -67,7 +69,7 @@ class _NotifcationCardState extends State<NotifcationCard> {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             color: notifRead ? Colors.transparent : Colors.blue[100],
           ),
@@ -85,12 +87,6 @@ class _NotifcationCardState extends State<NotifcationCard> {
                       notifRead = true;
                     });
                   });
-
-                  print('event: ${widget.isEvent}');
-                  print('group: ${widget.isGroup}');
-                  print('message: ${widget.isMessage}');
-                  print('fried request: ${widget.isFriendRequest}');
-                  print('accepted: ${widget.isFriendAccept}');
 
                   if (widget.isEvent == true &&
                       widget.isGroup == false &&
@@ -111,7 +107,7 @@ class _NotifcationCardState extends State<NotifcationCard> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (BuildContext context) =>
-                            GroupConversation(groupData: widget.groupData!),
+                            GroupConversation(groupDocId: widget.groupDocId!),
                       ),
                     );
                   } else if (widget.isEvent == false &&
@@ -141,7 +137,8 @@ class _NotifcationCardState extends State<NotifcationCard> {
                       Provider.of<FriendsModel>(context, listen: false)
                           .viewProfile(userData);
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) => ProfileView()));
+                          builder: (BuildContext context) =>
+                              const ProfileView()));
                     });
                   } else {
                     Provider.of<NotificationModel>(context, listen: false)
@@ -150,7 +147,8 @@ class _NotifcationCardState extends State<NotifcationCard> {
                       Provider.of<FriendsModel>(context, listen: false)
                           .viewProfile(userData);
                       Navigator.of(context).push(MaterialPageRoute(
-                          builder: (BuildContext context) => ProfileView()));
+                          builder: (BuildContext context) =>
+                              const ProfileView()));
                     });
                   }
                 },
@@ -182,7 +180,7 @@ class _NotifcationCardState extends State<NotifcationCard> {
                               children: [
                                 TextSpan(
                                   text: widget.fromName,
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                     color: Colors
@@ -191,7 +189,7 @@ class _NotifcationCardState extends State<NotifcationCard> {
                                 ),
                                 TextSpan(
                                   text: ' ${widget.notifMsg}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     color: Colors
                                         .black, // Add color to match theme
@@ -200,15 +198,6 @@ class _NotifcationCardState extends State<NotifcationCard> {
                               ],
                             ),
                           ),
-
-                          // messaged you
-                          // Text(
-                          //   notifMsg,
-                          //   style: Theme.of(context)
-                          //       .textTheme
-                          //       .bodyLarge!
-                          //       .copyWith(color: Colors.black),
-                          // ),
 
                           const SizedBox(
                             height: 5,

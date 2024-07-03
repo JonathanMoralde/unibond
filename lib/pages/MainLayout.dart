@@ -53,13 +53,13 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
       }
     }
 
-    if (_tabController?.index == 1) {
-      final groupModel = Provider.of<GroupModel>(context, listen: false);
+    // if (_tabController?.index == 1) {
+    //   final groupModel = Provider.of<GroupModel>(context, listen: false);
 
-      if (!groupModel.isInitialized) {
-        groupModel.fetchGroups();
-      }
-    }
+    //   if (!groupModel.isInitialized) {
+    //     groupModel.fetchGroups();
+    //   }
+    // }
   }
 
   @override

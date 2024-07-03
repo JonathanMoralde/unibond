@@ -151,7 +151,7 @@ class SideMenu extends StatelessWidget {
                       .reset();
                   Provider.of<ConversationModel>(context, listen: false)
                       .resetState();
-                  Provider.of<GroupModel>(context, listen: false).resetState();
+                  // Provider.of<GroupModel>(context, listen: false).resetState();
 
                   Navigator.of(context).pushAndRemoveUntil(
                       MaterialPageRoute(

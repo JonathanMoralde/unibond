@@ -50,6 +50,6 @@ class ProfileModel extends ChangeNotifier {
 
   void resetState() {
     _userDetails = {};
-    notifyListeners();
+    // notifyListeners();
   }
 }

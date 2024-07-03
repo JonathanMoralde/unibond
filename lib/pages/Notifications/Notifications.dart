@@ -80,6 +80,7 @@ class _NotificationsState extends State<Notifications> {
                   notifMsg: notification['notif_msg'],
                   img: notification['pic'],
                   groupData: notification['group_data'],
+                  groupDocId: notification['group_doc_id'],
                 );
               } else {
                 return Center(

@@ -12,8 +12,8 @@ import 'package:unibond/widgets/styledTextFormField.dart';
 
 class CreateGroupChat extends StatefulWidget {
   final bool? isEdit;
-  final Map<String, dynamic>? groupData;
-  const CreateGroupChat({super.key, this.isEdit, this.groupData});
+  final String? groupDocId;
+  const CreateGroupChat({super.key, this.isEdit, this.groupDocId});
 
   @override
   State<CreateGroupChat> createState() => _CreateGroupChatState();
@@ -63,12 +63,12 @@ class _CreateGroupChatState extends State<CreateGroupChat> {
                         Provider.of<ProfileModel>(context, listen: false)
                             .userDetails)
                     .then((_) {
-                  Provider.of<GroupModel>(context, listen: false).resetState();
+                  // Provider.of<GroupModel>(context, listen: false).resetState();
 
-                  Future.delayed(Duration(seconds: 2), () {
-                    Provider.of<GroupModel>(context, listen: false)
-                        .fetchGroups();
-                  });
+                  // Future.delayed(Duration(seconds: 2), () {
+                  //   Provider.of<GroupModel>(context, listen: false)
+                  //       .fetchGroups();
+                  // });
 
                   setState(() {
                     isLoading = false;
@@ -98,25 +98,13 @@ class _CreateGroupChatState extends State<CreateGroupChat> {
                     .editGroup(
                         Provider.of<ProfileModel>(context, listen: false)
                             .userDetails,
-                        widget.groupData!)
+                        widget.groupDocId!)
                     .then((_) {
-                  Provider.of<GroupModel>(context, listen: false).resetState();
-
-                  Future.delayed(Duration(seconds: 2), () {
-                    Provider.of<GroupModel>(context, listen: false)
-                        .fetchGroups();
-
-                    setState(() {
-                      isLoading = false;
-                    });
-
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => MainLayout(),
-                      ),
-                      (route) => false,
-                    );
+                  setState(() {
+                    isLoading = false;
                   });
+
+                  Navigator.pop(context);
                 });
               },
               child: const Padding(

@@ -170,14 +170,11 @@ class CreateGroupChatModel extends ChangeNotifier {
   }
 
   Future<void> editGroup(
-      Map<String, dynamic> _userDetails, Map<String, dynamic> groupData) async {
+      Map<String, dynamic> _userDetails, String groupDocId) async {
     try {
       // fetch the group uid
-      final groupResult = await FirebaseFirestore.instance
-          .collection('groups')
-          .where('group_name', isEqualTo: groupData['group_name'])
-          .get();
-      final groupId = groupResult.docs.first.id;
+      final groupRef =
+          FirebaseFirestore.instance.collection('groups').doc(groupDocId);
 
       // Upload the image to Firebase Storage
       final userUid = _userDetails['uid'];
@@ -193,21 +190,14 @@ class CreateGroupChatModel extends ChangeNotifier {
         // Get the download URL of the uploaded image
         final imageUrl = await storageRef.getDownloadURL();
 
-        await FirebaseFirestore.instance
-            .collection('groups')
-            .doc(groupId)
-            .update({
+        await groupRef.update({
           'group_pic': imageUrl,
           'latest_chat_message': '$userName changed the group photo',
           'latest_chat_user': userUid,
           'latest_timestamp': Timestamp.now(),
         });
 
-        await FirebaseFirestore.instance
-            .collection('groups')
-            .doc(groupId)
-            .collection('messages')
-            .add({
+        await groupRef.collection('messages').add({
           'is_read': false,
           'content': '$userName changed the group photo',
           'sender_id': userUid,
@@ -220,7 +210,7 @@ class CreateGroupChatModel extends ChangeNotifier {
         final query = await FirebaseFirestore.instance
             .collection('notification')
             .where('is_group', isEqualTo: true)
-            .where('chat_doc_id', isEqualTo: groupId)
+            .where('chat_doc_id', isEqualTo: groupDocId)
             .get();
 
         if (query.docs.isNotEmpty) {
@@ -234,10 +224,7 @@ class CreateGroupChatModel extends ChangeNotifier {
       }
 
       if (nameController.text.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('groups')
-            .doc(groupId)
-            .update({
+        await groupRef.update({
           'group_name': nameController.text,
           'latest_chat_message':
               '$userName changed the group name to ${nameController.text}',
@@ -245,11 +232,7 @@ class CreateGroupChatModel extends ChangeNotifier {
           'latest_timestamp': Timestamp.now(),
         });
 
-        await FirebaseFirestore.instance
-            .collection('groups')
-            .doc(groupId)
-            .collection('messages')
-            .add({
+        await groupRef.collection('messages').add({
           'is_read': false,
           'content':
               '$userName changed the group name to ${nameController.text}',
@@ -263,7 +246,7 @@ class CreateGroupChatModel extends ChangeNotifier {
         final query = await FirebaseFirestore.instance
             .collection('notification')
             .where('is_group', isEqualTo: true)
-            .where('chat_doc_id', isEqualTo: groupId)
+            .where('chat_doc_id', isEqualTo: groupDocId)
             .get();
 
         if (query.docs.isNotEmpty) {
@@ -274,24 +257,34 @@ class CreateGroupChatModel extends ChangeNotifier {
                 .update({'group_name': nameController.text});
           }
         }
+
+        final groupData = await groupRef.get();
+        final groupDataMap = groupData.data() as Map<String, dynamic>;
+
+        final query2 = await FirebaseFirestore.instance
+            .collection('notification')
+            .where('group_name', isEqualTo: groupDataMap['group_name'])
+            .get();
+
+        if (query2.docs.isNotEmpty) {
+          for (final doc in query2.docs) {
+            await FirebaseFirestore.instance
+                .collection('notification')
+                .doc(doc.id)
+                .update({'group_name': nameController.text});
+          }
+        }
       }
 
       if (descriptionController.text.isNotEmpty) {
-        await FirebaseFirestore.instance
-            .collection('groups')
-            .doc(groupId)
-            .update({
+        await groupRef.update({
           'group_description': descriptionController.text,
           'latest_chat_message': '$userName changed the group description',
           'latest_chat_user': userUid,
           'latest_timestamp': Timestamp.now(),
         });
 
-        await FirebaseFirestore.instance
-            .collection('groups')
-            .doc(groupId)
-            .collection('messages')
-            .add({
+        await groupRef.collection('messages').add({
           'is_read': false,
           'content': '$userName changed the group description',
           'sender_id': userUid,

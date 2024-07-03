@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class GroupRequests extends StatefulWidget {
-  final String groupName;
-  const GroupRequests({super.key, required this.groupName});
+  final String groupDocId;
+  const GroupRequests({super.key, required this.groupDocId});
 
   @override
   State<GroupRequests> createState() => _GroupRequestsState();
@@ -26,12 +26,12 @@ class _GroupRequestsState extends State<GroupRequests> {
               StreamBuilder(
                 stream: FirebaseFirestore.instance
                     .collection('groups')
-                    .where('group_name', isEqualTo: widget.groupName)
+                    .doc(widget.groupDocId)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasData) {
-                    final result = snapshot.data!.docs.first.data()
-                        as Map<String, dynamic>;
+                    final result =
+                        snapshot.data!.data() as Map<String, dynamic>;
 
                     final requestsList =
                         ((result['requests'] ?? []) as List<dynamic>)
@@ -99,53 +99,42 @@ class _GroupRequestsState extends State<GroupRequests> {
                                       constraints: const BoxConstraints(),
                                       icon: const Icon(Icons.check),
                                       onPressed: () async {
-                                        // Handle accept  request
-                                        final result = await FirebaseFirestore
-                                            .instance
+                                        await FirebaseFirestore.instance
                                             .collection('groups')
-                                            .where('group_name',
-                                                isEqualTo: widget.groupName)
-                                            .get();
+                                            .doc(widget.groupDocId)
+                                            .update({
+                                          'requests': FieldValue.arrayRemove(
+                                              [userResult['uid']]),
+                                          'members': FieldValue.arrayUnion(
+                                              [userResult['uid']])
+                                        });
 
-                                        if (result.docs.isNotEmpty) {
-                                          await FirebaseFirestore.instance
-                                              .collection('groups')
-                                              .doc(result.docs.first.id)
-                                              .update({
-                                            'requests': FieldValue.arrayRemove(
-                                                [userResult['uid']]),
-                                            'members': FieldValue.arrayUnion(
-                                                [userResult['uid']])
-                                          });
+                                        await FirebaseFirestore.instance
+                                            .collection('groups')
+                                            .doc(widget.groupDocId)
+                                            .update({
+                                          'latest_chat_message':
+                                              '${userResult['full_name']} joined the group',
+                                          'latest_chat_user': userResult['uid'],
+                                          'latest_timestamp': Timestamp.now(),
+                                        });
 
-                                          await FirebaseFirestore.instance
-                                              .collection('groups')
-                                              .doc(result.docs.first.id)
-                                              .update({
-                                            'latest_chat_message':
-                                                '${userResult['full_name']} joined the group',
-                                            'latest_chat_user':
-                                                userResult['uid'],
-                                            'latest_timestamp': Timestamp.now(),
-                                          });
-
-                                          await FirebaseFirestore.instance
-                                              .collection('groups')
-                                              .doc(result.docs.first.id)
-                                              .collection('messages')
-                                              .add({
-                                            'is_read': false,
-                                            'content':
-                                                '${userResult['full_name']} joined the group',
-                                            'sender_id': userResult['uid'],
-                                            'timestamp': Timestamp.now(),
-                                            'type': 'notify',
-                                            'sender_name':
-                                                userResult['full_name'],
-                                            'sender_profile_pic':
-                                                userResult['profile_pic'],
-                                          });
-                                        }
+                                        await FirebaseFirestore.instance
+                                            .collection('groups')
+                                            .doc(widget.groupDocId)
+                                            .collection('messages')
+                                            .add({
+                                          'is_read': false,
+                                          'content':
+                                              '${userResult['full_name']} joined the group',
+                                          'sender_id': userResult['uid'],
+                                          'timestamp': Timestamp.now(),
+                                          'type': 'notify',
+                                          'sender_name':
+                                              userResult['full_name'],
+                                          'sender_profile_pic':
+                                              userResult['profile_pic'],
+                                        });
                                       },
                                     ),
                                     IconButton(
@@ -154,22 +143,14 @@ class _GroupRequestsState extends State<GroupRequests> {
                                       icon: const Icon(Icons.close),
                                       onPressed: () async {
                                         // Handle decline request
-                                        final result = await FirebaseFirestore
-                                            .instance
-                                            .collection('groups')
-                                            .where('group_name',
-                                                isEqualTo: widget.groupName)
-                                            .get();
 
-                                        if (result.docs.isNotEmpty) {
-                                          await FirebaseFirestore.instance
-                                              .collection('groups')
-                                              .doc(result.docs.first.id)
-                                              .update({
-                                            'requests': FieldValue.arrayRemove(
-                                                [userResult['uid']])
-                                          });
-                                        }
+                                        await FirebaseFirestore.instance
+                                            .collection('groups')
+                                            .doc(widget.groupDocId)
+                                            .update({
+                                          'requests': FieldValue.arrayRemove(
+                                              [userResult['uid']])
+                                        });
                                       },
                                     ),
                                   ],
