@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:unibond/pages/Messages/AddPeople.dart';
 import 'package:unibond/pages/Messages/CreateGroupChat.dart';
 import 'package:unibond/pages/Messages/GroupRequests.dart';
 import 'package:unibond/provider/GroupChatDetailsModel.dart';
@@ -293,13 +294,18 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
                                           );
                                         }
 
-                                        // Remove Member
-                                        items.add(
-                                          const PopupMenuItem<String>(
-                                            value: 'remove',
-                                            child: Text('Remove from group'),
-                                          ),
-                                        );
+                                        if (student['uid'] !=
+                                            Provider.of<ProfileModel>(context,
+                                                    listen: false)
+                                                .userDetails['uid']) {
+                                          // Remove Member
+                                          items.add(
+                                            const PopupMenuItem<String>(
+                                              value: 'remove',
+                                              child: Text('Remove from group'),
+                                            ),
+                                          );
+                                        }
 
                                         return items;
                                       },
@@ -342,7 +348,16 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
 
                           // ADD PEOPLE
                           InkWell(
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (BuildContext context) => AddPeople(
+                                    fromGroupDetails: true,
+                                    groupDocId: widget.groupDocId,
+                                  ),
+                                ),
+                              );
+                            },
                             child: Container(
                               width: double.infinity,
                               padding: const EdgeInsets.all(16),

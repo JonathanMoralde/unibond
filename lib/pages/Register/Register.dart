@@ -130,16 +130,20 @@ class _RegisterState extends State<Register> {
                                 height: 20,
                               ),
                               StyledTextFormField(
-                                  obscureText: true,
-                                  controller: passwordController,
-                                  hintText: 'Enter password'),
+                                obscureText: true,
+                                controller: passwordController,
+                                hintText: 'Enter password',
+                                isPassword: true,
+                              ),
                               const SizedBox(
                                 height: 20,
                               ),
                               StyledTextFormField(
-                                  obscureText: true,
-                                  controller: confirmPasswordController,
-                                  hintText: 'Confirm password'),
+                                obscureText: true,
+                                controller: confirmPasswordController,
+                                hintText: 'Confirm password',
+                                isPassword: true,
+                              ),
                               const SizedBox(
                                 height: 80,
                               ),

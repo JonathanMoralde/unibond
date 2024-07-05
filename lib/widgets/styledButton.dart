@@ -21,6 +21,7 @@ class StyledButton extends StatelessWidget {
   final bool? isBorder;
   final EdgeInsetsGeometry? padding;
   final Color? borderColor;
+  final FontWeight? fontWeight;
 
   const StyledButton(
       {super.key,
@@ -38,7 +39,8 @@ class StyledButton extends StatelessWidget {
       this.textSize,
       this.isBorder,
       this.padding,
-      this.borderColor});
+      this.borderColor,
+      this.fontWeight});
 
   @override
   Widget build(BuildContext context) {
@@ -65,7 +67,7 @@ class StyledButton extends StatelessWidget {
             foregroundColor: textColor ?? Colors.white,
             textStyle: TextStyle(
                 // letterSpacing: 1,
-                fontWeight: FontWeight.bold,
+                fontWeight: fontWeight ?? FontWeight.bold,
                 fontSize: textSize ?? 19,
                 fontFamily: "Roboto"),
           ),
@@ -105,7 +107,7 @@ class StyledButton extends StatelessWidget {
               foregroundColor: textColor ?? Colors.white,
               textStyle: TextStyle(
                   // letterSpacing: 1,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: fontWeight ?? FontWeight.bold,
                   fontSize: textSize ?? 19,
                   fontFamily: "Roboto"),
               side: isBorder != null
@@ -152,7 +154,7 @@ class StyledButton extends StatelessWidget {
             foregroundColor: textColor ?? Colors.white,
             textStyle: TextStyle(
                 // letterSpacing: 1,
-                fontWeight: FontWeight.bold,
+                fontWeight: fontWeight ?? FontWeight.bold,
                 fontSize: textSize ?? 19,
                 fontFamily: "Roboto"),
           ),

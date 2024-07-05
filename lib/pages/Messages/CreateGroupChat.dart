@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/pages/MainLayout.dart';
+import 'package:unibond/pages/Messages/AddPeople.dart';
 import 'package:unibond/provider/CreateGroupChatModel.dart';
 import 'package:unibond/provider/GroupModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
@@ -28,6 +29,7 @@ class _CreateGroupChatState extends State<CreateGroupChat> {
   void initState() {
     // TODO: implement initState
     super.initState();
+
     Provider.of<CreateGroupChatModel>(context, listen: false)
         .fetchMemberSuggestions();
 
@@ -273,7 +275,14 @@ class _CreateGroupChatState extends State<CreateGroupChat> {
                 if (widget.isEdit == null)
                   StyledButton(
                     btnText: 'Search by name',
-                    onClick: () {},
+                    onClick: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              const AddPeople(fromGroupDetails: false),
+                        ),
+                      );
+                    },
                     isBorder: true,
                     borderColor: Colors.grey.shade300,
                     noShadow: true,

@@ -313,4 +313,55 @@ class CreateGroupChatModel extends ChangeNotifier {
     _memberSuggestions = [];
     _lastDocument = null;
   }
+
+  // For AddPeople.dart
+  Future<void> addPeopleToGroup(
+      String groupDocId, Map<String, dynamic> currentUser) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupDocId)
+          .update({'members': FieldValue.arrayUnion(selectedUsers)}).then(
+              ((_) async {
+        for (final uid in selectedUsers) {
+          final data = await FirebaseFirestore.instance
+              .collection('users')
+              .doc(uid)
+              .get();
+          final dataMap = data.data() as Map<String, dynamic>;
+
+          await FirebaseFirestore.instance
+              .collection('groups')
+              .doc(groupDocId)
+              .update({
+            'latest_chat_message':
+                '${currentUser['full_name']} added ${dataMap['full_name']} to the group',
+            'latest_chat_user': currentUser['uid'],
+            'latest_timestamp': Timestamp.now(),
+          });
+
+          await FirebaseFirestore.instance
+              .collection('groups')
+              .doc(groupDocId)
+              .collection('messages')
+              .add({
+            'is_read': false,
+            'content':
+                '${currentUser['full_name']} added ${dataMap['full_name']} to the group',
+            'sender_id': currentUser['uid'],
+            'timestamp': Timestamp.now(),
+            'type': 'notify',
+            'sender_name': currentUser['full_name'],
+            'sender_profile_pic': currentUser['profile_pic'],
+          });
+        }
+      }));
+    } catch (e) {
+      print("an error occured while adding people: $e");
+    }
+  }
+
+  void resetSelected() {
+    _selectedUsers = [];
+  }
 }

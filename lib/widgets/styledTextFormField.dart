@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class StyledTextFormField extends StatelessWidget {
+class StyledTextFormField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
   final TextInputType? keyboardType;
-  final bool obscureText;
+  bool obscureText;
   final bool? isReadOnly;
   final double? paddingTop;
   final double? paddingLeft;
@@ -15,10 +15,13 @@ class StyledTextFormField extends StatelessWidget {
   final double? height;
   final Color? fillColor;
   final IconData? prefixIcon;
+  final bool? isPassword;
+
   final int? maxLines;
   final int? minLines;
+  void Function(String)? onChanged;
 
-  const StyledTextFormField(
+  StyledTextFormField(
       {super.key,
       required this.controller,
       required this.hintText,
@@ -34,51 +37,97 @@ class StyledTextFormField extends StatelessWidget {
       this.width,
       this.fillColor,
       this.prefixIcon,
+      this.isPassword,
       this.maxLines,
-      this.minLines});
+      this.minLines,
+      this.onChanged});
+
+  @override
+  State<StyledTextFormField> createState() => _StyledTextFormFieldState();
+}
+
+class _StyledTextFormFieldState extends State<StyledTextFormField> {
+  bool isTextFieldEmpty = true;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_textListener);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_textListener);
+    super.dispose();
+  }
+
+  void _textListener() {
+    setState(() {
+      isTextFieldEmpty = widget.controller.text.isEmpty;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: width,
-      height: height,
+      width: widget.width,
+      height: widget.height,
       child: TextFormField(
-        minLines: minLines ?? 1,
-        maxLines: maxLines ?? 1,
-        readOnly: isReadOnly ?? false,
-        obscureText: obscureText,
+        onChanged: widget.onChanged,
+        minLines: widget.minLines ?? 1,
+        maxLines: widget.maxLines ?? 1,
+        readOnly: widget.isReadOnly ?? false,
+        obscureText: widget.obscureText,
         style: TextStyle(
             fontFamily: "Roboto",
             fontWeight: FontWeight.w400,
-            fontSize: hintSize),
-        controller: controller,
+            fontSize: widget.hintSize),
+        controller: widget.controller,
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Required';
           }
           return null;
         },
-        keyboardType: keyboardType ?? TextInputType.text,
+        keyboardType: widget.keyboardType ?? TextInputType.text,
         decoration: InputDecoration(
-          prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+          suffixIcon: widget.isPassword != null &&
+                  widget.isPassword == true &&
+                  !isTextFieldEmpty
+              ? IconButton(
+                  onPressed: () {
+                    setState(() {
+                      widget.obscureText = !widget.obscureText;
+                    });
+                  },
+                  icon: Icon(
+                    widget.obscureText
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                )
+              : null,
+          prefixIcon:
+              widget.prefixIcon != null ? Icon(widget.prefixIcon) : null,
           filled: true,
-          fillColor: fillColor ?? Colors.white,
+          fillColor: widget.fillColor ?? Colors.white,
           focusedBorder: const OutlineInputBorder(
               borderSide: BorderSide(color: Color(0xff00B0FF)),
               borderRadius: BorderRadius.all(Radius.circular(50))),
           border: const OutlineInputBorder(
               borderSide: BorderSide.none,
               borderRadius: BorderRadius.all(Radius.circular(50))),
-          hintText: hintText,
+          hintText: widget.hintText,
           hintStyle: TextStyle(
               fontFamily: "Roboto",
               fontWeight: FontWeight.w300,
-              fontSize: hintSize ?? 15),
+              fontSize: widget.hintSize ?? 15),
           contentPadding: EdgeInsets.only(
-              top: paddingTop ?? 15,
-              right: paddingRight ?? 32,
-              bottom: paddingBottom ?? 15,
-              left: paddingLeft ?? 32),
+              top: widget.paddingTop ?? 15,
+              right: widget.paddingRight ?? 32,
+              bottom: widget.paddingBottom ?? 15,
+              left: widget.paddingLeft ?? 32),
           errorStyle: const TextStyle(
               fontSize: 12.0, // Customize the font size here
               fontFamily: "Roboto",

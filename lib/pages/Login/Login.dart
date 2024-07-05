@@ -67,9 +67,13 @@ class _LoginState extends State<Login> {
                 (route) => false,
               );
             }
+          }).catchError((e) {
+            print('error occured: $e');
+            return;
           });
         }).catchError((e) {
           print('error occured: $e');
+          return;
         });
       } else {
         Fluttertoast.showToast(
@@ -134,9 +138,11 @@ class _LoginState extends State<Login> {
                             height: 20,
                           ),
                           StyledTextFormField(
-                              obscureText: true,
-                              controller: passwordController,
-                              hintText: 'Enter your password'),
+                            obscureText: true,
+                            controller: passwordController,
+                            hintText: 'Enter your password',
+                            isPassword: true,
+                          ),
                           const SizedBox(
                             height: 20,
                           ),

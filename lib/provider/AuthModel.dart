@@ -29,6 +29,17 @@ class AuthModel extends ChangeNotifier {
 // for register
   Future<void> registerUser(
       String fullName, String email, String password) async {
+    // Check if the email ends with @bicol-u.edu.ph
+    if (!email.endsWith('@bicol-u.edu.ph')) {
+      Fluttertoast.showToast(
+        msg:
+            'Registration is only allowed with a @bicol-u.edu.ph email address.',
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      return; // Exit the function if the email domain is not allowed
+    }
+
     try {
       UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
@@ -73,7 +84,7 @@ class AuthModel extends ChangeNotifier {
           .signInWithEmailAndPassword(email: email, password: password)
           .then((_) {
         Fluttertoast.showToast(
-          msg: 'Account was registered successfully!',
+          msg: 'Signed in successfully!',
           backgroundColor: Colors.green,
           textColor: Colors.black,
         );
