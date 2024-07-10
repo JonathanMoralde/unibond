@@ -89,13 +89,48 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
               },
             ),
           if (!widget.isMember)
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: GestureDetector(
-                onTap: () {},
-                child: const Text("JOIN"),
-              ),
-            ),
+            StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('groups')
+                    .doc(widget.groupDocId)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return SizedBox.shrink();
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return SizedBox.shrink();
+                  }
+                  if (!snapshot.hasData || !snapshot.data!.exists) {
+                    return SizedBox.shrink();
+                  }
+
+                  final groupData =
+                      snapshot.data!.data() as Map<String, dynamic>;
+
+                  final requestsList = (groupData['requests'] as List<dynamic>)
+                      .map((e) => e.toString());
+
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: GestureDetector(
+                      onTap: requestsList.contains(
+                              Provider.of<ProfileModel>(context, listen: false)
+                                  .userDetails['uid'])
+                          ? null
+                          : () {
+                              Provider.of<GroupChatDetailsModel>(context,
+                                      listen: false)
+                                  .joinGroupChat(widget.groupDocId);
+                            },
+                      child: requestsList.contains(
+                              Provider.of<ProfileModel>(context, listen: false)
+                                  .userDetails['uid'])
+                          ? Text("REQUESTED")
+                          : Text("JOIN"),
+                    ),
+                  );
+                }),
         ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
@@ -347,50 +382,52 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
                           }).toList(),
 
                           // ADD PEOPLE
-                          InkWell(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (BuildContext context) => AddPeople(
-                                    fromGroupDetails: true,
-                                    groupDocId: widget.groupDocId,
+                          if (widget.isMember)
+                            InkWell(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        AddPeople(
+                                      fromGroupDetails: true,
+                                      groupDocId: widget.groupDocId,
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xffE4ECEF),
+                                  border: Border(
+                                    top: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                    left: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                    right: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
                                   ),
                                 ),
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xffE4ECEF),
-                                border: Border(
-                                  top: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                  left: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                  right: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.person_add),
+                                    SizedBox(
+                                      width: 10,
+                                    ),
+                                    Text(
+                                      "Add people",
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600),
+                                    )
+                                  ],
                                 ),
-                              ),
-                              child: const Row(
-                                children: [
-                                  Icon(Icons.person_add),
-                                  SizedBox(
-                                    width: 10,
-                                  ),
-                                  Text(
-                                    "Add people",
-                                    style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600),
-                                  )
-                                ],
                               ),
                             ),
-                          ),
                           Container(
                             decoration: BoxDecoration(
                                 border: Border(

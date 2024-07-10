@@ -87,7 +87,7 @@ class CreateEventModel extends ChangeNotifier {
         for (final uid in members) {
           // After sending the message, create a notification
           await FirebaseFirestore.instance.collection('notification').add({
-            'chat_doc_id': '',
+            'chat_doc_id': result.docs.first.id,
             'dateTime': Timestamp.now(),
             'group_name': eventData.groupName,
             'event_description': eventData.description,

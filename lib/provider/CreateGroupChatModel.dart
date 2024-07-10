@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CreateGroupChatModel extends ChangeNotifier {
@@ -116,6 +117,18 @@ class CreateGroupChatModel extends ChangeNotifier {
       if (image != null &&
           nameController.text.isNotEmpty &&
           descriptionController.text.isNotEmpty) {
+        // ? Check first if existing group name exist
+        final query = await FirebaseFirestore.instance
+            .collection('groups')
+            .where('group_name', isEqualTo: nameController.text)
+            .get();
+
+        if (query.docs.isNotEmpty) {
+          Fluttertoast.showToast(
+              msg: 'Group name is already taken!', backgroundColor: Colors.red);
+          return;
+        }
+
         // if (userDoc.exists) {
         final String userName = _userDetails['full_name'];
         final String userProfPic = _userDetails['profile_pic'];
@@ -224,6 +237,18 @@ class CreateGroupChatModel extends ChangeNotifier {
       }
 
       if (nameController.text.isNotEmpty) {
+        // ? Check first if existing group name exist
+        final groupNameQuery = await FirebaseFirestore.instance
+            .collection('groups')
+            .where('group_name', isEqualTo: nameController.text)
+            .get();
+
+        if (groupNameQuery.docs.isNotEmpty) {
+          Fluttertoast.showToast(
+              msg: 'Group name is already taken!', backgroundColor: Colors.red);
+          return;
+        }
+
         await groupRef.update({
           'group_name': nameController.text,
           'latest_chat_message':
@@ -245,7 +270,7 @@ class CreateGroupChatModel extends ChangeNotifier {
 
         final query = await FirebaseFirestore.instance
             .collection('notification')
-            .where('is_group', isEqualTo: true)
+            // .where('is_group', isEqualTo: true)
             .where('chat_doc_id', isEqualTo: groupDocId)
             .get();
 

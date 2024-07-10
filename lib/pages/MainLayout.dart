@@ -10,6 +10,7 @@ import 'package:unibond/pages/Messages/Chats.dart';
 import 'package:unibond/pages/Messages/Friends.dart';
 import 'package:unibond/pages/Messages/Groups.dart';
 import 'package:unibond/pages/Messages/Messages.dart';
+import 'package:unibond/pages/Messages/SearchPage.dart';
 import 'package:unibond/pages/MyProfile/MyProfile.dart';
 import 'package:unibond/pages/Notifications/Notifications.dart';
 import 'package:unibond/provider/FriendsModel.dart';
@@ -100,6 +101,16 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                   ),
                 )
               : null,
+          actions: [
+            IconButton(
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (BuildContext context) => SearchPage(
+                            initialIndex: _tabController!.index,
+                          )));
+                },
+                icon: const Icon(Icons.search))
+          ],
         ),
         drawer: SideMenu(pages: pages), // Drawer at the root level
         body: Stack(

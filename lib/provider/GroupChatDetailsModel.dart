@@ -133,6 +133,27 @@ class GroupChatDetailsModel extends ChangeNotifier {
     }
   }
 
+  // FOR NON MEMBER
+  Future<void> joinGroupChat(String groupDocId) async {
+    final userUid = FirebaseAuth.instance.currentUser!.uid;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupDocId)
+          .update({
+        'requests': FieldValue.arrayUnion([userUid])
+      }).then((_) {
+        Fluttertoast.showToast(
+            msg:
+                'You have requested to join the IT Students Group. Wait for the Admin\'s approval.',
+            gravity: ToastGravity.CENTER);
+      });
+    } catch (e) {
+      print("error occured while joining group: $e");
+    }
+  }
+
 // FOR GROUP CARD
   Future<List<Map<String, dynamic>>> fetchMembers(
       List<String> membersUid) async {
