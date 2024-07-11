@@ -150,6 +150,9 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
           }
 
           final groupData = snapshot.data!.data() as Map<String, dynamic>;
+          final adminList = (groupData['admin'] as List<dynamic>)
+              .map((e) => e.toString())
+              .toList();
 
           // Fetch members data when group data changes
           Provider.of<GroupChatDetailsModel>(context, listen: false)
@@ -382,7 +385,11 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
                           }).toList(),
 
                           // ADD PEOPLE
-                          if (widget.isMember)
+                          if (widget.isMember &&
+                              adminList.contains(Provider.of<ProfileModel>(
+                                      context,
+                                      listen: false)
+                                  .userDetails['uid']))
                             InkWell(
                               onTap: () {
                                 Navigator.of(context).push(

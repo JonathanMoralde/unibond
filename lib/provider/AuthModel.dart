@@ -51,6 +51,7 @@ class AuthModel extends ChangeNotifier {
 
         await FirebaseFirestore.instance.collection('users').doc(uid).set({
           'full_name': fullName,
+          'full_name_lowercase': fullName.toLowerCase(),
           'email': email,
           'uid': uid,
           'friends': [],

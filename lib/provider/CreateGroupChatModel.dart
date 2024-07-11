@@ -146,6 +146,7 @@ class CreateGroupChatModel extends ChangeNotifier {
             await FirebaseFirestore.instance.collection('groups').add({
           'group_pic': imageUrl,
           'group_name': nameController.text,
+          'group_name_lowercase': nameController.text.toLowerCase(),
           'group_description': descriptionController.text,
           'admin': [userUid],
           'members': [userUid, ...selectedUsers],
@@ -251,6 +252,7 @@ class CreateGroupChatModel extends ChangeNotifier {
 
         await groupRef.update({
           'group_name': nameController.text,
+          'gruop_name_lowercase': nameController.text.toLowerCase(),
           'latest_chat_message':
               '$userName changed the group name to ${nameController.text}',
           'latest_chat_user': userUid,

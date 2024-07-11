@@ -132,8 +132,10 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 FutureBuilder(
                   future: FirebaseFirestore.instance
                       .collection('users')
-                      .where('full_name', isGreaterThanOrEqualTo: searchText)
-                      .where('full_name', isLessThan: searchText + 'z')
+                      .where('full_name_lowercase',
+                          isGreaterThanOrEqualTo: searchText.toLowerCase())
+                      .where('full_name_lowercase',
+                          isLessThan: searchText.toLowerCase() + 'z')
                       .get(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -143,50 +145,51 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                     if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
                       print(snapshot.data!.docs);
                       print(snapshot.data!.docs.first.data()['uid']);
-                      return Column(
-                        children: [
-                          for (final doc in snapshot.data!.docs)
-                            FutureBuilder(
-                              future: FirebaseFirestore.instance
-                                  .collection('chats')
-                                  .where('users_id',
-                                      arrayContains: doc.data()['uid'])
-                                  .get(),
-                              builder: (context, chatSnapshot) {
-                                if (chatSnapshot.hasData &&
-                                    chatSnapshot.data!.docs.isNotEmpty) {
-                                  print('chat snapshot');
-                                  print(chatSnapshot.data!.docs);
-                                  for (final chatDoc
-                                      in chatSnapshot.data!.docs) {
-                                    bool isRead = false;
 
-                                    // Fetch the latest message from the messages collection
-                                    final latestMessageQuery = FirebaseFirestore
-                                        .instance
-                                        .collection('chats')
-                                        .doc(chatDoc.id)
-                                        .collection('messages')
-                                        .where('sender_id',
-                                            isNotEqualTo:
-                                                Provider.of<ProfileModel>(
-                                                        context,
-                                                        listen: false)
-                                                    .userDetails['uid'])
-                                        .orderBy('timestamp', descending: true)
-                                        .limit(1)
-                                        .get();
+                      List<Widget> userWidgets = [];
+                      for (final doc in snapshot.data!.docs) {
+                        userWidgets.add(
+                          FutureBuilder(
+                            future: FirebaseFirestore.instance
+                                .collection('chats')
+                                .where('users_id',
+                                    arrayContains: doc.data()['uid'])
+                                .get(),
+                            builder: (context, chatSnapshot) {
+                              if (chatSnapshot.hasData &&
+                                  chatSnapshot.data!.docs.isNotEmpty) {
+                                print('chat snapshot');
+                                print(chatSnapshot.data!.docs);
 
-                                    latestMessageQuery.then((_) {
-                                      if (_.docs.isNotEmpty) {
-                                        final latestMessageData =
-                                            _.docs.first.data();
-                                        isRead = latestMessageData['is_read'] ??
-                                            false;
-                                      }
-                                    });
+                                List<Widget> chatWidgets = [];
+                                for (final chatDoc in chatSnapshot.data!.docs) {
+                                  bool isRead = false;
 
-                                    return MessageCard(
+                                  final latestMessageQuery = FirebaseFirestore
+                                      .instance
+                                      .collection('chats')
+                                      .doc(chatDoc.id)
+                                      .collection('messages')
+                                      .where('sender_id',
+                                          isNotEqualTo:
+                                              Provider.of<ProfileModel>(context,
+                                                      listen: false)
+                                                  .userDetails['uid'])
+                                      .orderBy('timestamp', descending: true)
+                                      .limit(1)
+                                      .get();
+
+                                  latestMessageQuery.then((_) {
+                                    if (_.docs.isNotEmpty) {
+                                      final latestMessageData =
+                                          _.docs.first.data();
+                                      isRead =
+                                          latestMessageData['is_read'] ?? false;
+                                    }
+                                  });
+
+                                  chatWidgets.add(
+                                    MessageCard(
                                       isRead: isRead,
                                       onTap: () {
                                         Provider.of<ConversationModel>(context,
@@ -214,15 +217,18 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                           chatDoc['latest_timestamp'],
                                       profilePic: doc.data()['profile_pic'],
                                       friendId: doc.data()['uid'],
-                                    );
-                                  }
+                                    ),
+                                  );
                                 }
+                                return Column(children: chatWidgets);
+                              }
 
-                                return SizedBox.shrink();
-                              },
-                            )
-                        ],
-                      );
+                              return SizedBox.shrink();
+                            },
+                          ),
+                        );
+                      }
+                      return Column(children: userWidgets);
                     }
 
                     return const SizedBox.shrink();
@@ -234,38 +240,39 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Expanded(
-                    child: Wrap(
-                      runSpacing: 10,
-                      spacing: 10,
-                      children: [
-                        FutureBuilder(
-                          future: FirebaseFirestore.instance
-                              .collection('groups')
-                              .where('group_name',
-                                  isGreaterThanOrEqualTo: searchText)
-                              .where('group_name', isLessThan: searchText + 'z')
-                              .get(),
-                          builder: (context, groupSnapshot) {
-                            if (groupSnapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Center(child: CircularProgressIndicator());
-                            }
-                            if (groupSnapshot.hasData &&
-                                groupSnapshot.data!.docs.isNotEmpty) {
-                              for (final doc in groupSnapshot.data!.docs) {
-                                return FractionallySizedBox(
-                                  widthFactor: 0.47,
-                                  child: GroupCard(
-                                      groupData: doc.data(),
-                                      groupDocId: doc.id),
-                                );
-                              }
-                            }
+                    child: FutureBuilder(
+                      future: FirebaseFirestore.instance
+                          .collection('groups')
+                          .where('group_name_lowercase',
+                              isGreaterThanOrEqualTo: searchText.toLowerCase())
+                          .where('group_name_lowercase',
+                              isLessThan: searchText.toLowerCase() + 'z')
+                          .get(),
+                      builder: (context, groupSnapshot) {
+                        if (groupSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: CircularProgressIndicator());
+                        }
+                        if (groupSnapshot.hasData &&
+                            groupSnapshot.data!.docs.isNotEmpty) {
+                          List<Widget> groups = [];
+                          for (final doc in groupSnapshot.data!.docs) {
+                            groups.add(FractionallySizedBox(
+                              widthFactor: 0.48,
+                              child: GroupCard(
+                                  groupData: doc.data(), groupDocId: doc.id),
+                            ));
+                          }
 
-                            return SizedBox.shrink();
-                          },
-                        )
-                      ],
+                          return Wrap(
+                            runSpacing: 10,
+                            spacing: 10,
+                            children: groups,
+                          );
+                        }
+
+                        return SizedBox.shrink();
+                      },
                     ),
                   ),
                 ),
@@ -275,187 +282,186 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Expanded(
-                    child: Wrap(
-                      runSpacing: 10,
-                      spacing: 10,
-                      children: [
-                        FutureBuilder(
-                          future: FirebaseFirestore.instance
-                              .collection('users')
-                              .where('full_name',
-                                  isGreaterThanOrEqualTo: searchText)
-                              .where('full_name', isLessThan: searchText + 'z')
-                              .get(),
-                          builder: (context, userSnapshot) {
-                            if (userSnapshot.hasData &&
-                                userSnapshot.data!.docs.isNotEmpty) {
-                              for (final doc in userSnapshot.data!.docs) {
-                                if (doc.data()['uid'] ==
-                                    Provider.of<ProfileModel>(context,
-                                            listen: false)
-                                        .userDetails['uid']) {
-                                  return SizedBox.shrink();
-                                }
-                                return StreamBuilder<QuerySnapshot>(
-                                    stream: Provider.of<ConversationModel>(
-                                            context,
-                                            listen: false)
-                                        .fetchDoc(doc.data()['uid']),
-                                    builder: (context, snapshot) {
-                                      String? chatDocumentId;
+                    child: FutureBuilder(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .where('full_name_lowercase',
+                              isGreaterThanOrEqualTo: searchText.toLowerCase())
+                          .where('full_name_lowercase',
+                              isLessThan: searchText.toLowerCase() + 'z')
+                          .get(),
+                      builder: (context, userSnapshot) {
+                        if (userSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
 
-                                      if (snapshot.hasData &&
-                                          snapshot.data!.docs.isNotEmpty) {
-                                        chatDocumentId =
-                                            snapshot.data!.docs.first.id;
-                                      }
+                        if (userSnapshot.hasData &&
+                            userSnapshot.data!.docs.isNotEmpty) {
+                          print('userSnapshot:');
+                          print(userSnapshot.data?.docs);
 
-                                      return FractionallySizedBox(
-                                        widthFactor: 0.47,
-                                        child: PersonCard(
-                                          userName: doc.data()['full_name'],
-                                          onConnect: () async {
-                                            final friendsModel =
-                                                Provider.of<FriendsModel>(
-                                                    context,
-                                                    listen: false);
-                                            final profileModel =
-                                                Provider.of<ProfileModel>(
-                                                    context,
-                                                    listen: false);
-                                            friendsModel
-                                                .addFriend(doc.data()['uid'])
-                                                .then((_) {
-                                              friendsModel
-                                                  .addFriendNofitication(
-                                                      profileModel
-                                                          .userDetails['uid'],
-                                                      profileModel.userDetails[
-                                                          'full_name'],
-                                                      doc.data()['uid']);
-                                            });
-                                          },
-                                          onTap: () {
-                                            final friendsModel =
-                                                Provider.of<FriendsModel>(
-                                                    context,
-                                                    listen: false);
-                                            friendsModel
-                                                .viewProfile(doc.data());
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder: (BuildContext
-                                                        context) =>
-                                                    ProfileView(
-                                                        // userData: friendsModel.friendSuggestions[index],
-                                                        ),
-                                              ),
-                                            );
-                                          },
-                                          isRequestSent: (doc.data()['requests']
-                                                      as List<dynamic>)
-                                                  .map((e) => e.toString())
-                                                  .toList()
-                                                  .contains(Provider.of<
-                                                              ProfileModel>(
+                          List<Widget> userWidgets = [];
+
+                          for (final doc in userSnapshot.data!.docs) {
+                            print(doc.data()['full_name']);
+
+                            if (doc.data()['uid'] ==
+                                Provider.of<ProfileModel>(context,
+                                        listen: false)
+                                    .userDetails['uid']) {
+                              continue;
+                            }
+
+                            userWidgets.add(StreamBuilder<QuerySnapshot>(
+                                stream: Provider.of<ConversationModel>(context,
+                                        listen: false)
+                                    .fetchDoc(doc.data()['uid'] ?? ''),
+                                builder: (context, snapshot) {
+                                  String? chatDocumentId;
+
+                                  if (snapshot.hasData &&
+                                      snapshot.data!.docs.isNotEmpty) {
+                                    chatDocumentId =
+                                        snapshot.data!.docs.first.id;
+                                  }
+
+                                  return FractionallySizedBox(
+                                    widthFactor: 0.48,
+                                    child: PersonCard(
+                                      userName: doc.data()['full_name'] ?? '',
+                                      onConnect: () async {
+                                        final friendsModel =
+                                            Provider.of<FriendsModel>(context,
+                                                listen: false);
+                                        final profileModel =
+                                            Provider.of<ProfileModel>(context,
+                                                listen: false);
+                                        friendsModel
+                                            .addFriend(doc.data()['uid'] ?? '')
+                                            .then((_) {
+                                          friendsModel.addFriendNofitication(
+                                              profileModel.userDetails['uid'],
+                                              profileModel
+                                                  .userDetails['full_name'],
+                                              doc.data()['uid'] ?? '');
+                                        });
+                                      },
+                                      onTap: () {
+                                        final friendsModel =
+                                            Provider.of<FriendsModel>(context,
+                                                listen: false);
+                                        friendsModel.viewProfile(doc.data());
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (BuildContext context) =>
+                                                ProfileView(
+                                                    // userData: friendsModel.friendSuggestions[index],
+                                                    ),
+                                          ),
+                                        );
+                                      },
+                                      isRequestSent: ((doc.data()['requests'] ??
+                                                  []) as List<dynamic>)
+                                              .map((e) => e.toString())
+                                              .toList()
+                                              .contains(
+                                                  Provider.of<ProfileModel>(
                                                           context,
                                                           listen: false)
                                                       .userDetails['uid']) ||
-                                              Provider.of<FriendsModel>(context,
+                                          Provider.of<FriendsModel>(context,
+                                                  listen: false)
+                                              .requestsList
+                                              .contains(
+                                                  doc.data()['uid'] ?? ''),
+                                      isFriend: (Provider.of<ProfileModel>(
+                                                      context,
                                                       listen: false)
-                                                  .requestsList
-                                                  .contains(doc.data()['uid']),
-                                          isFriend: (Provider.of<ProfileModel>(
-                                                          context,
-                                                          listen: false)
-                                                      .userDetails['friends']
-                                                  as List<dynamic>)
-                                              .map((e) => e.toString())
-                                              .toList()
-                                              .contains(doc.data()['uid']),
-                                          isRequesting: (Provider.of<
-                                                              ProfileModel>(
-                                                          context,
-                                                          listen: false)
-                                                      .userDetails['requests']
-                                                  as List<dynamic>)
-                                              .map((e) => e.toString())
-                                              .toList()
-                                              .contains(doc.data()['uid']),
-                                          onAccept: () async {
-                                            final friendsModel =
-                                                Provider.of<FriendsModel>(
-                                                    context,
-                                                    listen: false);
-                                            final profileModel =
-                                                Provider.of<ProfileModel>(
-                                                    context,
-                                                    listen: false);
-                                            friendsModel
-                                                .confirmRequest(
-                                                    doc.data()['uid'])
-                                                .then((_) {
-                                              friendsModel
-                                                  .confirmFriendNofitication(
-                                                      profileModel
-                                                          .userDetails['uid'],
-                                                      profileModel.userDetails[
-                                                          'full_name'],
-                                                      doc.data()['uid']);
-                                            });
-                                          },
-                                          onCancel: () async {
-                                            final friendsModel =
-                                                Provider.of<FriendsModel>(
-                                                    context,
-                                                    listen: false);
+                                                  .userDetails['friends']
+                                              as List<dynamic>)
+                                          .map((e) => e.toString())
+                                          .toList()
+                                          .contains(doc.data()['uid'] ?? ''),
+                                      isRequesting: (Provider.of<ProfileModel>(
+                                                      context,
+                                                      listen: false)
+                                                  .userDetails['requests']
+                                              as List<dynamic>)
+                                          .map((e) => e.toString())
+                                          .toList()
+                                          .contains(doc.data()['uid'] ?? ''),
+                                      onAccept: () async {
+                                        final friendsModel =
+                                            Provider.of<FriendsModel>(context,
+                                                listen: false);
+                                        final profileModel =
+                                            Provider.of<ProfileModel>(context,
+                                                listen: false);
+                                        friendsModel
+                                            .confirmRequest(
+                                                doc.data()['uid'] ?? '')
+                                            .then((_) {
+                                          friendsModel
+                                              .confirmFriendNofitication(
+                                                  profileModel
+                                                      .userDetails['uid'],
+                                                  profileModel
+                                                      .userDetails['full_name'],
+                                                  doc.data()['uid'] ?? '');
+                                        });
+                                      },
+                                      onCancel: () async {
+                                        final friendsModel =
+                                            Provider.of<FriendsModel>(context,
+                                                listen: false);
 
-                                            friendsModel
-                                                .cancelRequest(
-                                                    doc.data()['uid'])
-                                                .then((_) {
-                                              friendsModel.removeNotification(
-                                                  doc.data()['uid']);
-                                            });
-                                          },
-                                          onMessage: () async {
-                                            Provider.of<ConversationModel>(
-                                                    context,
-                                                    listen: false)
-                                                .setChatDocId(chatDocumentId);
+                                        friendsModel
+                                            .cancelRequest(
+                                                doc.data()['uid'] ?? '')
+                                            .then((_) {
+                                          friendsModel.removeNotification(
+                                              doc.data()['uid'] ?? '');
+                                        });
+                                      },
+                                      onMessage: () async {
+                                        Provider.of<ConversationModel>(context,
+                                                listen: false)
+                                            .setChatDocId(chatDocumentId);
 
-                                            Navigator.of(context).push(
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (BuildContext context) =>
-                                                        Conversation(
-                                                  friendName:
-                                                      doc.data()['full_name'],
-                                                  friendProfilePic:
-                                                      doc.data()['profile_pic'],
-                                                  friendUid: doc.data()['uid'],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          profilePic: doc.data()['profile_pic'],
-                                        ),
-                                      );
-                                    });
-                              }
-                            }
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (BuildContext context) =>
+                                                Conversation(
+                                              friendName:
+                                                  doc.data()['full_name'] ?? '',
+                                              friendProfilePic:
+                                                  doc.data()['profile_pic'] ??
+                                                      '',
+                                              friendUid:
+                                                  doc.data()['uid'] ?? '',
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      profilePic:
+                                          doc.data()['profile_pic'] ?? '',
+                                    ),
+                                  );
+                                }));
+                          }
 
-                            return SizedBox.shrink();
-                          },
-                        )
-                        // if(friendsModel.activeDisplay == 'friends')
-                        // FutureBuilder(future: FirebaseFirestore.instance.collection('users')
-                        //         .where('full_name',
-                        //             isGreaterThanOrEqualTo: searchText)
-                        //         .where('full_name', isLessThan: searchText + 'z').get(), builder: (context, snapshot) {
-                        //   return SizedBox.shrink();
-                        // },)
-                      ],
+                          return Wrap(
+                            runSpacing: 10,
+                            spacing: 10,
+                            children: userWidgets,
+                          );
+                        }
+
+                        return SizedBox.shrink();
+                      },
                     ),
                   ),
                 ),

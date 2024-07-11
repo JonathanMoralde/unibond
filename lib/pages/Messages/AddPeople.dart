@@ -205,10 +205,12 @@ class _AddPeopleState extends State<AddPeople> {
                             FutureBuilder(
                               future: FirebaseFirestore.instance
                                   .collection('users')
-                                  .where('full_name',
-                                      isGreaterThanOrEqualTo: searchText)
-                                  .where('full_name',
-                                      isLessThan: searchText + 'z')
+                                  .where('full_name_lowercase',
+                                      isGreaterThanOrEqualTo:
+                                          searchText.toLowerCase())
+                                  .where('full_name_lowercase',
+                                      isLessThan:
+                                          searchText.toLowerCase() + 'z')
                                   .get(),
                               builder: (context, snapshot) {
                                 if (snapshot.hasData) {
@@ -396,12 +398,15 @@ class _AddPeopleState extends State<AddPeople> {
                       FutureBuilder(
                         future: FirebaseFirestore.instance
                             .collection('users')
-                            .where('full_name',
-                                isGreaterThanOrEqualTo: searchText)
-                            .where('full_name', isLessThan: searchText + 'z')
+                            .where('full_name_lowercase',
+                                isGreaterThanOrEqualTo:
+                                    searchText.toLowerCase())
+                            .where('full_name_lowercase',
+                                isLessThan: searchText.toLowerCase() + 'z')
                             .get(),
                         builder: (context, snapshot) {
-                          if (snapshot.hasData) {
+                          if (snapshot.hasData &&
+                              snapshot.data!.docs.isNotEmpty) {
                             return Column(
                               children: [
                                 for (final doc in snapshot.data!.docs)
