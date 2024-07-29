@@ -27,67 +27,95 @@ class _GroupChatDetailsState extends State<GroupChatDetails> {
       appBar: AppBar(
         actions: [
           if (widget.isMember)
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert), // Icon for the button
-              itemBuilder: (BuildContext context) {
-                List<PopupMenuEntry<String>> items = [];
+            StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('groups')
+                    .doc(widget.groupDocId)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return SizedBox.shrink();
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  }
+                  if (!snapshot.hasData || !snapshot.data!.exists) {
+                    return SizedBox.shrink();
+                  }
 
-                // change group pic
-                items.add(
-                  const PopupMenuItem<String>(
-                    value: 'editgroup',
-                    child: Text('Edit Group'),
-                  ),
-                );
+                  final groupData =
+                      snapshot.data!.data() as Map<String, dynamic>;
+                  final adminList = (groupData['admin'] as List<dynamic>)
+                      .map((e) => e.toString())
+                      .toList();
 
-                // join request
-                items.add(
-                  const PopupMenuItem<String>(
-                    value: 'joinrequests',
-                    child: Text('Join requests'),
-                  ),
-                );
+                  return PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert), // Icon for the button
+                    itemBuilder: (BuildContext context) {
+                      List<PopupMenuEntry<String>> items = [];
 
-                // leave group
-                items.add(
-                  const PopupMenuItem<String>(
-                    value: 'leavegroup',
-                    child: Text('Leave group chat'),
-                  ),
-                );
-
-                return items;
-              },
-              onSelected: (String value) {
-                switch (value) {
-                  // Handle additional cases if needed
-                  case 'editgroup':
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => CreateGroupChat(
-                          isEdit: true,
-                          groupDocId: widget.groupDocId,
+                      // change group pic
+                      items.add(
+                        const PopupMenuItem<String>(
+                          value: 'editgroup',
+                          child: Text('Edit Group'),
                         ),
-                      ),
-                    );
-                    break;
-                  case 'joinrequests':
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => GroupRequests(
-                          groupDocId: widget.groupDocId,
-                        ),
-                      ),
-                    );
-                    break;
-                  case 'leavegroup':
-                    Provider.of<GroupChatDetailsModel>(context, listen: false)
-                        .leaveGroup(widget.groupDocId);
+                      );
 
-                    break;
-                }
-              },
-            ),
+                      if (adminList.contains(
+                          Provider.of<ProfileModel>(context, listen: false)
+                              .userDetails['uid']))
+                        // join request
+                        items.add(
+                          const PopupMenuItem<String>(
+                            value: 'joinrequests',
+                            child: Text('Join requests'),
+                          ),
+                        );
+
+                      // leave group
+                      items.add(
+                        const PopupMenuItem<String>(
+                          value: 'leavegroup',
+                          child: Text('Leave group chat'),
+                        ),
+                      );
+
+                      return items;
+                    },
+                    onSelected: (String value) {
+                      switch (value) {
+                        // Handle additional cases if needed
+                        case 'editgroup':
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (BuildContext context) =>
+                                  CreateGroupChat(
+                                isEdit: true,
+                                groupDocId: widget.groupDocId,
+                              ),
+                            ),
+                          );
+                          break;
+                        case 'joinrequests':
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (BuildContext context) => GroupRequests(
+                                groupDocId: widget.groupDocId,
+                              ),
+                            ),
+                          );
+                          break;
+                        case 'leavegroup':
+                          Provider.of<GroupChatDetailsModel>(context,
+                                  listen: false)
+                              .leaveGroup(widget.groupDocId);
+
+                          break;
+                      }
+                    },
+                  );
+                }),
           if (!widget.isMember)
             StreamBuilder<DocumentSnapshot>(
                 stream: FirebaseFirestore.instance

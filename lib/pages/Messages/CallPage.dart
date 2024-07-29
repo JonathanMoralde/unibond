@@ -14,7 +14,8 @@ import 'package:unibond/provider/ProfileModel.dart';
 
 class CallPage extends StatefulWidget {
   final CallModel call;
-  const CallPage({super.key, required this.call});
+  final List<String>? fcmTokens;
+  const CallPage({super.key, required this.call, this.fcmTokens});
 
   @override
   State<CallPage> createState() => _CallPageState();
@@ -40,18 +41,18 @@ class _CallPageState extends State<CallPage> {
     setState(() {
       callId = widget.call.id;
     });
-    // getToken().then((_) {
-    //   initAgora().then((_) {
-    //     if (callId == null) {
-    //       makeCall();
-    //     }
-    //   });
-    // });
-    initAgora().then((_) {
-      if (callId == null) {
-        makeCall();
-      }
+    getToken().then((_) {
+      initAgora().then((_) {
+        if (callId == null) {
+          makeCall();
+        }
+      });
     });
+    // initAgora().then((_) {
+    //   if (callId == null) {
+    //     makeCall();
+    //   }
+    // });
   }
 
   Future<void> initAgora() async {
@@ -62,10 +63,11 @@ class _CallPageState extends State<CallPage> {
     setState(() {
       client = AgoraClient(
         agoraConnectionData: AgoraConnectionData(
-            appId: appId,
-            channelName: widget.call.channel,
-            // tempToken: token,
-            tokenUrl: 'https://unibond-token-server.onrender.com'),
+          appId: appId,
+          channelName: widget.call.channel,
+          tempToken: token,
+          // tokenUrl: 'https://unibond-token-server.onrender.com'
+        ),
         agoraEventHandlers: AgoraRtcEventHandlers(
           onJoinChannelSuccess: (connection, uid) {
             print('\x1B[31mlocal user joined: $uid\x1B[0m');
@@ -164,6 +166,7 @@ class _CallPageState extends State<CallPage> {
       'channel': '${widget.call.caller}-${widget.call.called}',
       'caller_uid': widget.call.caller,
       'caller_name': widget.call.callerName,
+      'caller_pic': widget.call.callerPic,
       'called_uid': widget.call.called,
       'active': true,
       'accepted': false,
@@ -171,52 +174,109 @@ class _CallPageState extends State<CallPage> {
       'connected': false,
       'is_video_call': widget.call.isVideoCall
     });
+
+    for (final fcmToken in widget.fcmTokens!) {
+      await sendPushNotification(fcmToken);
+    }
+  }
+
+  Future<void> sendPushNotification(String token) async {
+    final String notificationTitle = "Incoming Call";
+    final String notificationBody =
+        "You have an incoming call from ${widget.call.callerName}";
+
+    final response = await http.post(
+      Uri.parse('https://unibond-token-server.onrender.com/send_notification'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'token': token, // replace with the actual recipient's FCM token
+        'title': notificationTitle,
+        'body': notificationBody,
+        'callData': {
+          'id': callId,
+          'callerPic': widget.call.callerPic,
+          'caller': widget.call.caller,
+          'callerName': widget.call.callerName,
+          'called': widget.call.called,
+          'channel': widget.call.channel,
+          'isVideoCall': widget.call.isVideoCall
+        },
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print("Notification sent successfully");
+    } else {
+      print("Failed to send notification: ${response.body}");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     print('\x1B[31mlocla user joined: $isLocalUserJoined\x1B[0m');
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-      ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            if (client == null) CircularProgressIndicator(),
-            if (client != null)
-              AgoraVideoViewer(
-                client: client!,
-                layoutType: Layout.oneToOne,
-                enableHostControls: true, // Add this to enable host controls
-              ),
-            if (client != null)
-              AgoraVideoButtons(
-                client: client!,
-              ),
-            if (callId != null)
-              StreamBuilder(
-                  stream: FirebaseFirestore.instance
-                      .collection('calls')
-                      .doc(callId)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      final data =
-                          snapshot.data!.data() as Map<String, dynamic>;
-                      if (data['rejected'] == true) {
-                        Fluttertoast.showToast(
-                            msg: "Call rejected", gravity: ToastGravity.CENTER);
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          Navigator.pop(context);
-                        });
-                        return SizedBox.shrink();
-                      }
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+        ),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              if (client == null) CircularProgressIndicator(),
+              if (client != null)
+                AgoraVideoViewer(
+                  client: client!,
+                  layoutType: Layout.oneToOne,
+                  enableHostControls: true, // Add this to enable host controls
+                ),
+              if (client != null && callId != null)
+                AgoraVideoButtons(
+                  client: client!,
+                  onDisconnect: () async {
+                    if (callId != null) {
+                      FirebaseFirestore.instance
+                          .collection('calls')
+                          .doc(callId)
+                          .update({'active': false, 'connected': false});
                     }
+                  },
+                ),
+              if (callId != null)
+                StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('calls')
+                        .doc(callId)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final data =
+                            snapshot.data!.data() as Map<String, dynamic>;
+                        if (data['rejected'] == true) {
+                          Fluttertoast.showToast(
+                              msg: "Call rejected",
+                              gravity: ToastGravity.CENTER);
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            Navigator.pop(context);
+                          });
+                          return SizedBox.shrink();
+                        }
+                        if (data['active'] == false) {
+                          Fluttertoast.showToast(
+                              msg: "Call Ended", gravity: ToastGravity.CENTER);
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            Navigator.pop(context);
+                          });
+                          return SizedBox.shrink();
+                        }
+                      }
 
-                    return SizedBox.shrink();
-                  })
-          ],
+                      return SizedBox.shrink();
+                    })
+            ],
+          ),
         ),
       ),
     );

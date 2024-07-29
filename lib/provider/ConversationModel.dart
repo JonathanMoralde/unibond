@@ -133,10 +133,11 @@ class ConversationModel extends ChangeNotifier {
             // Add the initial message to the messages subcollection
             await messagesCollection.add({
               'is_read': false,
-              'message_text': message,
+              'content': message,
               'receiver_id': friendUid,
               'sender_id': uid,
               'timestamp': timeSent,
+              'type': 'text'
             });
 
             _chatDocId = newChatDocId;

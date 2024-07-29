@@ -57,6 +57,7 @@ class AuthModel extends ChangeNotifier {
           'friends': [],
           'friend_requests': [],
           'interests': [],
+          'requests': [],
           'bio': '',
           'profile_pic': '',
           'cover_pic': '',
@@ -97,6 +98,7 @@ class AuthModel extends ChangeNotifier {
         backgroundColor: Colors.red,
         textColor: Colors.white,
       );
+      rethrow;
     }
   }
 
@@ -167,7 +169,7 @@ class AuthModel extends ChangeNotifier {
       return false;
     } catch (e) {
       print(e);
-      return false;
+      rethrow;
     }
   }
 }

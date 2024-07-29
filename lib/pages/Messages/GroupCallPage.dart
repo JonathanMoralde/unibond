@@ -193,54 +193,131 @@ class _GroupCallPageState extends State<GroupCallPage> {
       'members': widget.call.members, //List of String
       'joined': [widget.call.caller], //list of String
       'chat_doc_id': widget.chatDocId,
-      'is_video_call': widget.call.isVideoCall
+      'is_video_call': widget.call.isVideoCall,
+      'rejected': []
     });
   }
 
   @override
   Widget build(BuildContext context) {
     print('\x1B[31mlocla user joined: $isLocalUserJoined\x1B[0m');
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-      ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            if (client == null) CircularProgressIndicator(),
-            if (client != null)
-              AgoraVideoViewer(
-                client: client!,
-                layoutType: Layout.grid,
-                enableHostControls: true, // Add this to enable host controls
-              ),
-            if (client != null)
-              AgoraVideoButtons(
-                client: client!,
-              ),
-            // if (callId != null)
-            //   StreamBuilder(
-            //       stream: FirebaseFirestore.instance
-            //           .collection('group_calls')
-            //           .doc(callId)
-            //           .snapshots(),
-            //       builder: (context, snapshot) {
-            //         if (snapshot.hasData) {
-            //           final data =
-            //               snapshot.data!.data() as Map<String, dynamic>;
-            //           if (data['rejected'] == true) {
-            //             Fluttertoast.showToast(
-            //                 msg: "Call rejected", gravity: ToastGravity.CENTER);
-            //             WidgetsBinding.instance.addPostFrameCallback((_) {
-            //               Navigator.pop(context);
-            //             });
-            //             return SizedBox.shrink();
-            //           }
-            //         }
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+        ),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              if (client == null) CircularProgressIndicator(),
+              if (client != null)
+                AgoraVideoViewer(
+                  client: client!,
+                  layoutType: Layout.grid,
+                  enableHostControls: true, // Add this to enable host controls
+                ),
+              if (client != null && callId != null)
+                StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('group_calls')
+                        .doc(callId)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final data =
+                            snapshot.data!.data() as Map<String, dynamic>;
 
-            //         return SizedBox.shrink();
-            //       })
-          ],
+                        final joined = (data['joined'] as List<dynamic>)
+                            .map((e) => e.toString())
+                            .toList();
+
+                        return AgoraVideoButtons(
+                          onDisconnect: () async {
+                            if (joined.length == 1 &&
+                                joined.contains(widget.userUid)) {
+                              FirebaseFirestore.instance
+                                  .collection('group_calls')
+                                  .doc(callId)
+                                  .update({'active': false, 'joined': []});
+
+                              DocumentReference chatDoc = FirebaseFirestore
+                                  .instance
+                                  .collection('groups')
+                                  .doc(widget.chatDocId);
+
+                              CollectionReference messagesCollection =
+                                  chatDoc.collection('messages');
+
+                              Timestamp timeSent = Timestamp.now();
+
+                              await messagesCollection.add({
+                                'is_read': false,
+                                'content':
+                                    '${widget.call.isVideoCall ? 'video ' : ''}call ended',
+                                'sender_id': widget.userUid,
+                                'sender_name': widget.call.callerName,
+                                'sender_profile_pic': '',
+                                'timestamp': timeSent,
+                                'type': 'notify'
+                              });
+
+                              await chatDoc.update({
+                                'latest_chat_message':
+                                    '${widget.call.isVideoCall ? 'video ' : ''}call ended',
+                                'latest_chat_user': widget.userUid,
+                                'latest_timestamp': timeSent,
+                              });
+                            }
+
+                            if (joined.length > 1 &&
+                                joined.contains(widget.userUid)) {
+                              joined.remove(widget.userUid);
+
+                              FirebaseFirestore.instance
+                                  .collection('group_calls')
+                                  .doc(callId)
+                                  .update({'joined': joined});
+
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                Navigator.pop(context);
+                              });
+                            }
+                          },
+                          client: client!,
+                        );
+                      }
+
+                      return SizedBox.shrink();
+                    }),
+              if (callId != null)
+                StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('group_calls')
+                        .doc(callId)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        final data =
+                            snapshot.data!.data() as Map<String, dynamic>;
+
+                        final joined = (data['joined'] as List<dynamic>)
+                            .map((e) => e.toString())
+                            .toList();
+                        if (joined.length == 0 || data['active'] == false) {
+                          Fluttertoast.showToast(
+                              msg: "Call Ended", gravity: ToastGravity.CENTER);
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            Navigator.pop(context);
+                          });
+                          return SizedBox.shrink();
+                        }
+                      }
+
+                      return SizedBox.shrink();
+                    })
+            ],
+          ),
         ),
       ),
     );
@@ -301,12 +378,12 @@ class _GroupCallPageState extends State<GroupCallPage> {
       }
 
       if (callJoined.length > 1 && callJoined.contains(widget.userUid)) {
-        final newJoined = callJoined.remove(widget.userUid);
+        callJoined.remove(widget.userUid);
 
         FirebaseFirestore.instance
             .collection('group_calls')
             .doc(callId)
-            .update({'joined': newJoined});
+            .update({'joined': callJoined});
       }
     }
   }

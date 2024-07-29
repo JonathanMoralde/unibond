@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:unibond/model/CallModel.dart';
+import 'package:uuid/uuid.dart';
 
 class NavigationModel extends ChangeNotifier {
   int currentIndex = 4;
@@ -16,6 +18,16 @@ class NavigationModel extends ChangeNotifier {
   }
 
   String? lastCallId;
+  String? uuid;
+  CallModel? activeCall;
+
+  void setNewUuid(String newUuid) {
+    uuid = newUuid;
+  }
+
+  void setActiveCall(CallModel call) {
+    activeCall = call;
+  }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> watchCalls() {
     final uid = FirebaseAuth.instance.currentUser!.uid;

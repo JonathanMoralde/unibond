@@ -3,6 +3,7 @@ class CallModel {
   String channel;
   String caller;
   String callerName;
+  String? callerPic;
   String called;
   bool? active;
   bool? accepted;
@@ -14,6 +15,7 @@ class CallModel {
     required this.channel,
     required this.caller,
     required this.callerName,
+    this.callerPic,
     required this.called,
     required this.active,
     required this.accepted,

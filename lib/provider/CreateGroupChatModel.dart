@@ -150,6 +150,7 @@ class CreateGroupChatModel extends ChangeNotifier {
           'group_description': descriptionController.text,
           'admin': [userUid],
           'members': [userUid, ...selectedUsers],
+          'requests': [],
           'latest_chat_message': '$userName created the group',
           'latest_chat_user': userUid,
           'latest_timestamp': timeSent,

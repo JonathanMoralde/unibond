@@ -12,6 +12,8 @@ import 'package:unibond/pages/Messages/GroupCallPage.dart';
 import '../main.dart'; // Import the file where the GlobalKey is defined
 
 class NotificationService {
+  static bool isNotifActive = false;
+
   static Future<void> initializeNotification() async {
     await AwesomeNotifications().initialize(
       null,
@@ -25,10 +27,11 @@ class NotificationService {
             ledColor: Colors.white,
             importance: NotificationImportance.Max,
             channelShowBadge: true,
-            // onlyAlertOnce: true,
-            // playSound: true,
-            // criticalAlerts: true,
+            onlyAlertOnce: true,
+            playSound: true,
+            criticalAlerts: true,
             defaultRingtoneType: DefaultRingtoneType.Ringtone,
+            locked: true,
             enableVibration: true)
       ],
       channelGroups: [
@@ -78,6 +81,7 @@ class NotificationService {
 
     if (payload["navigate"] == "true") {
       if (receivedAction.buttonKeyPressed == 'ACCEPT') {
+        isNotifActive = false;
         if (payload['groupName'] == null) {
           // Accept call
           FirebaseFirestore.instance
@@ -89,6 +93,7 @@ class NotificationService {
           navigatorKey.currentState?.push(
             MaterialPageRoute(
               builder: (context) => CallPage(
+                fcmTokens: [],
                 call: CallModel(
                     id: payload['callId'],
                     caller: payload['caller'] ?? '',
@@ -114,39 +119,42 @@ class NotificationService {
                 FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid])
           });
 
-          final joinedList = payload['joined']!.split(',');
-          final rejectedList = payload['rejected']!.split(',');
-          final membersList = payload['members']!.split(',');
+          final joinedList = payload['joined']?.split(',') ?? [];
+          final rejectedList = payload['rejected']?.split(',') ?? [];
+          final membersList = payload['members']?.split(',') ?? [];
 
           // Navigate to CallPage using the global navigator key
-          navigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (context) => GroupCallPage(
-                chatDocId: payload['chatDocId'] ?? '',
-                userUid: FirebaseAuth.instance.currentUser!.uid,
-                call: GroupCallModel(
-                    id: payload['callId'],
-                    caller: payload['caller'] ?? '',
-                    callerName: payload['callerName'] ?? '',
-                    channel: payload['channelName'] ?? '',
-                    active: true,
-                    groupName: payload['groupName'] ?? '',
-                    joined: joinedList,
-                    rejected: rejectedList,
-                    members: membersList,
-                    isVideoCall:
-                        payload['isVideoCall']?.toLowerCase() == 'true'),
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => GroupCallPage(
+                  chatDocId: payload['chatDocId'] ?? '',
+                  userUid: FirebaseAuth.instance.currentUser!.uid,
+                  call: GroupCallModel(
+                      id: payload['callId'],
+                      caller: payload['caller'] ?? '',
+                      callerName: payload['callerName'] ?? '',
+                      channel: payload['channelName'] ?? '',
+                      active: true,
+                      groupName: payload['groupName'] ?? '',
+                      joined: joinedList,
+                      rejected: rejectedList,
+                      members: membersList,
+                      isVideoCall:
+                          payload['isVideoCall']?.toLowerCase() == 'true'),
+                ),
               ),
-            ),
-          );
+            );
+          });
         }
       } else if (receivedAction.buttonKeyPressed == 'REJECT') {
+        isNotifActive = false;
         if (payload['groupName'] == null) {
           // Reject call
           FirebaseFirestore.instance
               .collection('calls')
               .doc(payload['callId'])
-              .update({'rejected': true});
+              .update({'rejected': true, 'active': false});
         } else {
           // Reject call
           FirebaseFirestore.instance
@@ -190,6 +198,7 @@ class NotificationService {
         bigPicture: bigPicture,
         wakeUpScreen: true,
         autoDismissible: false,
+        locked: true,
       ),
       actionButtons: actionButtons,
       schedule: scheduled
