@@ -114,6 +114,7 @@ class _GroupConversationState extends State<GroupConversation> {
                                   .userDetails['uid'],
                           call: GroupCallModel(
                               id: null,
+                              groupPic: groupData['group_pic'],
                               channel: groupData['group_name'],
                               caller: Provider.of<ProfileModel>(context,
                                       listen: false)

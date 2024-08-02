@@ -52,10 +52,9 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
     _tabController?.addListener(_handleTabSelection);
 
     // Initialize notifications
-    NotificationService.initializeNotification();
+    // NotificationService.initializeNotification();
     FirebaseMessagingApi().initPushNotification();
     FirebaseMessagingApi().initialize(context);
-    initializeCallkit();
   }
 
   void _handleTabSelection() {
@@ -316,99 +315,99 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
     });
   }
 
-  Future<void> showCallkitIncoming(
-      String uuid, String callerName, String callerPic) async {
-    final params = CallKitParams(
-      id: uuid,
-      nameCaller: callerName,
-      appName: 'Callkit',
-      avatar: callerPic,
-      handle: '0123456789',
-      type: 0,
-      textAccept: 'Accept',
-      textDecline: 'Decline',
-      missedCallNotification: const NotificationParams(
-        showNotification: true,
-        isShowCallback: false,
-        subtitle: 'Missed call',
-        callbackText: 'Call back',
-      ),
-      extra: <String, dynamic>{'userId': '1a2b3c4d'},
-      headers: <String, dynamic>{'apiKey': 'Abc@123!', 'platform': 'flutter'},
-      android: const AndroidParams(
-        isCustomNotification: true,
-        isShowLogo: false,
-        ringtonePath: 'system_ringtone_default',
-        backgroundColor: '#F5F5F5',
-        backgroundUrl: 'assets/test.png',
-        actionColor: '#4CAF50',
-        textColor: '#ffffff',
-      ),
-    );
-    await FlutterCallkitIncoming.showCallkitIncoming(params);
-  }
-
-  Future<void> endIncomingCall(String uuid) async {
-    await FlutterCallkitIncoming.endCall(uuid);
-  }
-
-  void initializeCallkit() {
-    FlutterCallkitIncoming.onEvent.listen((CallEvent? event) async {
-      switch (event?.event) {
-        case Event.actionCallAccept:
-          // Handle call accept
-          // print(currentCall);
-
-          // // Accept call
-          // FirebaseFirestore.instance
-          //     .collection('calls')
-          //     .doc(currentCall!.id)
-          //     .update({'accepted': true});
-
-          // WidgetsBinding.instance.addPostFrameCallback((_) {
-          //   // Navigate to CallPage using the global navigator key
-          //   navigatorKey.currentState?.push(
-          //     MaterialPageRoute(
-          //       builder: (context) => CallPage(
-          //         call: CallModel(
-          //             id: currentCall.id,
-          //             caller: currentCall.caller ?? '',
-          //             callerName: currentCall.callerName ?? '',
-          //             called: currentCall.called ?? '',
-          //             channel: currentCall.channel ?? '',
-          //             active: true,
-          //             accepted: true,
-          //             rejected: false,
-          //             connected: false,
-          //             isVideoCall: currentCall.isVideoCall),
-          //       ),
-          //     ),
-          //   );
-          // });
-
-          break;
-        case Event.actionCallDecline:
-          // Handle call decline
-          break;
-        default:
-          break;
-      }
-    });
-  }
-
-  // Future<dynamic> getCurrentCall() async {
-  //   //check current call from pushkit if possible
-  //   var calls = await FlutterCallkitIncoming.activeCalls();
-  //   if (calls is List) {
-  //     if (calls.isNotEmpty) {
-  //       print('DATA: $calls');
-  //       // _currentUuid = calls[0]['id'];
-  //       return calls[0];
-  //     } else {
-  //       // _currentUuid = "";
-  //       return null;
-  //     }
-  //   }
-  //   return calls;
+  // Future<void> showCallkitIncoming(
+  //     String uuid, String callerName, String callerPic) async {
+  //   final params = CallKitParams(
+  //     id: uuid,
+  //     nameCaller: callerName,
+  //     appName: 'Callkit',
+  //     avatar: callerPic,
+  //     handle: '0123456789',
+  //     type: 0,
+  //     textAccept: 'Accept',
+  //     textDecline: 'Decline',
+  //     missedCallNotification: const NotificationParams(
+  //       showNotification: true,
+  //       isShowCallback: false,
+  //       subtitle: 'Missed call',
+  //       callbackText: 'Call back',
+  //     ),
+  //     extra: <String, dynamic>{'userId': '1a2b3c4d'},
+  //     headers: <String, dynamic>{'apiKey': 'Abc@123!', 'platform': 'flutter'},
+  //     android: const AndroidParams(
+  //       isCustomNotification: true,
+  //       isShowLogo: false,
+  //       ringtonePath: 'system_ringtone_default',
+  //       backgroundColor: '#F5F5F5',
+  //       backgroundUrl: 'assets/test.png',
+  //       actionColor: '#4CAF50',
+  //       textColor: '#ffffff',
+  //     ),
+  //   );
+  //   await FlutterCallkitIncoming.showCallkitIncoming(params);
   // }
+
+  // Future<void> endIncomingCall(String uuid) async {
+  //   await FlutterCallkitIncoming.endCall(uuid);
+  // }
+
+  // void initializeCallkit() {
+  //   FlutterCallkitIncoming.onEvent.listen((CallEvent? event) async {
+  //     switch (event?.event) {
+  //       case Event.actionCallAccept:
+  //         // Handle call accept
+  //         // print(currentCall);
+
+  //         // // Accept call
+  //         // FirebaseFirestore.instance
+  //         //     .collection('calls')
+  //         //     .doc(currentCall!.id)
+  //         //     .update({'accepted': true});
+
+  //         // WidgetsBinding.instance.addPostFrameCallback((_) {
+  //         //   // Navigate to CallPage using the global navigator key
+  //         //   navigatorKey.currentState?.push(
+  //         //     MaterialPageRoute(
+  //         //       builder: (context) => CallPage(
+  //         //         call: CallModel(
+  //         //             id: currentCall.id,
+  //         //             caller: currentCall.caller ?? '',
+  //         //             callerName: currentCall.callerName ?? '',
+  //         //             called: currentCall.called ?? '',
+  //         //             channel: currentCall.channel ?? '',
+  //         //             active: true,
+  //         //             accepted: true,
+  //         //             rejected: false,
+  //         //             connected: false,
+  //         //             isVideoCall: currentCall.isVideoCall),
+  //         //       ),
+  //         //     ),
+  //         //   );
+  //         // });
+
+  //         break;
+  //       case Event.actionCallDecline:
+  //         // Handle call decline
+  //         break;
+  //       default:
+  //         break;
+  //     }
+  //   });
+  // }
+
+  // // Future<dynamic> getCurrentCall() async {
+  // //   //check current call from pushkit if possible
+  // //   var calls = await FlutterCallkitIncoming.activeCalls();
+  // //   if (calls is List) {
+  // //     if (calls.isNotEmpty) {
+  // //       print('DATA: $calls');
+  // //       // _currentUuid = calls[0]['id'];
+  // //       return calls[0];
+  // //     } else {
+  // //       // _currentUuid = "";
+  // //       return null;
+  // //     }
+  // //   }
+  // //   return calls;
+  // // }
 }

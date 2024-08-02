@@ -196,6 +196,63 @@ class _GroupCallPageState extends State<GroupCallPage> {
       'is_video_call': widget.call.isVideoCall,
       'rejected': []
     });
+
+    // fetch fcm for each users
+    for (final memberUid in widget.call.members) {
+      if (memberUid != widget.call.caller) {
+        final result = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(memberUid)
+            .collection('fcm_tokens')
+            .get();
+        if (result.docs.isNotEmpty) {
+          // send push notification to each fcm_token
+          for (final fcmToken in result.docs
+              .map((doc) => doc.data()['fcm_token'] as String)
+              .toList()) {
+            await sendPushNotification(fcmToken, memberUid);
+          }
+        }
+      }
+    }
+  }
+
+  Future<void> sendPushNotification(String token, String userCalled) async {
+    final String notificationTitle = "Incoming Call";
+    final String notificationBody =
+        "You have an incoming call from ${widget.call.callerName}";
+
+    final response = await http.post(
+      Uri.parse('https://unibond-token-server.onrender.com/send_notification'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'token': token, // replace with the actual recipient's FCM token
+        'title': notificationTitle,
+        'body': notificationBody,
+        'callData': {
+          'id': callId,
+          'callerPic': widget.call.groupPic,
+          'caller': widget.call.caller,
+          'callerName': widget.call.callerName,
+          'called': userCalled,
+          'groupName': widget.call.groupName,
+          'members': widget.call.members,
+          'joined': [widget.call.caller],
+          'rejected': widget.call.rejected,
+          'channel': widget.call.channel,
+          'chatDocId': widget.chatDocId,
+          'isVideoCall': widget.call.isVideoCall
+        },
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print("Notification sent successfully");
+    } else {
+      print("Failed to send notification: ${response.body}");
+    }
   }
 
   @override

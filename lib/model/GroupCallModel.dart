@@ -4,6 +4,7 @@ class GroupCallModel {
   String caller;
   String callerName;
   String groupName;
+  String? groupPic;
   bool? active;
   List<String> members;
   List<String> joined;
@@ -15,6 +16,7 @@ class GroupCallModel {
     required this.caller,
     required this.callerName,
     required this.groupName,
+    this.groupPic,
     required this.active,
     required this.members,
     required this.joined,

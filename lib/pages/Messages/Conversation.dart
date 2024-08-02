@@ -71,109 +71,183 @@ class _ConversationState extends State<Conversation> {
           ],
         ),
         actions: [
-          IconButton(
-            onPressed: () async {
-              // TODO CHECK FIRST IF FRIEND IS IN ANOTHER CALL
-              // TODO FRIEND IS ALREADY CALLLING
+          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance
+                  .collection('calls')
+                  .where('called_uid', isEqualTo: widget.friendUid)
+                  .where('active', isEqualTo: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  final data = snapshot.data!.docs.first.data();
 
-              final result = await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(widget.friendUid)
-                  .collection('fcm_tokens')
-                  .get();
+                  return IconButton(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.videocam,
+                        color: Colors.grey,
+                      ));
+                }
+                return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection('calls')
+                        .where('caller_uid', isEqualTo: widget.friendUid)
+                        .where('active', isEqualTo: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                        final data = snapshot.data!.docs.first.data();
 
-              if (result.docs.isNotEmpty) {
-                // get fcm tokens of the user
-                final List<String> fcmTokens = result.docs
-                    .map((doc) => doc.data()['fcm_token'] as String)
-                    .toList();
+                        return IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.videocam,
+                              color: Colors.grey,
+                            ));
+                      }
+                      return IconButton(
+                        onPressed: () async {
+                          final result = await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(widget.friendUid)
+                              .collection('fcm_tokens')
+                              .get();
 
-                // VIDEO CALL
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (BuildContext context) {
-                    return CallPage(
-                      fcmTokens: fcmTokens,
-                      call: CallModel(
-                          accepted: null,
-                          active: null,
-                          called: widget.friendUid,
-                          caller:
-                              Provider.of<ProfileModel>(context, listen: false)
-                                  .userDetails['uid'],
-                          callerName:
-                              Provider.of<ProfileModel>(context, listen: false)
-                                  .userDetails['full_name'],
-                          callerPic:
-                              Provider.of<ProfileModel>(context, listen: false)
-                                  .userDetails['profile_pic'],
-                          channel:
-                              '${Provider.of<ProfileModel>(context, listen: false).userDetails['uid']}-${widget.friendUid}', //localuseruid-frienduid
-                          // channel: 'test', //localuseruid-frienduid
-                          connected: null,
-                          id: null,
-                          rejected: null,
-                          isVideoCall: true),
-                    );
-                  }),
-                );
-              }
-            },
-            icon: const Icon(
-              Icons.videocam,
-              color: Colors.black,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-          IconButton(
-            onPressed: () async {
-              final result = await FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(widget.friendUid)
-                  .collection('fcm_tokens')
-                  .get();
+                          if (result.docs.isNotEmpty) {
+                            // get fcm tokens of the user
+                            final List<String> fcmTokens = result.docs
+                                .map((doc) => doc.data()['fcm_token'] as String)
+                                .toList();
 
-              if (result.docs.isNotEmpty) {
-                // get fcm tokens of the user
-                final List<String> fcmTokens = result.docs
-                    .map((doc) => doc.data()['fcm_token'] as String)
-                    .toList();
+                            // VIDEO CALL
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) {
+                                return CallPage(
+                                  fcmTokens: fcmTokens,
+                                  call: CallModel(
+                                      accepted: null,
+                                      active: null,
+                                      called: widget.friendUid,
+                                      caller: Provider.of<ProfileModel>(context,
+                                              listen: false)
+                                          .userDetails['uid'],
+                                      callerName: Provider.of<ProfileModel>(
+                                              context,
+                                              listen: false)
+                                          .userDetails['full_name'],
+                                      callerPic: Provider.of<ProfileModel>(
+                                              context,
+                                              listen: false)
+                                          .userDetails['profile_pic'],
+                                      channel:
+                                          '${Provider.of<ProfileModel>(context, listen: false).userDetails['uid']}-${widget.friendUid}', //localuseruid-frienduid
+                                      // channel: 'test', //localuseruid-frienduid
+                                      connected: null,
+                                      id: null,
+                                      rejected: null,
+                                      isVideoCall: true),
+                                );
+                              }),
+                            );
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.videocam,
+                          color: Colors.black,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      );
+                    });
+              }),
+          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirebaseFirestore.instance
+                  .collection('calls')
+                  .where('called_uid', isEqualTo: widget.friendUid)
+                  .where('active', isEqualTo: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  final data = snapshot.data!.docs.first.data();
 
-                // AUDIO CALL
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (BuildContext context) {
-                    return CallPage(
-                      fcmTokens: fcmTokens,
-                      call: CallModel(
-                          accepted: null,
-                          active: null,
-                          called: widget.friendUid,
-                          caller:
-                              Provider.of<ProfileModel>(context, listen: false)
-                                  .userDetails['uid'],
-                          callerName:
-                              Provider.of<ProfileModel>(context, listen: false)
-                                  .userDetails['full_name'],
-                          channel:
-                              '${Provider.of<ProfileModel>(context, listen: false).userDetails['uid']}-${widget.friendUid}',
-                          connected: null,
-                          id: null,
-                          rejected: null,
-                          isVideoCall: false),
-                    );
-                  }),
-                );
-              }
-            },
-            icon: const Icon(
-              Icons.call,
-              color: Colors.black,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          )
+                  return const IconButton(
+                      onPressed: null,
+                      icon: Icon(
+                        Icons.videocam,
+                        color: Colors.grey,
+                      ));
+                }
+                return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection('calls')
+                        .where('caller_uid', isEqualTo: widget.friendUid)
+                        .where('active', isEqualTo: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                        final data = snapshot.data!.docs.first.data();
+
+                        return IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.videocam,
+                              color: Colors.grey,
+                            ));
+                      }
+                      return IconButton(
+                        onPressed: () async {
+                          final result = await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(widget.friendUid)
+                              .collection('fcm_tokens')
+                              .get();
+
+                          if (result.docs.isNotEmpty) {
+                            // get fcm tokens of the user
+                            final List<String> fcmTokens = result.docs
+                                .map((doc) => doc.data()['fcm_token'] as String)
+                                .toList();
+
+                            // AUDIO CALL
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) {
+                                return CallPage(
+                                  fcmTokens: fcmTokens,
+                                  call: CallModel(
+                                      accepted: null,
+                                      active: null,
+                                      called: widget.friendUid,
+                                      caller: Provider.of<ProfileModel>(context,
+                                              listen: false)
+                                          .userDetails['uid'],
+                                      callerName: Provider.of<ProfileModel>(
+                                              context,
+                                              listen: false)
+                                          .userDetails['full_name'],
+                                      channel:
+                                          '${Provider.of<ProfileModel>(context, listen: false).userDetails['uid']}-${widget.friendUid}',
+                                      connected: null,
+                                      id: null,
+                                      rejected: null,
+                                      isVideoCall: false),
+                                );
+                              }),
+                            );
+                          }
+                        },
+                        icon: const Icon(
+                          Icons.call,
+                          color: Colors.black,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      );
+                    });
+              })
         ],
       ),
       body: Consumer2<ConversationModel, ProfileModel>(

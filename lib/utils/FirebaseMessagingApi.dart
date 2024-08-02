@@ -11,7 +11,9 @@ import 'package:flutter_callkit_incoming/entities/notification_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
 import 'package:unibond/main.dart';
 import 'package:unibond/model/CallModel.dart';
+import 'package:unibond/model/GroupCallModel.dart';
 import 'package:unibond/pages/Messages/CallPage.dart';
+import 'package:unibond/pages/Messages/GroupCallPage.dart';
 import 'package:uuid/uuid.dart';
 
 class FirebaseMessagingApi {
@@ -49,41 +51,102 @@ class FirebaseMessagingApi {
           // Handle call accept
           // print(currentCall);
 
-          // Accept call
-          FirebaseFirestore.instance
-              .collection('calls')
-              .doc(callData['id'])
-              .update({'accepted': true});
+          if (callData['groupName'] != null) {
+            //  Accept call
+            FirebaseFirestore.instance
+                .collection('group_calls')
+                .doc(callData['id'])
+                .update({
+              'joined': FieldValue.arrayUnion(
+                  [FirebaseAuth.instance.currentUser!.uid])
+            });
 
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final joinedList = (callData['joined'] as List<dynamic>)
+                .map((e) => e.toString())
+                .toList();
+            final rejectedList = (callData['rejected'] as List<dynamic>)
+                .map((e) => e.toString())
+                .toList();
+            final membersList = (callData['members'] as List<dynamic>)
+                .map((e) => e.toString())
+                .toList();
+            print('joined: $joinedList');
+            print('rejected: $rejectedList');
+            print('members: $membersList');
+
             // Navigate to CallPage using the global navigator key
-            navigatorKey.currentState?.push(
-              MaterialPageRoute(
-                builder: (context) => CallPage(
-                  call: CallModel(
-                      id: callData['id'],
-                      caller: callData['caller'] ?? '',
-                      callerName: callData['callerName'] ?? '',
-                      called: callData['called'] ?? '',
-                      channel: callData['channel'] ?? '',
-                      active: true,
-                      accepted: true,
-                      rejected: false,
-                      connected: false,
-                      isVideoCall: callData['isVideoCall']),
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              navigatorKey.currentState?.push(
+                MaterialPageRoute(
+                  builder: (context) => GroupCallPage(
+                    chatDocId: callData['chatDocId'],
+                    userUid: FirebaseAuth.instance.currentUser!.uid,
+                    call: GroupCallModel(
+                        id: callData['id'],
+                        caller: callData['caller'],
+                        callerName: callData['callerName'],
+                        channel: callData['channel'],
+                        active: true,
+                        groupName: callData['groupName'],
+                        joined: [
+                          FirebaseAuth.instance.currentUser!.uid,
+                          ...joinedList
+                        ],
+                        rejected: rejectedList,
+                        members: membersList,
+                        isVideoCall: callData['isVideoCall']),
+                  ),
                 ),
-              ),
-            );
-          });
+              );
+            });
+          } else {
+            // Accept call
+            FirebaseFirestore.instance
+                .collection('calls')
+                .doc(callData['id'])
+                .update({'accepted': true});
+
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // Navigate to CallPage using the global navigator key
+              navigatorKey.currentState?.push(
+                MaterialPageRoute(
+                  builder: (context) => CallPage(
+                    call: CallModel(
+                        id: callData['id'],
+                        caller: callData['caller'] ?? '',
+                        callerName: callData['callerName'] ?? '',
+                        called: callData['called'] ?? '',
+                        channel: callData['channel'] ?? '',
+                        active: true,
+                        accepted: true,
+                        rejected: false,
+                        connected: false,
+                        isVideoCall: callData['isVideoCall']),
+                  ),
+                ),
+              );
+            });
+          }
 
           break;
         case Event.actionCallDecline:
           // Handle call decline
-          // Reject call
-          FirebaseFirestore.instance
-              .collection('calls')
-              .doc(callData['id'])
-              .update({'rejected': true, 'active': false});
+          if (callData['groupName'] != null) {
+            // Reject call
+            FirebaseFirestore.instance
+                .collection('group_calls')
+                .doc(callData['id'])
+                .update({
+              'rejected': FieldValue.arrayUnion(
+                  [FirebaseAuth.instance.currentUser!.uid])
+            });
+          } else {
+            // Reject call
+            FirebaseFirestore.instance
+                .collection('calls')
+                .doc(callData['id'])
+                .update({'rejected': true, 'active': false});
+          }
           break;
         default:
           break;
@@ -142,4 +205,116 @@ class FirebaseMessagingApi {
       }
     });
   }
+
+  // void initiateFlutterCallKit(){
+
+  //   FlutterCallkitIncoming.onEvent.listen((CallEvent? event) async {
+  //     switch (event?.event) {
+  //       case Event.actionCallAccept:
+  //         // Handle call accept
+  //         // print(currentCall);
+
+  //         if (callData['groupName'] != null) {
+  //           //  Accept call
+  //           FirebaseFirestore.instance
+  //               .collection('group_calls')
+  //               .doc(callData['id'])
+  //               .update({
+  //             'joined': FieldValue.arrayUnion(
+  //                 [FirebaseAuth.instance.currentUser!.uid])
+  //           });
+
+  //           final joinedList = (callData['joined'] as List<dynamic>)
+  //               .map((e) => e.toString())
+  //               .toList();
+  //           final rejectedList = (callData['rejected'] as List<dynamic>)
+  //               .map((e) => e.toString())
+  //               .toList();
+  //           final membersList = (callData['members'] as List<dynamic>)
+  //               .map((e) => e.toString())
+  //               .toList();
+  //           print('joined: $joinedList');
+  //           print('rejected: $rejectedList');
+  //           print('members: $membersList');
+
+  //           // Navigate to CallPage using the global navigator key
+  //           WidgetsBinding.instance.addPostFrameCallback((_) {
+  //             navigatorKey.currentState?.push(
+  //               MaterialPageRoute(
+  //                 builder: (context) => GroupCallPage(
+  //                   chatDocId: callData['chatDocId'],
+  //                   userUid: FirebaseAuth.instance.currentUser!.uid,
+  //                   call: GroupCallModel(
+  //                       id: callData['id'],
+  //                       caller: callData['caller'],
+  //                       callerName: callData['callerName'],
+  //                       channel: callData['channel'],
+  //                       active: true,
+  //                       groupName: callData['groupName'],
+  //                       joined: [
+  //                         FirebaseAuth.instance.currentUser!.uid,
+  //                         ...joinedList
+  //                       ],
+  //                       rejected: rejectedList,
+  //                       members: membersList,
+  //                       isVideoCall: callData['isVideoCall']),
+  //                 ),
+  //               ),
+  //             );
+  //           });
+  //         } else {
+  //           // Accept call
+  //           FirebaseFirestore.instance
+  //               .collection('calls')
+  //               .doc(callData['id'])
+  //               .update({'accepted': true});
+
+  //           WidgetsBinding.instance.addPostFrameCallback((_) {
+  //             // Navigate to CallPage using the global navigator key
+  //             navigatorKey.currentState?.push(
+  //               MaterialPageRoute(
+  //                 builder: (context) => CallPage(
+  //                   call: CallModel(
+  //                       id: callData['id'],
+  //                       caller: callData['caller'] ?? '',
+  //                       callerName: callData['callerName'] ?? '',
+  //                       called: callData['called'] ?? '',
+  //                       channel: callData['channel'] ?? '',
+  //                       active: true,
+  //                       accepted: true,
+  //                       rejected: false,
+  //                       connected: false,
+  //                       isVideoCall: callData['isVideoCall']),
+  //                 ),
+  //               ),
+  //             );
+  //           });
+  //         }
+
+  //         break;
+  //       case Event.actionCallDecline:
+  //         // Handle call decline
+  //         if (callData['groupName'] != null) {
+  //           // Reject call
+  //           FirebaseFirestore.instance
+  //               .collection('group_calls')
+  //               .doc(callData['id'])
+  //               .update({
+  //             'rejected': FieldValue.arrayUnion(
+  //                 [FirebaseAuth.instance.currentUser!.uid])
+  //           });
+  //         } else {
+  //           // Reject call
+  //           FirebaseFirestore.instance
+  //               .collection('calls')
+  //               .doc(callData['id'])
+  //               .update({'rejected': true, 'active': false});
+  //         }
+  //         break;
+  //       default:
+  //         break;
+  //     }
+  //   });
+
+  // }
 }
