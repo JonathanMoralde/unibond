@@ -91,10 +91,10 @@ class AuthModel extends ChangeNotifier {
           textColor: Colors.black,
         );
       });
-    } catch (e) {
-      print(e);
+    } catch (error) {
+      print(error);
       Fluttertoast.showToast(
-        msg: 'Error occured during login, please try again!',
+        msg: error.toString(),
         backgroundColor: Colors.red,
         textColor: Colors.white,
       );

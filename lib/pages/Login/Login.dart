@@ -69,10 +69,16 @@ class _LoginState extends State<Login> {
             }
           }).catchError((e) {
             print('error occured: $e');
+            setState(() {
+              isLoading = false;
+            });
             return;
           });
         }).catchError((e) {
           print('error occured: $e');
+          setState(() {
+            isLoading = false;
+          });
           return;
         });
       } else {

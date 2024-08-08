@@ -35,16 +35,25 @@ class _CallPageState extends State<CallPage> {
 
   bool isLocalUserJoined = false;
 
+  // bool? isVideoEnabled;
+
   @override
   void initState() {
     super.initState();
     setState(() {
       callId = widget.call.id;
+      // isVideoEnabled = widget.call.isVideoCall;
     });
     getToken().then((_) {
       initAgora().then((_) {
         if (callId == null) {
           makeCall();
+        }
+
+        if (widget.call.isVideoCall) {
+          client!.engine.enableVideo();
+        } else {
+          client!.engine.disableVideo();
         }
       });
     });
@@ -133,14 +142,15 @@ class _CallPageState extends State<CallPage> {
     });
 
     try {
+      // client!.sessionController.updateUserVideo(
+      //     uid: client!.agoraConnectionData.uid ?? 0,
+      //     videoDisabled: !widget.call.isVideoCall);
       await client!.initialize();
+
       print('\x1B[31mclient initialized successfully!\x1B[0m');
     } catch (e) {
       print('\x1B[31mfaled to initialize: $e\x1B[0m');
     }
-    client!.sessionController.updateUserVideo(
-        uid: client!.agoraConnectionData.uid ?? 0,
-        videoDisabled: !widget.call.isVideoCall);
   }
 
   Future<void> getToken() async {
@@ -215,7 +225,6 @@ class _CallPageState extends State<CallPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('\x1B[31mlocla user joined: $isLocalUserJoined\x1B[0m');
     return PopScope(
       canPop: false,
       child: Scaffold(
@@ -232,9 +241,22 @@ class _CallPageState extends State<CallPage> {
                   layoutType: Layout.oneToOne,
                   enableHostControls: true, // Add this to enable host controls
                 ),
+              // if (client != null && callId != null && isVideoEnabled != null)
               if (client != null && callId != null)
                 AgoraVideoButtons(
+                  autoHideButtons: true,
                   client: client!,
+                  enabledButtons: widget.call.isVideoCall == false
+                      ? [
+                          BuiltInButtons.toggleMic,
+                          BuiltInButtons.callEnd,
+                        ]
+                      : [
+                          BuiltInButtons.toggleMic,
+                          BuiltInButtons.callEnd,
+                          BuiltInButtons.switchCamera,
+                          BuiltInButtons.toggleCamera
+                        ],
                   onDisconnect: () async {
                     if (callId != null) {
                       FirebaseFirestore.instance
@@ -244,7 +266,68 @@ class _CallPageState extends State<CallPage> {
                     }
                   },
                 ),
-              if (callId != null)
+              // Row(
+              //   crossAxisAlignment: CrossAxisAlignment.end,
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: [
+              //     AgoraVideoButtons(
+              //       client: client!,
+              //       enabledButtons: widget.call.isVideoCall == false
+              //           ? [
+              //               BuiltInButtons.toggleMic,
+              //               BuiltInButtons.callEnd,
+              //               BuiltInButtons.switchCamera
+              //             ]
+              //           : [
+              //               BuiltInButtons.toggleMic,
+              //               BuiltInButtons.callEnd,
+              //               BuiltInButtons.switchCamera,
+              //               BuiltInButtons.toggleCamera
+              //             ],
+              //       onDisconnect: () async {
+              //         if (callId != null) {
+              //           FirebaseFirestore.instance
+              //               .collection('calls')
+              //               .doc(callId)
+              //               .update({'active': false, 'connected': false});
+              //         }
+              //       },
+              //     ),
+              //     if (widget.call.isVideoCall == false)
+              //       InkWell(
+              //         borderRadius: BorderRadius.circular(50),
+              //         onTap: () {
+              //           if (isVideoEnabled == true) {
+              //             client!.engine.disableVideo();
+              //           } else {
+              //             client!.engine.enableVideo();
+              //           }
+              //           setState(() {
+              //             isVideoEnabled = !isVideoEnabled!;
+              //           });
+              //         },
+              //         child: Container(
+              //           padding: EdgeInsets.all(10),
+              //           margin:
+              //               EdgeInsets.only(bottom: 58, left: 16, right: 16),
+              //           decoration: BoxDecoration(
+              //               borderRadius: BorderRadius.circular(50),
+              //               color: isVideoEnabled == true
+              //                   ? Colors.white
+              //                   : Colors.blue.shade600),
+              //           child: Icon(
+              //             isVideoEnabled == true
+              //                 ? Icons.videocam
+              //                 : Icons.videocam_off,
+              //             color: isVideoEnabled == true
+              //                 ? Colors.blue.shade600
+              //                 : Colors.white,
+              //           ),
+              //         ),
+              //       ),
+              //   ],
+              // ),
+              if (callId != null && client != null)
                 StreamBuilder(
                     stream: FirebaseFirestore.instance
                         .collection('calls')

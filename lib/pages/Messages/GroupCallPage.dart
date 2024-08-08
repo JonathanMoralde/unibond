@@ -51,6 +51,12 @@ class _GroupCallPageState extends State<GroupCallPage> {
         if (callId == null) {
           makeCall();
         }
+
+        if (widget.call.isVideoCall) {
+          client!.engine.enableVideo();
+        } else {
+          client!.engine.disableVideo();
+        }
       });
     });
     // initAgora().then((_) {
@@ -271,6 +277,7 @@ class _GroupCallPageState extends State<GroupCallPage> {
               if (client != null)
                 AgoraVideoViewer(
                   client: client!,
+
                   layoutType: Layout.grid,
                   enableHostControls: true, // Add this to enable host controls
                 ),
@@ -290,6 +297,17 @@ class _GroupCallPageState extends State<GroupCallPage> {
                             .toList();
 
                         return AgoraVideoButtons(
+                          enabledButtons: widget.call.isVideoCall == false
+                              ? [
+                                  BuiltInButtons.toggleMic,
+                                  BuiltInButtons.callEnd,
+                                ]
+                              : [
+                                  BuiltInButtons.toggleMic,
+                                  BuiltInButtons.callEnd,
+                                  BuiltInButtons.switchCamera,
+                                  BuiltInButtons.toggleCamera
+                                ],
                           onDisconnect: () async {
                             if (joined.length == 1 &&
                                 joined.contains(widget.userUid)) {
