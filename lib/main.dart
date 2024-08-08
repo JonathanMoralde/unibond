@@ -19,12 +19,15 @@ import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/provider/EditProfileModel.dart';
 import 'package:unibond/provider/NotificationModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
+import 'package:unibond/utils/FirebaseMessagingApi.dart';
+import 'package:unibond/utils/NotificationService.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  NotificationService.initializeNotification();
 
   await dotenv.load(fileName: ".env");
   runApp(

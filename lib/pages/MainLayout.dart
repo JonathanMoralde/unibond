@@ -43,6 +43,10 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
   late TabController? _tabController;
 
+  int? notifId;
+  Map<String, dynamic>? currentCallData;
+  bool shouldResetCallData = false;
+
   @override
   void initState() {
     super.initState();
@@ -52,9 +56,35 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
     _tabController?.addListener(_handleTabSelection);
 
     // Initialize notifications
-    // NotificationService.initializeNotification();
-    FirebaseMessagingApi().initPushNotification();
-    FirebaseMessagingApi().initialize(context);
+    //
+    // FirebaseMessagingApi().initPushNotification();
+    // FirebaseMessagingApi().initialize(context);
+    FirebaseMessagingApi().initPushNotification((int newNotifId) {
+      setState(() {
+        notifId = newNotifId;
+      });
+      // Provider.of<NavigationModel>(context, listen: false).currentNotifId =
+      //     newNotifId;
+    }, (Map<String, dynamic> newCallData) {
+      setState(() {
+        currentCallData = newCallData;
+      });
+      // Provider.of<NavigationModel>(context, listen: false).currentCallData =
+      //     newCallData;
+    });
+    FirebaseMessagingApi().initialize((int newNotifId) {
+      setState(() {
+        notifId = newNotifId;
+      });
+      // Provider.of<NavigationModel>(context, listen: false).currentNotifId =
+      //     newNotifId;
+    }, (Map<String, dynamic> newCallData) {
+      setState(() {
+        currentCallData = newCallData;
+      });
+      // Provider.of<NavigationModel>(context, listen: false).currentCallData =
+      //     newCallData;
+    });
   }
 
   void _handleTabSelection() {
@@ -83,6 +113,15 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    if (shouldResetCallData) {
+      Future.microtask(() {
+        setState(() {
+          currentCallData = null;
+          notifId = null;
+          shouldResetCallData = false;
+        });
+      });
+    }
     return Consumer<NavigationModel>(builder: (context, value, child) {
       return Scaffold(
         appBar: AppBar(
@@ -148,86 +187,45 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                       MyProfile(),
                     ],
                   ),
-            // if (FirebaseAuth.instance.currentUser?.uid != null)
-            //   StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            //     stream: value.watchCalls(),
-            //     builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            //       endIncomingCall(value.uuid ?? '');
-            //       value.activeCall = null;
+            if (FirebaseAuth.instance.currentUser?.uid != null &&
+                currentCallData != null &&
+                notifId != null)
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: FirebaseFirestore.instance
+                    .collection(currentCallData!['groupName'] != null
+                        ? 'group_calls'
+                        : 'calls')
+                    .where('id', isEqualTo: currentCallData!['id'])
+                    .snapshots(),
+                builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                    print('NOTIF ID: ${notifId}');
 
-            //       if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-            //         print(snapshot.data?.docs.first);
-            //         var callData = snapshot.data!.docs.first;
-            //         var callDataMap = snapshot.data!.docs.first.data()
-            //             as Map<String, dynamic>;
-            //         var call = CallModel(
-            //             id: callData.id,
-            //             channel: callDataMap['channel'],
-            //             caller: callDataMap['caller_uid'],
-            //             callerName: callDataMap['caller_name'],
-            //             callerPic: callDataMap['caller_pic'],
-            //             called: callDataMap['called_uid'],
-            //             active: callDataMap['active'],
-            //             accepted: callDataMap['accepted'],
-            //             rejected: callDataMap['rejected'],
-            //             connected: callDataMap['connected'],
-            //             isVideoCall: callDataMap['is_video_call']);
+                    final data = snapshot.data!.docs.first.data()
+                        as Map<String, dynamic>;
 
-            //         if (call.id != value.lastCallId &&
-            //             call.active != null &&
-            //             call.active == true &&
-            //             call.accepted != null &&
-            //             call.accepted == false &&
-            //             call.rejected != null &&
-            //             call.rejected == false &&
-            //             call.connected != null &&
-            //             call.connected == false) {
-            //           value.setLastCallId(call.id!);
-            //           value.setNewUuid(Uuid().v4());
+                    if (data['active'] == false) {
+                      print("NOTIF ID: ${notifId}");
+                      print("call is inactive, removing notifcation");
+                      // if call is not active
+                      AwesomeNotifications().cancel(notifId!);
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        setState(() {
+                          currentCallData = null;
+                          notifId = null;
+                        });
+                      });
+                      // setState(() {
+                      //   shouldResetCallData = true;
+                      // });
+                    }
 
-            //           showCallkitIncoming(
-            //               value.uuid!,
-            //               call.callerName,
-            //               call.callerPic ??
-            //                   'C:/Users/Tantan/AndroidStudioProjects/unibond/lib/assets/default_profile_pic.png');
+                    return const SizedBox.shrink();
+                  }
 
-            //           value.setActiveCall(call);
-            //           print(value.activeCall);
-
-            //           // Show notification
-            //           // NotificationService.showNotification(
-            //           //   title: 'Incoming Call',
-            //           //   body:
-            //           //       'You have an incoming call from ${call.callerName}',
-            //           //   payload: {
-            //           //     'navigate': 'true',
-            //           //     'callId': call.id!,
-            //           //     'channelName': '${call.caller}-${call.called}',
-            //           //     'caller': call.caller,
-            //           //     'callerName': call.callerName,
-            //           //     'called': call.called,
-            //           //     'isVideoCall': call.isVideoCall.toString()
-            //           //   },
-            //           //   category: NotificationCategory.Call,
-            //           //   actionButtons: [
-            //           //     NotificationActionButton(
-            //           //       key: 'ACCEPT',
-            //           //       label: 'Accept',
-            //           //       actionType: ActionType.Default,
-            //           //     ),
-            //           //     NotificationActionButton(
-            //           //       key: 'REJECT',
-            //           //       label: 'Reject',
-            //           //       actionType: ActionType.Default,
-            //           //     ),
-            //           //   ],
-            //           // );
-            //         }
-            //       }
-
-            //       return const SizedBox.shrink();
-            //     },
-            //   ),
+                  return const SizedBox.shrink();
+                },
+              ),
 
             // // GROUP CALL
             // if (FirebaseAuth.instance.currentUser?.uid != null)

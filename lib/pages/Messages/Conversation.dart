@@ -175,7 +175,7 @@ class _ConversationState extends State<Conversation> {
                   return const IconButton(
                       onPressed: null,
                       icon: Icon(
-                        Icons.videocam,
+                        Icons.call,
                         color: Colors.grey,
                       ));
                 }
@@ -192,7 +192,7 @@ class _ConversationState extends State<Conversation> {
                         return IconButton(
                             onPressed: () {},
                             icon: const Icon(
-                              Icons.videocam,
+                              Icons.call,
                               color: Colors.grey,
                             ));
                       }

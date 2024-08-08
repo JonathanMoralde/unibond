@@ -1,0 +1,243 @@
+import 'dart:convert';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_callkit_incoming/entities/android_params.dart';
+import 'package:flutter_callkit_incoming/entities/call_event.dart';
+import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
+import 'package:flutter_callkit_incoming/entities/notification_params.dart';
+import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:provider/provider.dart';
+import 'package:unibond/main.dart';
+import 'package:unibond/model/CallModel.dart';
+import 'package:unibond/model/GroupCallModel.dart';
+import 'package:unibond/pages/Messages/CallPage.dart';
+import 'package:unibond/pages/Messages/GroupCallPage.dart';
+import 'package:uuid/uuid.dart';
+
+class FirebaseMessagingApi {
+  final _firebaseMessaging = FirebaseMessaging.instance;
+  String? currentUuid;
+  Map<String, dynamic>? currentCallData;
+
+  Future<void> initPushNotification(
+      Function(Map<String, dynamic> callData, String newUuid)
+          setCallData) async {
+    await _firebaseMessaging.requestPermission();
+
+    final fCMToken = await _firebaseMessaging.getToken();
+
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection('fcm_tokens')
+        .doc(fCMToken)
+        .set({'fcm_token': fCMToken});
+
+    initPushNotification2(setCallData);
+  }
+
+  void handleMessage(RemoteMessage message, String uuid) {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null && message.data['userId'] == currentUser.uid) {
+      Map<String, dynamic> callData = jsonDecode(message.data['callData']);
+
+      showIncomingCall(callData, uuid);
+    }
+  }
+
+  Future<void> showIncomingCall(
+      Map<String, dynamic> callData, String uuid) async {
+    currentCallData = callData;
+    // FlutterCallkitIncoming.onEvent.listen((CallEvent? event) async {
+    //   switch (event?.event) {
+    //     case Event.actionCallAccept:
+    //       // Handle call accept
+    //       // print(currentCall);
+
+    //       if (callData['groupName'] != null) {
+    //         //  Accept call
+    //         FirebaseFirestore.instance
+    //             .collection('group_calls')
+    //             .doc(callData['id'])
+    //             .update({
+    //           'joined': FieldValue.arrayUnion(
+    //               [FirebaseAuth.instance.currentUser!.uid])
+    //         });
+
+    //         final joinedList = (callData['joined'] as List<dynamic>)
+    //             .map((e) => e.toString())
+    //             .toList();
+    //         final rejectedList = (callData['rejected'] as List<dynamic>)
+    //             .map((e) => e.toString())
+    //             .toList();
+    //         final membersList = (callData['members'] as List<dynamic>)
+    //             .map((e) => e.toString())
+    //             .toList();
+    //         print('joined: $joinedList');
+    //         print('rejected: $rejectedList');
+    //         print('members: $membersList');
+
+    //         // Navigate to CallPage using the global navigator key
+    //         WidgetsBinding.instance.addPostFrameCallback((_) {
+    //           navigatorKey.currentState?.push(
+    //             MaterialPageRoute(
+    //               builder: (context) => GroupCallPage(
+    //                 chatDocId: callData['chatDocId'],
+    //                 userUid: FirebaseAuth.instance.currentUser!.uid,
+    //                 call: GroupCallModel(
+    //                     id: callData['id'],
+    //                     caller: callData['caller'],
+    //                     callerName: callData['callerName'],
+    //                     channel: callData['channel'],
+    //                     active: true,
+    //                     groupName: callData['groupName'],
+    //                     joined: [
+    //                       FirebaseAuth.instance.currentUser!.uid,
+    //                       ...joinedList
+    //                     ],
+    //                     rejected: rejectedList,
+    //                     members: membersList,
+    //                     isVideoCall: callData['isVideoCall']),
+    //               ),
+    //             ),
+    //           );
+    //         });
+    //       } else {
+    //         // Accept call
+    //         FirebaseFirestore.instance
+    //             .collection('calls')
+    //             .doc(callData['id'])
+    //             .update({'accepted': true});
+
+    //         WidgetsBinding.instance.addPostFrameCallback((_) {
+    //           // Navigate to CallPage using the global navigator key
+    //           navigatorKey.currentState?.push(
+    //             MaterialPageRoute(
+    //               builder: (context) => CallPage(
+    //                 call: CallModel(
+    //                     id: callData['id'],
+    //                     caller: callData['caller'] ?? '',
+    //                     callerName: callData['callerName'] ?? '',
+    //                     called: callData['called'] ?? '',
+    //                     channel: callData['channel'] ?? '',
+    //                     active: true,
+    //                     accepted: true,
+    //                     rejected: false,
+    //                     connected: false,
+    //                     isVideoCall: callData['isVideoCall']),
+    //               ),
+    //             ),
+    //           );
+    //         });
+    //       }
+
+    //       break;
+    //     case Event.actionCallDecline:
+    //       // Handle call decline
+    //       if (callData['groupName'] != null) {
+    //         // Reject call
+    //         FirebaseFirestore.instance
+    //             .collection('group_calls')
+    //             .doc(callData['id'])
+    //             .update({
+    //           'rejected': FieldValue.arrayUnion(
+    //               [FirebaseAuth.instance.currentUser!.uid])
+    //         });
+    //       } else {
+    //         // Reject call
+    //         FirebaseFirestore.instance
+    //             .collection('calls')
+    //             .doc(callData['id'])
+    //             .update({'rejected': true, 'active': false});
+    //       }
+    //       break;
+    //     default:
+    //       break;
+    //   }
+    // });
+
+    final params = CallKitParams(
+      id: uuid,
+      nameCaller: callData['callerName'],
+      appName: 'Unibond',
+      avatar: callData['callerPic'] ?? '',
+      handle: 'Incoming Call',
+      type: 0,
+      textAccept: 'Accept',
+      textDecline: 'Decline',
+      missedCallNotification: const NotificationParams(
+        showNotification: false,
+        isShowCallback: false,
+        subtitle: 'Missed call',
+        callbackText: 'Call back',
+      ),
+      extra: callData,
+      android: const AndroidParams(
+        isShowFullLockedScreen: false,
+        isCustomNotification: false,
+        isShowLogo: false,
+        ringtonePath: 'system_ringtone_default',
+        actionColor: '#4CAF50',
+        textColor: '#ffffff',
+      ),
+    );
+
+    await FlutterCallkitIncoming.showCallkitIncoming(params);
+  }
+
+  Future<void> initPushNotification2(
+      Function(Map<String, dynamic> callData, String newUuid)
+          setCallData) async {
+    _firebaseMessaging.getInitialMessage().then((RemoteMessage? message) {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (message == null) return;
+
+      if (currentUser != null && message.data['userId'] == currentUser.uid) {
+        Map<String, dynamic> callData = jsonDecode(message.data['callData']);
+        String generatedUuid = Uuid().v4();
+        setCallData(callData, generatedUuid);
+        handleMessage(message, generatedUuid);
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage? message) {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (message == null) return;
+
+      if (currentUser != null && message.data['userId'] == currentUser.uid) {
+        Map<String, dynamic> callData = jsonDecode(message.data['callData']);
+        String generatedUuid = Uuid().v4();
+        setCallData(callData, generatedUuid);
+        handleMessage(message, generatedUuid);
+      }
+    });
+  }
+
+  void initialize(BuildContext context,
+      Function(Map<String, dynamic> callData, String newUuid) setCallData) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser != null && message.data['userId'] == currentUser.uid) {
+        Map<String, dynamic> callData = jsonDecode(message.data['callData']);
+        String generatedUuid = Uuid().v4();
+        setCallData(callData, generatedUuid);
+        handleMessage(message, generatedUuid);
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+
+      if (currentUser != null && message.data['userId'] == currentUser.uid) {
+        Map<String, dynamic> callData = jsonDecode(message.data['callData']);
+        String generatedUuid = Uuid().v4();
+        setCallData(callData, generatedUuid);
+        handleMessage(message, generatedUuid);
+      }
+    });
+  }
+}

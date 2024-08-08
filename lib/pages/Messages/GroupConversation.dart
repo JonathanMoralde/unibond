@@ -100,62 +100,84 @@ class _GroupConversationState extends State<GroupConversation> {
 
                 final groupData = snapshot.data!.data() as Map<String, dynamic>;
 
-                return IconButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => GroupCallPage(
-                          chatDocId: Provider.of<GroupConversationModel>(
-                                  context,
-                                  listen: false)
-                              .chatDocId!,
-                          userUid:
-                              Provider.of<ProfileModel>(context, listen: false)
-                                  .userDetails['uid'],
-                          call: GroupCallModel(
-                              id: null,
-                              groupPic: groupData['group_pic'],
-                              channel: groupData['group_name'],
-                              caller: Provider.of<ProfileModel>(context,
-                                      listen: false)
-                                  .userDetails['uid'],
-                              callerName: Provider.of<ProfileModel>(context,
-                                      listen: false)
-                                  .userDetails['full_name'],
-                              groupName: groupData['group_name'],
-                              active: true,
-                              members: (groupData['members'] as List<dynamic>)
-                                  .map((e) => e.toString())
-                                  .toList(),
-                              joined: [
+                return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection('group_calls')
+                        .where('group_name', isEqualTo: groupData['group_name'])
+                        .where('active', isEqualTo: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                        final data = snapshot.data!.docs.first.data();
+
+                        return IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.videocam,
+                              color: Colors.grey,
+                            ));
+                      }
+                      return IconButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (BuildContext context) => GroupCallPage(
+                                chatDocId: Provider.of<GroupConversationModel>(
+                                        context,
+                                        listen: false)
+                                    .chatDocId!,
+                                userUid: Provider.of<ProfileModel>(context,
+                                        listen: false)
+                                    .userDetails['uid'],
+                                call: GroupCallModel(
+                                    id: null,
+                                    groupPic: groupData['group_pic'],
+                                    channel: groupData['group_name'],
+                                    caller: Provider.of<ProfileModel>(context,
+                                            listen: false)
+                                        .userDetails['uid'],
+                                    callerName: Provider.of<ProfileModel>(
+                                            context,
+                                            listen: false)
+                                        .userDetails['full_name'],
+                                    groupName: groupData['group_name'],
+                                    active: true,
+                                    members:
+                                        (groupData['members'] as List<dynamic>)
+                                            .map((e) => e.toString())
+                                            .toList(),
+                                    joined: [
+                                      Provider.of<ProfileModel>(context,
+                                              listen: false)
+                                          .userDetails['uid']
+                                    ],
+                                    rejected: [],
+                                    isVideoCall: true),
+                              ),
+                            ),
+                          );
+
+                          final groupConversationModel =
+                              Provider.of<GroupConversationModel>(context,
+                                  listen: false);
+
+                          Future.delayed(Duration(seconds: 3), () {
+                            groupConversationModel.sendMessage(
+                                '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a video call',
                                 Provider.of<ProfileModel>(context,
                                         listen: false)
-                                    .userDetails['uid']
-                              ],
-                              rejected: [],
-                              isVideoCall: true),
-                        ),
-                      ),
-                    );
-
-                    final groupConversationModel =
-                        Provider.of<GroupConversationModel>(context,
-                            listen: false);
-
-                    Future.delayed(Duration(seconds: 3), () {
-                      groupConversationModel.sendMessage(
-                          '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a video call',
-                          Provider.of<ProfileModel>(context, listen: false)
-                              .userDetails['full_name'],
-                          Provider.of<ProfileModel>(context, listen: false)
-                              .userDetails['profile_pic'],
-                          'notify');
+                                    .userDetails['full_name'],
+                                Provider.of<ProfileModel>(context,
+                                        listen: false)
+                                    .userDetails['profile_pic'],
+                                'notify');
+                          });
+                        },
+                        icon: const Icon(Icons.videocam, color: Colors.black),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      );
                     });
-                  },
-                  icon: const Icon(Icons.videocam, color: Colors.black),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                );
               }),
           StreamBuilder<DocumentSnapshot>(
               stream: FirebaseFirestore.instance
@@ -172,61 +194,83 @@ class _GroupConversationState extends State<GroupConversation> {
 
                 final groupData = snapshot.data!.data() as Map<String, dynamic>;
 
-                return IconButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => GroupCallPage(
-                          chatDocId: Provider.of<GroupConversationModel>(
-                                  context,
-                                  listen: false)
-                              .chatDocId!,
-                          userUid:
-                              Provider.of<ProfileModel>(context, listen: false)
-                                  .userDetails['uid'],
-                          call: GroupCallModel(
-                              id: null,
-                              channel: groupData['group_name'],
-                              caller: Provider.of<ProfileModel>(context,
-                                      listen: false)
-                                  .userDetails['uid'],
-                              callerName: Provider.of<ProfileModel>(context,
-                                      listen: false)
-                                  .userDetails['full_name'],
-                              groupName: groupData['group_name'],
-                              active: true,
-                              members: (groupData['members'] as List<dynamic>)
-                                  .map((e) => e.toString())
-                                  .toList(),
-                              joined: [
+                return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: FirebaseFirestore.instance
+                        .collection('group_calls')
+                        .where('group_name', isEqualTo: groupData['group_name'])
+                        .where('active', isEqualTo: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                        final data = snapshot.data!.docs.first.data();
+
+                        return IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.call,
+                              color: Colors.grey,
+                            ));
+                      }
+                      return IconButton(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (BuildContext context) => GroupCallPage(
+                                chatDocId: Provider.of<GroupConversationModel>(
+                                        context,
+                                        listen: false)
+                                    .chatDocId!,
+                                userUid: Provider.of<ProfileModel>(context,
+                                        listen: false)
+                                    .userDetails['uid'],
+                                call: GroupCallModel(
+                                    id: null,
+                                    channel: groupData['group_name'],
+                                    caller: Provider.of<ProfileModel>(context,
+                                            listen: false)
+                                        .userDetails['uid'],
+                                    callerName: Provider.of<ProfileModel>(
+                                            context,
+                                            listen: false)
+                                        .userDetails['full_name'],
+                                    groupName: groupData['group_name'],
+                                    active: true,
+                                    members:
+                                        (groupData['members'] as List<dynamic>)
+                                            .map((e) => e.toString())
+                                            .toList(),
+                                    joined: [
+                                      Provider.of<ProfileModel>(context,
+                                              listen: false)
+                                          .userDetails['uid']
+                                    ],
+                                    rejected: [],
+                                    isVideoCall: false),
+                              ),
+                            ),
+                          );
+
+                          final groupConversationModel =
+                              Provider.of<GroupConversationModel>(context,
+                                  listen: false);
+
+                          Future.delayed(Duration(seconds: 3), () {
+                            groupConversationModel.sendMessage(
+                                '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a call',
                                 Provider.of<ProfileModel>(context,
                                         listen: false)
-                                    .userDetails['uid']
-                              ],
-                              rejected: [],
-                              isVideoCall: false),
-                        ),
-                      ),
-                    );
-
-                    final groupConversationModel =
-                        Provider.of<GroupConversationModel>(context,
-                            listen: false);
-
-                    Future.delayed(Duration(seconds: 3), () {
-                      groupConversationModel.sendMessage(
-                          '${Provider.of<ProfileModel>(context, listen: false).userDetails['full_name']} started a call',
-                          Provider.of<ProfileModel>(context, listen: false)
-                              .userDetails['full_name'],
-                          Provider.of<ProfileModel>(context, listen: false)
-                              .userDetails['profile_pic'],
-                          'notify');
+                                    .userDetails['full_name'],
+                                Provider.of<ProfileModel>(context,
+                                        listen: false)
+                                    .userDetails['profile_pic'],
+                                'notify');
+                          });
+                        },
+                        icon: const Icon(Icons.call, color: Colors.black),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      );
                     });
-                  },
-                  icon: const Icon(Icons.call, color: Colors.black),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                );
               }),
           IconButton(
             onPressed: () {

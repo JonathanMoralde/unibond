@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -21,33 +19,27 @@ class NotificationService {
       null,
       [
         NotificationChannel(
-          channelGroupKey: 'sound_channel',
-          channelKey: 'sound_channel',
-          channelName: 'Call notifications',
-          channelDescription: 'Notification channel for incoming call',
-          defaultColor: const Color(0xFF9D50DD),
-          ledColor: Colors.white,
-          importance: NotificationImportance.High,
-          channelShowBadge: true,
-          // onlyAlertOnce: true,
-          vibrationPattern: Int64List.fromList(
-            [0, 500, 200, 500, 200, 500, 200, 500],
-          ),
-          playSound: true,
-          criticalAlerts: true,
-          defaultRingtoneType: DefaultRingtoneType.Ringtone,
-          defaultPrivacy: NotificationPrivacy.Public,
-
-          locked: true,
-          enableVibration: true,
-        ),
+            channelGroupKey: 'high_importance_channel',
+            channelKey: 'high_importance_channel',
+            channelName: 'Basic notifications',
+            channelDescription: 'Notification channel for basic tests',
+            defaultColor: const Color(0xFF9D50DD),
+            ledColor: Colors.white,
+            importance: NotificationImportance.Max,
+            channelShowBadge: true,
+            onlyAlertOnce: true,
+            playSound: true,
+            criticalAlerts: true,
+            defaultRingtoneType: DefaultRingtoneType.Ringtone,
+            locked: true,
+            enableVibration: true)
       ],
-      // channelGroups: [
-      //   NotificationChannelGroup(
-      //     channelGroupKey: 'sound_channel_group',
-      //     channelGroupName: 'Group 1',
-      //   )
-      // ],
+      channelGroups: [
+        NotificationChannelGroup(
+          channelGroupKey: 'high_importance_channel_group',
+          channelGroupName: 'Group 1',
+        )
+      ],
       debug: true,
     );
 
@@ -178,7 +170,6 @@ class NotificationService {
   }
 
   static Future<void> showNotification({
-    required final int id,
     required final String title,
     required final String body,
     final String? summary,
@@ -195,8 +186,8 @@ class NotificationService {
 
     await AwesomeNotifications().createNotification(
       content: NotificationContent(
-        id: id,
-        channelKey: 'sound_channel',
+        id: -1,
+        channelKey: 'high_importance_channel',
         title: title,
         body: body,
         actionType: actionType,

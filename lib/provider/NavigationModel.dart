@@ -17,16 +17,23 @@ class NavigationModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String? lastCallId;
-  String? uuid;
-  CallModel? activeCall;
+  int? currentNotifId;
+  Map<String, dynamic>? currentCallData;
 
-  void setNewUuid(String newUuid) {
-    uuid = newUuid;
+  void newNotifId(int newId) {
+    currentNotifId = newId;
+    notifyListeners();
   }
 
-  void setActiveCall(CallModel call) {
-    activeCall = call;
+  void newCallData(Map<String, dynamic> newCallData) {
+    currentCallData = newCallData;
+    notifyListeners();
+  }
+
+  void resetNotif() {
+    currentNotifId = null;
+    currentCallData = null;
+    notifyListeners();
   }
 
   Stream<QuerySnapshot<Map<String, dynamic>>> watchCalls() {
@@ -52,10 +59,5 @@ class NavigationModel extends ChangeNotifier {
         .snapshots();
 
     return result;
-  }
-
-  void setLastCallId(String id) {
-    lastCallId = id;
-    // notifyListeners();
   }
 }
