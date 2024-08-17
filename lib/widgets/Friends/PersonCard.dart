@@ -78,6 +78,7 @@ class _PersonCardState extends State<PersonCard> {
                 ),
               ),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                       width:

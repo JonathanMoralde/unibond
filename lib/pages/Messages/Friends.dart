@@ -218,7 +218,7 @@ class _FriendsState extends State<Friends> {
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.8,
+                          childAspectRatio: 0.68,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
@@ -267,7 +267,7 @@ class _FriendsState extends State<Friends> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.8,
+                          childAspectRatio: 0.68,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
