@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/model/MessageData.dart';
@@ -50,55 +51,142 @@ class _ChatsState extends State<Chats> {
                 //   }).toList();
                 // }
 
-                return FutureBuilder<List<MessageData>>(
-                    future: chatsModel.processMessageDocs(snapshot.data!.docs),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<List<MessageData>> chatsSnapshot) {
-                      if (chatsSnapshot.connectionState ==
-                          ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
+                return Column(
+                  children: [
+                    for (final doc in snapshot.data!.docs)
+                      StreamBuilder(
+                          stream: FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(((doc.data()
+                                          as Map<String, dynamic>)['users_id']
+                                      as List<dynamic>)
+                                  .map((item) => item.toString())
+                                  .toList()
+                                  .firstWhere((id) =>
+                                      id !=
+                                      FirebaseAuth.instance.currentUser!.uid))
+                              .snapshots(),
+                          builder: (context, userSnapshot) {
+                            return StreamBuilder(
+                                stream: FirebaseFirestore.instance
+                                    .collection('chats')
+                                    .doc(doc.id)
+                                    .collection("messages")
+                                    .orderBy('timestamp', descending: true)
+                                    .limit(1)
+                                    .snapshots(),
+                                builder: (context, msgSnapshot) {
+                                  if (msgSnapshot.hasData &&
+                                      msgSnapshot.data!.docs.isNotEmpty) {
+                                    final result = msgSnapshot.data!.docs.first
+                                        .data() as Map<String, dynamic>;
+                                    return MessageCard(
+                                      isRead: result['is_read'],
+                                      onTap: () {
+                                        Provider.of<ConversationModel>(context,
+                                                listen: false)
+                                            .setChatDocId(doc.id);
 
-                      if (!chatsSnapshot.hasData ||
-                          chatsSnapshot.data!.isEmpty) {
-                        return const Center(
-                          child: Text('No chats available.'),
-                        );
-                      }
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (BuildContext context) =>
+                                                Conversation(
+                                              friendName:
+                                                  ((userSnapshot.data?.data()
+                                                              as Map<String,
+                                                                  dynamic>)[
+                                                          'full_name']) ??
+                                                      'Loading...',
+                                              friendUid: ((userSnapshot.data
+                                                          ?.data()
+                                                      as Map<String,
+                                                          dynamic>)['uid']) ??
+                                                  '',
+                                              friendProfilePic:
+                                                  ((userSnapshot.data?.data()
+                                                              as Map<String,
+                                                                  dynamic>)[
+                                                          'profile_pic']) ??
+                                                      null,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      userName: ((userSnapshot.data?.data()
+                                                  as Map<String, dynamic>)[
+                                              'full_name']) ??
+                                          'Loading...',
+                                      latestMessage: (doc.data() as Map<String,
+                                          dynamic>)['latest_chat_message'],
+                                      latestUser: (doc.data() as Map<String,
+                                          dynamic>)['latest_chat_user'],
+                                      latestTimestamp: (doc.data() as Map<
+                                          String, dynamic>)['latest_timestamp'],
+                                      profilePic: ((userSnapshot.data?.data()
+                                                  as Map<String, dynamic>)[
+                                              'profile_pic']) ??
+                                          'null',
+                                      friendId: ((userSnapshot.data?.data()
+                                                  as Map<String, dynamic>)[
+                                              'uid']) ??
+                                          'Loading...',
+                                    );
+                                  }
+                                  return CircularProgressIndicator();
+                                });
+                          })
+                  ],
+                );
 
-                      List<MessageData> chats = chatsSnapshot.data!;
+                // return FutureBuilder<List<MessageData>>(
+                //     future: chatsModel.processMessageDocs(snapshot.data!.docs),
+                //     builder: (BuildContext context,
+                //         AsyncSnapshot<List<MessageData>> chatsSnapshot) {
+                //       if (chatsSnapshot.connectionState ==
+                //           ConnectionState.waiting) {
+                //         return const Center(child: CircularProgressIndicator());
+                //       }
 
-                      return Column(
-                        children: [
-                          for (final chat in chats)
-                            MessageCard(
-                              isRead: chat.isRead,
-                              onTap: () {
-                                Provider.of<ConversationModel>(context,
-                                        listen: false)
-                                    .setChatDocId(chat.chatDocId);
+                //       if (!chatsSnapshot.hasData ||
+                //           chatsSnapshot.data!.isEmpty) {
+                //         return const Center(
+                //           child: Text('No chats available.'),
+                //         );
+                //       }
 
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (BuildContext context) =>
-                                        Conversation(
-                                      friendName: chat.userName,
-                                      friendUid: chat.incomindId,
-                                      friendProfilePic: chat.userProfPic,
-                                    ),
-                                  ),
-                                );
-                              },
-                              userName: chat.userName,
-                              latestMessage: chat.latestChatMsg,
-                              latestUser: chat.latestChatUser,
-                              latestTimestamp: chat.latestTimestamp,
-                              profilePic: chat.userProfPic,
-                              friendId: chat.incomindId,
-                            )
-                        ],
-                      );
-                    });
+                //       List<MessageData> chats = chatsSnapshot.data!;
+
+                //       return Column(
+                //         children: [
+                //           for (final chat in chats)
+                //             MessageCard(
+                //               isRead: chat.isRead,
+                //               onTap: () {
+                //                 Provider.of<ConversationModel>(context,
+                //                         listen: false)
+                //                     .setChatDocId(chat.chatDocId);
+
+                //                 Navigator.of(context).push(
+                //                   MaterialPageRoute(
+                //                     builder: (BuildContext context) =>
+                //                         Conversation(
+                //                       friendName: chat.userName,
+                //                       friendUid: chat.incomindId,
+                //                       friendProfilePic: chat.userProfPic,
+                //                     ),
+                //                   ),
+                //                 );
+                //               },
+                //               userName: chat.userName,
+                //               latestMessage: chat.latestChatMsg,
+                //               latestUser: chat.latestChatUser,
+                //               latestTimestamp: chat.latestTimestamp,
+                //               profilePic: chat.userProfPic,
+                //               friendId: chat.incomindId,
+                //             )
+                //         ],
+                //       );
+                //     });
               }),
         );
       }),

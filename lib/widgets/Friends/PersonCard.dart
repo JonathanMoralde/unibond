@@ -208,10 +208,12 @@ class _PersonCardState extends State<PersonCard> {
                         final friendsModel =
                             Provider.of<FriendsModel>(context, listen: false);
                         friendsModel
-                            .cancelRequest(userData['uid'] ?? '')
+                            .confirmRequest(userData['uid'] ?? '')
                             .then((_) {
-                          friendsModel
-                              .removeNotification(userData['uid'] ?? '');
+                          friendsModel.confirmFriendNofitication(
+                              widget.currentUserUid,
+                              widget.currentUserFullName,
+                              (userData['uid'] ?? ''));
                         });
                       },
                       btnIcon: friendsList.contains(widget.currentUserUid)

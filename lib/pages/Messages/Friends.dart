@@ -328,7 +328,14 @@ class _FriendsState extends State<Friends> {
                               profilePic: user['profile_pic'],
                               fullName: user['full_name'],
                               onAccept: () {
-                                friendsModel.confirmRequest(user['uid']);
+                                friendsModel
+                                    .confirmRequest(user['uid'])
+                                    .then((_) {
+                                  friendsModel.confirmFriendNofitication(
+                                      currentUserUid,
+                                      currentUserFullName,
+                                      user['uid']);
+                                });
                               },
                               onDeclince: () {
                                 friendsModel.declineRequest(user['uid']);

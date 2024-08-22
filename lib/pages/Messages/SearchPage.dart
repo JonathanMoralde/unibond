@@ -89,7 +89,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final aspectRatio = screenWidth / (screenHeight / 1.5); // Adjust as needed
+    final aspectRatio = screenWidth / (screenHeight / 1.2); // Adjust as needed
 
     return Consumer<NavigationModel>(
         builder: (context, navigationModel, child) {

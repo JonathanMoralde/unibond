@@ -187,7 +187,7 @@ class GroupConversationModel extends ChangeNotifier {
             await FirebaseFirestore.instance
                 .collection('notification')
                 .where('group_name', isEqualTo: groupDataMap['group_name'])
-                .where('is_message', isEqualTo: true)
+                .where('is_group', isEqualTo: true)
                 .where('dateTime', isGreaterThanOrEqualTo: startOfDayTimestamp)
                 .get();
 
@@ -206,7 +206,7 @@ class GroupConversationModel extends ChangeNotifier {
                 'is_friend_accept': false,
                 'is_event': false,
                 'is_group': true,
-                'is_message': true,
+                'is_message': false,
                 'is_read': false,
                 'group_name': groupDataMap['group_name'],
                 'notif_msg': 'has new messages. Tap to view!',

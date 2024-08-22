@@ -49,10 +49,14 @@ class _InteresttcntainerState extends State<Interestcontainer> {
   @override
   Widget build(BuildContext context) {
     return Consumer<EditProfileModel>(builder: (context, value, child) {
-      List<List<String>> chunks = _chunkInterests(widget.options, 74);
+      List<List<String>> chunks = _chunkInterests(widget.options, 75); //74
 
       return Container(
-        height: 245,
+        height: MediaQuery.sizeOf(context).height * 0.4, //1/40 of screen height
+        // height: 245, //1/40 of screen height
+        // height: !widget.isDisplayOnly
+        //     ? MediaQuery.sizeOf(context).height * 0.4
+        //     : 245, //1/40 of screen height
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.all(
@@ -71,20 +75,42 @@ class _InteresttcntainerState extends State<Interestcontainer> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               width: double.infinity,
               decoration: BoxDecoration(
                   color: widget.headerColor ?? const Color(0xffFF6E00),
                   borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(16),
                       topRight: Radius.circular(16))),
-              child: Text(
-                '${widget.title} Interests',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
+              child: Row(
+                mainAxisAlignment: !widget.isDisplayOnly
+                    ? MainAxisAlignment.spaceBetween
+                    : MainAxisAlignment.center,
+                children: [
+                  if (!widget.isDisplayOnly)
+                    const SizedBox(
+                      width: 24,
+                    ),
+                  Text(
+                    '${widget.title} Interests',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (!widget.isDisplayOnly)
+                    IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: BoxConstraints(),
+                        onPressed: () {
+                          _showAddInterestDialog(context);
+                        },
+                        icon: const Icon(
+                          Icons.add,
+                          color: Colors.black,
+                        ))
+                ],
               ),
             ),
             Expanded(
@@ -127,14 +153,14 @@ class _InteresttcntainerState extends State<Interestcontainer> {
                                         });
                                       },
                               ),
-                            if (!widget.isDisplayOnly && chunk == chunks.last)
-                              InterestButton(
-                                btnName: 'Add New Interest',
-                                onTap: () {
-                                  _showAddInterestDialog(context);
-                                },
-                                isAdd: !widget.isDisplayOnly,
-                              )
+                            // if (!widget.isDisplayOnly && chunk == chunks.last)
+                            //   InterestButton(
+                            //     btnName: 'Add New Interest',
+                            //     onTap: () {
+                            //       _showAddInterestDialog(context);
+                            //     },
+                            //     isAdd: !widget.isDisplayOnly,
+                            //   )
                           ],
                         ),
                       );
@@ -213,7 +239,7 @@ class _InteresttcntainerState extends State<Interestcontainer> {
                             final editProfileProvider =
                                 context.read<EditProfileModel>();
                             setState(() {
-                              editProfileProvider.addNewOptions(newInterest);
+                              // editProfileProvider.addNewOptions(newInterest);
                               editProfileProvider.addInterest(newInterest);
                               editProfileProvider.setOptions.add(
                                   newInterest); // Add to the list of options

@@ -52,6 +52,7 @@ class _GroupCardState extends State<GroupCard> {
             color: const Color(0xffD9D9D9),
             borderRadius: BorderRadius.circular(16)),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             widget.groupData['group_pic'] != null &&
                     (widget.groupData['group_pic'] as String).isNotEmpty
