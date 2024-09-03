@@ -1,16 +1,15 @@
-# unibond
+# Chat Messenger App
 
-A new Flutter project.
+An android-based app that leverages the Agora SDK, enabling real-time voice and video calls for its users.
 
-## Getting Started
+## Features include:
 
-This project is a starting point for a Flutter application.
+Firebase Authentication
 
-A few resources to get you started if this is your first Flutter project:
+Real-time private and group chat
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Real-time voice/video call
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Group events posting
+
+Notifications

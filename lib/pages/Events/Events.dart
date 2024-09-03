@@ -301,8 +301,13 @@ class _EventsState extends State<Events> {
                                                       MainAxisAlignment
                                                           .spaceBetween,
                                                   children: [
-                                                    Text(
-                                                        '${indivEvent.eventName} (${indivEvent.eventTime})'),
+                                                    Expanded(
+                                                      child: Text(
+                                                        '${indivEvent.eventName} (${indivEvent.eventTime})',
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
                                                     Icon(Icons.chevron_right)
                                                   ],
                                                 ),
