@@ -9,6 +9,7 @@ import 'package:photo_view/photo_view.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/model/GroupCallModel.dart';
 import 'package:unibond/model/GroupIndivMessage.dart';
+import 'package:unibond/pages/Announcements/SinglePostView.dart';
 import 'package:unibond/pages/Messages/GroupCallPage.dart';
 import 'package:unibond/pages/Messages/GroupChatDetails.dart';
 import 'package:unibond/provider/GroupConversationModel.dart';
@@ -307,6 +308,19 @@ class _GroupConversationState extends State<GroupConversation> {
 
                   if (snapshot.data != null) {
                     msg = snapshot.data!.docs.map((messageDoc) {
+                      if (messageDoc['type'] == 'announcement') {
+                        return GroupIndivMessage(
+                            msgDocId: messageDoc.id,
+                            content: messageDoc['content'],
+                            type: messageDoc['type'],
+                            senderId: messageDoc['sender_id'],
+                            timestamp: messageDoc['timestamp'],
+                            isRead: messageDoc['is_read'],
+                            senderName: messageDoc['sender_name'],
+                            senderProfilePic: messageDoc['sender_profile_pic'],
+                            postDocId: messageDoc['post_doc_id'],
+                            postPic: messageDoc['post_pic']);
+                      }
                       return GroupIndivMessage(
                         msgDocId: messageDoc.id,
                         content: messageDoc['content'],
@@ -425,52 +439,204 @@ class _GroupConversationState extends State<GroupConversation> {
                                               ),
                                             ),
                                           )
-                                        : GestureDetector(
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      Scaffold(
-                                                    appBar: AppBar(
-                                                      leading: GestureDetector(
-                                                          onTap: () {
-                                                            Navigator.pop(
-                                                                context);
-                                                          },
-                                                          child: Icon(
-                                                              Icons.close)),
-                                                      actions: [
-                                                        IconButton(
-                                                            icon: const Icon(
-                                                                Icons.save_alt),
-                                                            onPressed: () {
-                                                              groupConversationModel
-                                                                  .saveImage(msg[
-                                                                          index]
-                                                                      .content);
-                                                            }),
-                                                      ],
+                                        : msg[index].type == 'announcement'
+                                            ? InkWell(
+                                                onTap: () {
+                                                  print(msg[index].postDocId);
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute(
+                                                      builder: (BuildContext
+                                                          context) {
+                                                        return SinglePostView(
+                                                            postId: msg[index]
+                                                                    .postDocId ??
+                                                                '');
+                                                      },
                                                     ),
-                                                    body: PhotoView(
-                                                      imageProvider:
-                                                          NetworkImage(
-                                                              msg[index]
-                                                                  .content),
+                                                  );
+                                                },
+                                                child: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                      vertical: 8),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            16),
+                                                    color: Color.fromARGB(
+                                                        255, 213, 213, 213),
+                                                  ),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 8.0),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Container(
+                                                                width:
+                                                                    30, // double the maxRadius to cover the entire CircleAvatar
+                                                                height:
+                                                                    30, // double the maxRadius to cover the entire CircleAvatar
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  boxShadow: [
+                                                                    BoxShadow(
+                                                                      color: Colors
+                                                                          .black
+                                                                          .withOpacity(
+                                                                              0.20), // Shadow color with opacity
+                                                                      spreadRadius:
+                                                                          0, // Spread radius
+                                                                      blurRadius:
+                                                                          3, // Blur radius
+                                                                      offset: const Offset(
+                                                                          0,
+                                                                          3), // Offset in x and y directions
+                                                                    ),
+                                                                  ],
+                                                                  shape: BoxShape
+                                                                      .circle,
+                                                                ),
+                                                                child: msg[index]
+                                                                            .senderProfilePic !=
+                                                                        null
+                                                                    ? msg[index]
+                                                                            .senderProfilePic!
+                                                                            .isNotEmpty
+                                                                        ? CircleAvatar(
+                                                                            backgroundImage:
+                                                                                NetworkImage(msg[index].senderProfilePic!),
+                                                                            maxRadius:
+                                                                                15,
+                                                                          )
+                                                                        : const CircleAvatar(
+                                                                            backgroundImage:
+                                                                                AssetImage('lib/assets/default_profile_pic.png'),
+                                                                            maxRadius:
+                                                                                15,
+                                                                          )
+                                                                    : const CircleAvatar(
+                                                                        backgroundImage:
+                                                                            AssetImage('lib/assets/default_profile_pic.png'),
+                                                                        maxRadius:
+                                                                            20,
+                                                                      )),
+                                                            Expanded(
+                                                              child: Padding(
+                                                                padding: const EdgeInsets
+                                                                    .symmetric(
+                                                                    horizontal:
+                                                                        8.0),
+                                                                child: Text(
+                                                                  msg[index]
+                                                                      .senderName,
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                  style: TextStyle(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      fontSize:
+                                                                          12),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        Text(
+                                                          msg[index].content,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                              const TextStyle(
+                                                            color: Colors.black,
+                                                          ),
+                                                        ),
+                                                        Row(
+                                                          children: [
+                                                            Text(
+                                                              'Announcement',
+                                                              style: TextStyle(
+                                                                  fontSize: 10,
+                                                                  color: const Color
+                                                                      .fromARGB(
+                                                                      255,
+                                                                      108,
+                                                                      108,
+                                                                      108)),
+                                                            ),
+                                                            Icon(
+                                                              Icons
+                                                                  .arrow_outward,
+                                                              size: 12,
+                                                              color: const Color
+                                                                  .fromARGB(
+                                                                  255,
+                                                                  108,
+                                                                  108,
+                                                                  108),
+                                                            )
+                                                          ],
+                                                        )
+                                                      ],
                                                     ),
                                                   ),
                                                 ),
-                                              );
-                                            },
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                      color: const Color(
-                                                          0xff00B0FF))),
-                                              child: CachedNetworkImage(
-                                                  imageUrl: msg[index].content),
-                                            ),
-                                          ),
+                                              )
+                                            : GestureDetector(
+                                                onTap: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          Scaffold(
+                                                        appBar: AppBar(
+                                                          leading:
+                                                              GestureDetector(
+                                                                  onTap: () {
+                                                                    Navigator.pop(
+                                                                        context);
+                                                                  },
+                                                                  child: Icon(Icons
+                                                                      .close)),
+                                                          actions: [
+                                                            IconButton(
+                                                                icon: const Icon(
+                                                                    Icons
+                                                                        .save_alt),
+                                                                onPressed: () {
+                                                                  groupConversationModel
+                                                                      .saveImage(
+                                                                          msg[index]
+                                                                              .content);
+                                                                }),
+                                                          ],
+                                                        ),
+                                                        body: PhotoView(
+                                                          imageProvider:
+                                                              NetworkImage(
+                                                                  msg[index]
+                                                                      .content),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                },
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                      border: Border.all(
+                                                          color: const Color(
+                                                              0xff00B0FF))),
+                                                  child: CachedNetworkImage(
+                                                      imageUrl:
+                                                          msg[index].content),
+                                                ),
+                                              ),
                                   ),
                                   const SizedBox(
                                     height: 4.0,

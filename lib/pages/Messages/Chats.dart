@@ -67,73 +67,72 @@ class _ChatsState extends State<Chats> {
                                       FirebaseAuth.instance.currentUser!.uid))
                               .snapshots(),
                           builder: (context, userSnapshot) {
-                            return StreamBuilder(
-                                stream: FirebaseFirestore.instance
-                                    .collection('chats')
-                                    .doc(doc.id)
-                                    .collection("messages")
-                                    .orderBy('timestamp', descending: true)
-                                    .limit(1)
-                                    .snapshots(),
-                                builder: (context, msgSnapshot) {
-                                  if (msgSnapshot.hasData &&
-                                      msgSnapshot.data!.docs.isNotEmpty) {
-                                    final result = msgSnapshot.data!.docs.first
-                                        .data() as Map<String, dynamic>;
-                                    return MessageCard(
-                                      isRead: result['is_read'],
-                                      onTap: () {
-                                        Provider.of<ConversationModel>(context,
-                                                listen: false)
-                                            .setChatDocId(doc.id);
+                            if (userSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
 
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (BuildContext context) =>
-                                                Conversation(
-                                              friendName:
-                                                  ((userSnapshot.data?.data()
-                                                              as Map<String,
-                                                                  dynamic>)[
-                                                          'full_name']) ??
-                                                      'Loading...',
-                                              friendUid: ((userSnapshot.data
-                                                          ?.data()
-                                                      as Map<String,
-                                                          dynamic>)['uid']) ??
-                                                  '',
-                                              friendProfilePic:
-                                                  ((userSnapshot.data?.data()
-                                                              as Map<String,
-                                                                  dynamic>)[
-                                                          'profile_pic']) ??
-                                                      null,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      userName: ((userSnapshot.data?.data()
+                            if (!userSnapshot.hasData ||
+                                !userSnapshot.data!.exists) {
+                              return const Center(
+                                child: Text('User data not available.'),
+                              );
+                            }
+                            return MessageCard(
+                              isRead: (doc.data()
+                                  as Map<String, dynamic>)['latest_chat_read'],
+                              onTap: () async {
+                                Provider.of<ConversationModel>(context,
+                                        listen: false)
+                                    .setChatDocId(doc.id);
+
+                                try {
+                                  await FirebaseFirestore.instance
+                                      .collection('chats')
+                                      .doc(doc.id)
+                                      .update({'latest_chat_read': true});
+                                } catch (e) {
+                                  print(e);
+                                }
+
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        Conversation(
+                                      friendName: ((userSnapshot.data?.data()
                                                   as Map<String, dynamic>)[
                                               'full_name']) ??
                                           'Loading...',
-                                      latestMessage: (doc.data() as Map<String,
-                                          dynamic>)['latest_chat_message'],
-                                      latestUser: (doc.data() as Map<String,
-                                          dynamic>)['latest_chat_user'],
-                                      latestTimestamp: (doc.data() as Map<
-                                          String, dynamic>)['latest_timestamp'],
-                                      profilePic: ((userSnapshot.data?.data()
-                                                  as Map<String, dynamic>)[
-                                              'profile_pic']) ??
-                                          'null',
-                                      friendId: ((userSnapshot.data?.data()
+                                      friendUid: ((userSnapshot.data?.data()
                                                   as Map<String, dynamic>)[
                                               'uid']) ??
-                                          'Loading...',
-                                    );
-                                  }
-                                  return CircularProgressIndicator();
-                                });
+                                          '',
+                                      friendProfilePic:
+                                          ((userSnapshot.data?.data() as Map<
+                                                  String,
+                                                  dynamic>)['profile_pic']) ??
+                                              null,
+                                    ),
+                                  ),
+                                );
+                              },
+                              userName: ((userSnapshot.data?.data()
+                                      as Map<String, dynamic>)['full_name']) ??
+                                  'Loading...',
+                              latestMessage: (doc.data() as Map<String,
+                                  dynamic>)['latest_chat_message'],
+                              latestUser: (doc.data()
+                                  as Map<String, dynamic>)['latest_chat_user'],
+                              latestTimestamp: (doc.data()
+                                  as Map<String, dynamic>)['latest_timestamp'],
+                              profilePic: ((userSnapshot.data?.data() as Map<
+                                      String, dynamic>)['profile_pic']) ??
+                                  'null',
+                              friendId: ((userSnapshot.data?.data()
+                                      as Map<String, dynamic>)['uid']) ??
+                                  'Loading...',
+                            );
                           })
                   ],
                 );

@@ -97,126 +97,143 @@ class _LoginState extends State<Login> {
       body: Stack(
         children: [
           Consumer<AuthModel>(builder: (context, value, child) {
-            return SafeArea(
-                child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 70,
-                    ),
-                    const SizedBox(
-                      width: double.infinity,
-                      child: const Text(
-                        'Welcome Back!',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 40),
-                        textAlign: TextAlign.left,
+            return Stack(
+              children: [
+                Image.asset(
+                  'lib/assets/loginbgpng.png',
+                  alignment: AlignmentDirectional.bottomEnd,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(
+                        width: double.infinity,
+                        child: const Text(
+                          'Welcome!',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 40,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0.0, 0.0),
+                                blurRadius: 3.0,
+                                color: Color.fromARGB(255, 255, 255, 255),
+                              ),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    const SizedBox(
-                      width: double.infinity,
-                      child: const Text(
-                        'Let\'s help you find friends!',
-                        textAlign: TextAlign.left,
+                      const SizedBox(
+                        height: 10,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 50,
-                    ),
-                    Image.asset('lib/assets/welcome.png'),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    Form(
-                      key: loginFormKey,
-                      child: Column(
+                      const SizedBox(
+                        width: double.infinity,
+                        child: const Text(
+                          'Let\'s help you find friends!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(shadows: [
+                            Shadow(
+                              offset: Offset(0.0, 0.0),
+                              blurRadius: 2.0,
+                              color: Color.fromARGB(255, 255, 255, 255),
+                            ),
+                          ], fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      Center(child: Image.asset('lib/assets/loginimage.png')),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      Form(
+                        key: loginFormKey,
+                        child: Column(
+                          children: [
+                            StyledTextFormField(
+                                obscureText: false,
+                                controller: emailController,
+                                hintText: 'Enter your email'),
+                            const SizedBox(
+                              height: 15,
+                            ),
+                            StyledTextFormField(
+                              obscureText: true,
+                              controller: passwordController,
+                              hintText: 'Enter your password',
+                              isPassword: true,
+                            ),
+                            const SizedBox(
+                              height: 15,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        ForgotPass(),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Forgot Password',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xff00B0FF),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 50,
+                            ),
+                            StyledButton(
+                              btnText: 'Login',
+                              onClick: handleSubmit,
+                              btnWidth: double.infinity,
+                              noShadow: true,
+                            )
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          StyledTextFormField(
-                              obscureText: false,
-                              controller: emailController,
-                              hintText: 'Enter your email'),
+                          const Text('Don\'t have an account?'),
                           const SizedBox(
-                            height: 20,
-                          ),
-                          StyledTextFormField(
-                            obscureText: true,
-                            controller: passwordController,
-                            hintText: 'Enter your password',
-                            isPassword: true,
-                          ),
-                          const SizedBox(
-                            height: 20,
+                            width: 5,
                           ),
                           GestureDetector(
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (BuildContext context) =>
-                                      ForgotPass(),
+                                      const Register(),
                                 ),
                               );
                             },
                             child: const Text(
-                              'Forgot Password',
+                              'Sign Up',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xff00B0FF),
+                                color: Color(0xFF00415F),
                               ),
                             ),
-                          ),
-                          const SizedBox(
-                            height: 50,
-                          ),
-                          StyledButton(
-                            btnText: 'Login',
-                            onClick: handleSubmit,
-                            btnWidth: double.infinity,
-                            noShadow: true,
                           )
                         ],
                       ),
-                    ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Don\'t have an account?'),
-                        const SizedBox(
-                          width: 5,
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (BuildContext context) =>
-                                    const Register(),
-                              ),
-                            );
-                          },
-                          child: const Text(
-                            'Sign Up',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xff00B0FF),
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ));
+              ],
+            );
           }),
           if (isLoading)
             const Center(

@@ -79,34 +79,57 @@ class _RegisterState extends State<Register> {
       return Scaffold(
         body: Stack(
           children: [
-            SafeArea(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: SizedBox(
-                    width: double.infinity,
+            SizedBox(
+              width: double.infinity,
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  Image.asset(
+                    'lib/assets/registerbg.png',
+                    alignment: AlignmentDirectional.bottomEnd,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(
-                          height: 110,
-                        ),
                         const Text(
                           'Welcome to',
                           style: TextStyle(
-                              fontSize: 40, fontWeight: FontWeight.bold),
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        const Text(
-                          'UniBond App!',
-                          style: TextStyle(
-                              fontSize: 40, fontWeight: FontWeight.bold),
+                        const Row(
+                          children: [
+                            Text(
+                              'Uni',
+                              style: TextStyle(
+                                  color: Color(0xff0072A5),
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              'Bond',
+                              style: TextStyle(
+                                  color: Color(0xffFF6E00),
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              ' App!',
+                              style: TextStyle(
+                                  fontSize: 40, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                         const SizedBox(
                           height: 10,
                         ),
                         const Text(
                           'Let\'s get started!',
+                          style: TextStyle(fontWeight: FontWeight.w500),
                         ),
                         const SizedBox(
                           height: 30,
@@ -120,14 +143,14 @@ class _RegisterState extends State<Register> {
                                   controller: fullNameController,
                                   hintText: 'Enter your full name'),
                               const SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               StyledTextFormField(
                                   obscureText: false,
                                   controller: emailController,
                                   hintText: 'Enter your email'),
                               const SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               StyledTextFormField(
                                 obscureText: true,
@@ -136,7 +159,7 @@ class _RegisterState extends State<Register> {
                                 isPassword: true,
                               ),
                               const SizedBox(
-                                height: 20,
+                                height: 15,
                               ),
                               StyledTextFormField(
                                 obscureText: true,
@@ -145,7 +168,7 @@ class _RegisterState extends State<Register> {
                                 isPassword: true,
                               ),
                               const SizedBox(
-                                height: 80,
+                                height: 50,
                               ),
                               StyledButton(
                                 btnText: 'Register',
@@ -157,12 +180,15 @@ class _RegisterState extends State<Register> {
                           ),
                         ),
                         const SizedBox(
-                          height: 30,
+                          height: 20,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('Already have an account?'),
+                            Text(
+                              'Already have an account?',
+                              // style: TextStyle(color: Colors.white),
+                            ),
                             const SizedBox(
                               width: 5,
                             ),
@@ -170,8 +196,9 @@ class _RegisterState extends State<Register> {
                               child: const Text(
                                 'Sign In',
                                 style: TextStyle(
-                                    color: Color(0xff00B0FF),
-                                    fontWeight: FontWeight.bold),
+                                  color: Color(0xFF00415F),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               onTap: () {
                                 Navigator.of(context).push(
@@ -184,13 +211,10 @@ class _RegisterState extends State<Register> {
                             ),
                           ],
                         ),
-                        const SizedBox(
-                          height: 30,
-                        ),
                       ],
                     ),
                   ),
-                ),
+                ],
               ),
             ),
 

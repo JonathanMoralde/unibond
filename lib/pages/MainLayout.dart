@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:unibond/main.dart';
 import 'package:unibond/model/CallModel.dart';
 import 'package:unibond/model/GroupCallModel.dart';
+import 'package:unibond/pages/Announcements/Annoucements.dart';
 import 'package:unibond/pages/Events/Events.dart';
 import 'package:unibond/pages/Messages/CallPage.dart';
 import 'package:unibond/pages/Messages/Chats.dart';
@@ -42,6 +43,7 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
   late TabController? _tabController;
+  late TabController? _eventsTabController;
 
   int? notifId;
   Map<String, dynamic>? currentCallData;
@@ -52,38 +54,29 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
     super.initState();
     // Initialize the TabController with the initial length and vsync
     _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
+    _eventsTabController =
+        TabController(length: 2, vsync: this, initialIndex: 0);
 
     _tabController?.addListener(_handleTabSelection);
+    _eventsTabController?.addListener(_handleEventsTabSelection);
 
-    // Initialize notifications
-    //
-    // FirebaseMessagingApi().initPushNotification();
-    // FirebaseMessagingApi().initialize(context);
     FirebaseMessagingApi().initPushNotification((int newNotifId) {
       setState(() {
         notifId = newNotifId;
       });
-      // Provider.of<NavigationModel>(context, listen: false).currentNotifId =
-      //     newNotifId;
     }, (Map<String, dynamic> newCallData) {
       setState(() {
         currentCallData = newCallData;
       });
-      // Provider.of<NavigationModel>(context, listen: false).currentCallData =
-      //     newCallData;
     });
     FirebaseMessagingApi().initialize((int newNotifId) {
       setState(() {
         notifId = newNotifId;
       });
-      // Provider.of<NavigationModel>(context, listen: false).currentNotifId =
-      //     newNotifId;
     }, (Map<String, dynamic> newCallData) {
       setState(() {
         currentCallData = newCallData;
       });
-      // Provider.of<NavigationModel>(context, listen: false).currentCallData =
-      //     newCallData;
     });
   }
 
@@ -95,14 +88,16 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
         friendsModel.fetchFriendSuggestions();
       }
     }
+  }
 
-    // if (_tabController?.index == 1) {
-    //   final groupModel = Provider.of<GroupModel>(context, listen: false);
-
-    //   if (!groupModel.isInitialized) {
-    //     groupModel.fetchGroups();
-    //   }
-    // }
+  void _handleEventsTabSelection() {
+    if (_tabController?.index == 1) {
+      // Only fetch data if not initialized
+      // final friendsModel = Provider.of<FriendsModel>(context, listen: false);
+      // if (!friendsModel.isInitialized) {
+      //   friendsModel.fetchFriendSuggestions();
+      // }
+    }
   }
 
   @override
@@ -151,7 +146,24 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                     ),
                   ),
                 )
-              : null,
+              : value.currentIndex == 2
+                  ? PreferredSize(
+                      preferredSize: const Size.fromHeight(kToolbarHeight),
+                      child: Container(
+                        color: Color(0xffFC852B),
+                        child: TabBar(
+                          unselectedLabelColor: Colors.white,
+                          labelColor: Colors.white,
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          controller: _eventsTabController,
+                          tabs: const [
+                            Tab(text: 'Events'),
+                            Tab(text: 'Announcement'),
+                          ],
+                        ),
+                      ),
+                    )
+                  : null,
           actions: [
             value.currentIndex == 0
                 ? IconButton(
@@ -177,16 +189,21 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                       Friends(),
                     ],
                   )
-                : IndexedStack(
-                    index: value.currentIndex,
-                    children: const <Widget>[
-                      Chats(),
-                      Notifications(),
-                      Events(),
-                      SettingsPage.Settings(),
-                      MyProfile(),
-                    ],
-                  ),
+                : value.currentIndex == 2
+                    ? TabBarView(
+                        controller: _eventsTabController!,
+                        children: const <Widget>[Events(), Announcements()],
+                      )
+                    : IndexedStack(
+                        index: value.currentIndex,
+                        children: const <Widget>[
+                          Chats(),
+                          Notifications(),
+                          Events(),
+                          SettingsPage.Settings(),
+                          MyProfile(),
+                        ],
+                      ),
             if (FirebaseAuth.instance.currentUser?.uid != null &&
                 currentCallData != null &&
                 notifId != null)
@@ -215,9 +232,6 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                           notifId = null;
                         });
                       });
-                      // setState(() {
-                      //   shouldResetCallData = true;
-                      // });
                     }
 
                     return const SizedBox.shrink();
@@ -226,186 +240,10 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
                   return const SizedBox.shrink();
                 },
               ),
-
-            // // GROUP CALL
-            // if (FirebaseAuth.instance.currentUser?.uid != null)
-            //   StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            //     stream: value.watchGroupCalls(),
-            //     builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            //       if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-            //         print(snapshot.data?.docs.first);
-            //         var callData = snapshot.data!.docs.first;
-            //         var callDataMap = snapshot.data!.docs.first.data()
-            //             as Map<String, dynamic>;
-
-            //         var call = GroupCallModel(
-            //           id: callData.id,
-            //           channel: callDataMap['channel'],
-            //           caller: callDataMap['caller_uid'],
-            //           callerName: callDataMap['caller_name'],
-            //           groupName: callDataMap['group_name'],
-            //           joined: (callDataMap['joined'] as List<dynamic>)
-            //               .map((e) => e.toString())
-            //               .toList(),
-            //           members: (callDataMap['members'] as List<dynamic>)
-            //               .map((e) => e.toString())
-            //               .toList(),
-            //           active: callDataMap['active'],
-            //           isVideoCall: callDataMap['is_video_call'],
-            //           rejected:
-            //               ((callDataMap['rejected'] ?? []) as List<dynamic>)
-            //                   .map((e) => e.toString())
-            //                   .toList(),
-            //         );
-
-            //         if (call.id != value.lastCallId &&
-            //             NotificationService.isNotifActive == false &&
-            //             call.active != null &&
-            //             call.active == true &&
-            //             !call.rejected.contains(
-            //                 Provider.of<ProfileModel>(context, listen: false)
-            //                     .userDetails['uid'])) {
-            //           value.setLastCallId(call.id!);
-            //           NotificationService.isNotifActive = true;
-            //           print('this ran');
-
-            //           // Show notification
-            //           NotificationService.showNotification(
-            //             title: 'Incoming Call',
-            //             body:
-            //                 '${call.callerName} started a group call in ${call.groupName}',
-            //             payload: {
-            //               'navigate': 'true',
-            //               'callId': call.id!,
-            //               'channelName': call.channel,
-            //               'caller': call.caller,
-            //               'callerName': call.callerName,
-            //               'groupName': call.groupName,
-            //               'joined': call.joined.join(','),
-            //               'rejeceted': call.rejected.join(','),
-            //               'chatDocId': callDataMap['chat_doc_id'],
-            //               'isVideoCall': call.isVideoCall.toString()
-            //             },
-            //             category: NotificationCategory.Call,
-            //             actionButtons: [
-            //               NotificationActionButton(
-            //                 key: 'ACCEPT',
-            //                 label: 'Accept',
-            //                 actionType: ActionType.SilentBackgroundAction,
-            //               ),
-            //               NotificationActionButton(
-            //                 key: 'REJECT',
-            //                 label: 'Reject',
-            //                 actionType: ActionType.SilentBackgroundAction,
-            //               ),
-            //             ],
-            //           );
-            //         }
-            //       }
-
-            //       return const SizedBox.shrink();
-            //     },
-            //   )
           ],
         ),
         bottomNavigationBar: const BottomNavBar(),
       );
     });
   }
-
-  // Future<void> showCallkitIncoming(
-  //     String uuid, String callerName, String callerPic) async {
-  //   final params = CallKitParams(
-  //     id: uuid,
-  //     nameCaller: callerName,
-  //     appName: 'Callkit',
-  //     avatar: callerPic,
-  //     handle: '0123456789',
-  //     type: 0,
-  //     textAccept: 'Accept',
-  //     textDecline: 'Decline',
-  //     missedCallNotification: const NotificationParams(
-  //       showNotification: true,
-  //       isShowCallback: false,
-  //       subtitle: 'Missed call',
-  //       callbackText: 'Call back',
-  //     ),
-  //     extra: <String, dynamic>{'userId': '1a2b3c4d'},
-  //     headers: <String, dynamic>{'apiKey': 'Abc@123!', 'platform': 'flutter'},
-  //     android: const AndroidParams(
-  //       isCustomNotification: true,
-  //       isShowLogo: false,
-  //       ringtonePath: 'system_ringtone_default',
-  //       backgroundColor: '#F5F5F5',
-  //       backgroundUrl: 'assets/test.png',
-  //       actionColor: '#4CAF50',
-  //       textColor: '#ffffff',
-  //     ),
-  //   );
-  //   await FlutterCallkitIncoming.showCallkitIncoming(params);
-  // }
-
-  // Future<void> endIncomingCall(String uuid) async {
-  //   await FlutterCallkitIncoming.endCall(uuid);
-  // }
-
-  // void initializeCallkit() {
-  //   FlutterCallkitIncoming.onEvent.listen((CallEvent? event) async {
-  //     switch (event?.event) {
-  //       case Event.actionCallAccept:
-  //         // Handle call accept
-  //         // print(currentCall);
-
-  //         // // Accept call
-  //         // FirebaseFirestore.instance
-  //         //     .collection('calls')
-  //         //     .doc(currentCall!.id)
-  //         //     .update({'accepted': true});
-
-  //         // WidgetsBinding.instance.addPostFrameCallback((_) {
-  //         //   // Navigate to CallPage using the global navigator key
-  //         //   navigatorKey.currentState?.push(
-  //         //     MaterialPageRoute(
-  //         //       builder: (context) => CallPage(
-  //         //         call: CallModel(
-  //         //             id: currentCall.id,
-  //         //             caller: currentCall.caller ?? '',
-  //         //             callerName: currentCall.callerName ?? '',
-  //         //             called: currentCall.called ?? '',
-  //         //             channel: currentCall.channel ?? '',
-  //         //             active: true,
-  //         //             accepted: true,
-  //         //             rejected: false,
-  //         //             connected: false,
-  //         //             isVideoCall: currentCall.isVideoCall),
-  //         //       ),
-  //         //     ),
-  //         //   );
-  //         // });
-
-  //         break;
-  //       case Event.actionCallDecline:
-  //         // Handle call decline
-  //         break;
-  //       default:
-  //         break;
-  //     }
-  //   });
-  // }
-
-  // // Future<dynamic> getCurrentCall() async {
-  // //   //check current call from pushkit if possible
-  // //   var calls = await FlutterCallkitIncoming.activeCalls();
-  // //   if (calls is List) {
-  // //     if (calls.isNotEmpty) {
-  // //       print('DATA: $calls');
-  // //       // _currentUuid = calls[0]['id'];
-  // //       return calls[0];
-  // //     } else {
-  // //       // _currentUuid = "";
-  // //       return null;
-  // //     }
-  // //   }
-  // //   return calls;
-  // // }
 }

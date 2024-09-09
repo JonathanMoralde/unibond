@@ -61,6 +61,7 @@ class AuthModel extends ChangeNotifier {
           'bio': '',
           'profile_pic': '',
           'cover_pic': '',
+          'role': 'user',
         }).then((_) {
           Fluttertoast.showToast(
             msg: 'Account was registered successfully!',

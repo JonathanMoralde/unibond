@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:unibond/pages/Login/Login.dart';
 import 'package:unibond/pages/Register/Register.dart';
 import 'package:unibond/widgets/styledButton.dart';
 
@@ -16,7 +17,18 @@ class GetStarted extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset('lib/assets/get_started.png'),
+              Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  Image.asset(
+                    'lib/assets/getstartedbg.png',
+                    alignment: AlignmentDirectional.bottomEnd,
+                  ),
+                  Image.asset(
+                    'lib/assets/get_started.png',
+                  ),
+                ],
+              ),
               const SizedBox(
                 height: 50,
               ),
@@ -34,7 +46,7 @@ class GetStarted extends StatelessWidget {
                 onClick: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (BuildContext context) => Register(),
+                      builder: (BuildContext context) => Login(),
                     ),
                   );
                 },

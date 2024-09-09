@@ -1,16 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:unibond/model/EventsData.dart';
+import 'package:unibond/pages/Events/CreateEvent.dart';
 
 class EventDetails extends StatelessWidget {
   final IndivEvents eventData;
-  const EventDetails({super.key, required this.eventData});
+  final bool isAdmin;
+  const EventDetails(
+      {super.key, required this.eventData, required this.isAdmin});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Event details'),
+        actions: [
+          if (isAdmin)
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: InkWell(
+                child: Text("EDIT"),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (BuildContext context) => CreateEvent(
+                            eventData: eventData,
+                          )));
+                },
+              ),
+            )
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

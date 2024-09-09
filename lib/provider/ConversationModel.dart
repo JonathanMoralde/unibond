@@ -6,9 +6,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_nude_detector/flutter_nude_detector.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:intl/intl.dart';
+import 'package:profanity_filter/profanity_filter.dart';
 
 class ConversationModel extends ChangeNotifier {
   String? _chatDocId;
@@ -77,6 +79,109 @@ class ConversationModel extends ChangeNotifier {
   Future<void> sendMessage(String message, String friendUid) async {
     if (message.isNotEmpty) {
       final uid = FirebaseAuth.instance.currentUser!.uid;
+      final filter = ProfanityFilter.filterAdditionally([
+        "amputa",
+        "animal ka",
+        "bilat",
+        "binibrocha",
+        "bobo",
+        "bogo",
+        "boto",
+        "brocha",
+        "burat",
+        "bwesit",
+        "bwisit",
+        "demonyo ka",
+        "engot",
+        "etits",
+        "gaga",
+        "gagi",
+        "gago",
+        "habal",
+        "hayop ka",
+        "hayup",
+        "hinampak",
+        "hinayupak",
+        "hindot",
+        "hindutan",
+        "hudas",
+        "iniyot",
+        "inutel",
+        "inutil",
+        "iyot",
+        "kagaguhan",
+        "kagang",
+        "kantot",
+        "kantotan",
+        "kantut",
+        "kantutan",
+        "kaululan",
+        "kayat",
+        "kiki",
+        "kikinginamo",
+        "kingina",
+        "kupal",
+        "leche",
+        "leching",
+        "lechugas",
+        "lintik",
+        "nakakaburat",
+        "nimal",
+        "ogag",
+        "olok",
+        "pakingshet",
+        "pakshet",
+        "pakyu",
+        "pesteng yawa",
+        "poke",
+        "poki",
+        "pokpok",
+        "poyet",
+        "pu'keng",
+        "pucha",
+        "puchanggala",
+        "puchangina",
+        "puke",
+        "puki",
+        "pukinangina",
+        "puking",
+        "punyeta",
+        "puta",
+        "pota",
+        "putang",
+        "putang ina",
+        "putangina",
+        "putanginamo",
+        "putaragis",
+        "putragis",
+        "puyet",
+        "ratbu",
+        "shunga",
+        "sira ulo",
+        "siraulo",
+        "suso",
+        "susu",
+        "tae",
+        "taena",
+        "tamod",
+        "tanga",
+        "tangina",
+        "taragis",
+        "tarantado",
+        "tete",
+        "teti",
+        "timang",
+        "tinil",
+        "tite",
+        "titi",
+        "tungaw",
+        "ulol",
+        "ulul",
+        "ungas",
+      ]);
+      String cleanString = filter.censor(message);
+
+      print(cleanString);
 
       try {
         if (chatDocId != null) {
@@ -91,7 +196,7 @@ class ConversationModel extends ChangeNotifier {
 
           await messagesCollection.add({
             'is_read': false,
-            'content': message,
+            'content': cleanString,
             'receiver_id': friendUid,
             'sender_id': uid,
             'timestamp': timeSent,
@@ -99,7 +204,7 @@ class ConversationModel extends ChangeNotifier {
           });
 
           await chatDoc.update({
-            'latest_chat_message': message,
+            'latest_chat_message': cleanString,
             'latest_chat_user': uid,
             'latest_timestamp': timeSent,
           });
@@ -118,7 +223,7 @@ class ConversationModel extends ChangeNotifier {
             DocumentReference newChatDocRef = await chatsCollection.add({
               'users_id': [uid, friendUid],
               'composite_id': generateConversationId(uid, friendUid),
-              'latest_chat_message': message,
+              'latest_chat_message': cleanString,
               'latest_chat_user': uid,
               'latest_timestamp': timeSent,
             });
@@ -133,7 +238,7 @@ class ConversationModel extends ChangeNotifier {
             // Add the initial message to the messages subcollection
             await messagesCollection.add({
               'is_read': false,
-              'content': message,
+              'content': cleanString,
               'receiver_id': friendUid,
               'sender_id': uid,
               'timestamp': timeSent,
@@ -160,6 +265,16 @@ class ConversationModel extends ChangeNotifier {
 
   Future<void> sendImage(File image, String friendUid) async {
     try {
+      print(image.path);
+      final hasNudity =
+          await FlutterNudeDetector.detect(path: image.path, threshold: 0.1);
+      print(hasNudity);
+      if (hasNudity) {
+        Fluttertoast.showToast(msg: "This photo is prohibited");
+        print('nude detected');
+        return;
+      }
+      print('this executed');
       // Upload the image to Firebase Storage
       final userUid = FirebaseAuth.instance.currentUser!.uid;
       final ext = image.path.split('.').last;
@@ -197,6 +312,7 @@ class ConversationModel extends ChangeNotifier {
           'latest_chat_message': '[image]',
           'latest_chat_user': userUid,
           'latest_timestamp': timeSent,
+          'latest_chat_read': false
         });
 
         print('message sent successfully');
@@ -215,6 +331,7 @@ class ConversationModel extends ChangeNotifier {
           'latest_chat_message': '[image]',
           'latest_chat_user': userUid,
           'latest_timestamp': timeSent,
+          'latest_chat_read': false
         });
 
         // Get the ID of the newly created chat document

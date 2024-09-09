@@ -12,6 +12,7 @@ import 'package:unibond/provider/ChatsModel.dart';
 import 'package:unibond/provider/ConversationModel.dart';
 import 'package:unibond/provider/FriendsModel.dart';
 import 'package:unibond/provider/NotificationModel.dart';
+import 'package:unibond/provider/ProfileModel.dart';
 
 class NotifcationCard extends StatefulWidget {
   final String? chatDocId;
@@ -112,7 +113,7 @@ class _NotifcationCardState extends State<NotifcationCard> {
                       height: 10,
                     ),
                     GestureDetector(
-                      onTap: () {
+                      onTap: () async {
                         Provider.of<NotificationModel>(context, listen: false)
                             .updateReadStatus(widget.docId)
                             .then((_) async {
@@ -126,12 +127,49 @@ class _NotifcationCardState extends State<NotifcationCard> {
                             widget.isMessage == false &&
                             widget.isFriendRequest == false &&
                             widget.isFriendAccept == false) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (BuildContext context) =>
-                                  EventDetails(eventData: widget.eventData!),
-                            ),
-                          );
+                          final profileModel =
+                              Provider.of<ProfileModel>(context, listen: false);
+                          try {
+                            final result = await FirebaseFirestore.instance
+                                .collection('groups')
+                                .where('group_name',
+                                    isEqualTo: widget.eventData!.groupName)
+                                .get();
+
+                            if (result.docs.isNotEmpty) {
+                              final data = result.docs.first.data();
+
+                              print('this executed');
+
+                              if ((data['admin'] as List<dynamic>).contains(
+                                      profileModel.userDetails['uid']) ||
+                                  profileModel.userDetails['role'] == 'admin') {
+                                print('admin');
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        EventDetails(
+                                      eventData: widget.eventData!,
+                                      isAdmin: true,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                print('not admin');
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        EventDetails(
+                                      eventData: widget.eventData!,
+                                      isAdmin: false,
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            print(e);
+                          }
                         } else if (widget.isEvent == false &&
                             widget.isGroup == true &&
                             widget.isMessage == false &&

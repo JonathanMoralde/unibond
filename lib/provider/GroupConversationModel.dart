@@ -4,9 +4,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_nude_detector/flutter_nude_detector.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:intl/intl.dart';
+import 'package:profanity_filter/profanity_filter.dart';
 
 class GroupConversationModel extends ChangeNotifier {
   String? _chatDocId;
@@ -67,6 +69,107 @@ class GroupConversationModel extends ChangeNotifier {
       String message, String userName, String userProfPic, String type) async {
     if (message.isNotEmpty) {
       final uid = FirebaseAuth.instance.currentUser!.uid;
+      final filter = ProfanityFilter.filterAdditionally([
+        "amputa",
+        "animal ka",
+        "bilat",
+        "binibrocha",
+        "bobo",
+        "bogo",
+        "boto",
+        "brocha",
+        "burat",
+        "bwesit",
+        "bwisit",
+        "demonyo ka",
+        "engot",
+        "etits",
+        "gaga",
+        "gagi",
+        "gago",
+        "habal",
+        "hayop ka",
+        "hayup",
+        "hinampak",
+        "hinayupak",
+        "hindot",
+        "hindutan",
+        "hudas",
+        "iniyot",
+        "inutel",
+        "inutil",
+        "iyot",
+        "kagaguhan",
+        "kagang",
+        "kantot",
+        "kantotan",
+        "kantut",
+        "kantutan",
+        "kaululan",
+        "kayat",
+        "kiki",
+        "kikinginamo",
+        "kingina",
+        "kupal",
+        "leche",
+        "leching",
+        "lechugas",
+        "lintik",
+        "nakakaburat",
+        "nimal",
+        "ogag",
+        "olok",
+        "pakingshet",
+        "pakshet",
+        "pakyu",
+        "pesteng yawa",
+        "poke",
+        "poki",
+        "pokpok",
+        "poyet",
+        "pu'keng",
+        "pucha",
+        "puchanggala",
+        "puchangina",
+        "puke",
+        "puki",
+        "pukinangina",
+        "puking",
+        "punyeta",
+        "puta",
+        "pota",
+        "putang",
+        "putang ina",
+        "putangina",
+        "putanginamo",
+        "putaragis",
+        "putragis",
+        "puyet",
+        "ratbu",
+        "shunga",
+        "sira ulo",
+        "siraulo",
+        "suso",
+        "susu",
+        "tae",
+        "taena",
+        "tamod",
+        "tanga",
+        "tangina",
+        "taragis",
+        "tarantado",
+        "tete",
+        "teti",
+        "timang",
+        "tinil",
+        "tite",
+        "titi",
+        "tungaw",
+        "ulol",
+        "ulul",
+        "ungas",
+      ]);
+      String cleanString = filter.censor(message);
 
       try {
         if (chatDocId != null) {
@@ -81,7 +184,7 @@ class GroupConversationModel extends ChangeNotifier {
 
           await messagesCollection.add({
             'is_read': false,
-            'content': message,
+            'content': cleanString,
             'sender_id': uid,
             'sender_name': userName,
             'sender_profile_pic': userProfPic,
@@ -90,7 +193,7 @@ class GroupConversationModel extends ChangeNotifier {
           });
 
           await chatDoc.update({
-            'latest_chat_message': message,
+            'latest_chat_message': cleanString,
             'latest_chat_user': uid,
             'latest_timestamp': timeSent,
           });
@@ -112,6 +215,11 @@ class GroupConversationModel extends ChangeNotifier {
       File image, String userName, String userProfPic) async {
     try {
       if (chatDocId != null) {
+        final hasNudity = await FlutterNudeDetector.detect(path: image.path);
+        if (hasNudity) {
+          Fluttertoast.showToast(msg: "This photo is prohibited");
+          return;
+        }
         final groupData = await FirebaseFirestore.instance
             .collection('groups')
             .doc(chatDocId)

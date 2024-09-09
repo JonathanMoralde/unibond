@@ -9,6 +9,8 @@ class GroupIndivMessage {
   final bool isRead;
   final String senderName;
   final String? senderProfilePic;
+  final String? postPic;
+  final String? postDocId;
 
   GroupIndivMessage({
     required this.msgDocId,
@@ -19,5 +21,7 @@ class GroupIndivMessage {
     required this.isRead,
     required this.senderName,
     this.senderProfilePic,
+    this.postPic,
+    this.postDocId,
   });
 }

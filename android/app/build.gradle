@@ -67,6 +67,11 @@ flutter {
 
 dependencies {
     implementation 'io.agora.rtc:full-sdk:v6.3.2'
+        implementation platform('com.google.firebase:firebase-bom:31.0.0')
+
+    implementation 'com.google.firebase:firebase-functions'
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.firebase:firebase-iid:21.1.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

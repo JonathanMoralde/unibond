@@ -3,11 +3,14 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/model/EventsData.dart';
+import 'package:unibond/pages/MainLayout.dart';
 import 'package:unibond/provider/CreateEventModel.dart';
 import 'package:unibond/provider/EventsModel.dart';
+import 'package:unibond/provider/ProfileModel.dart';
 
 class CreateEvent extends StatefulWidget {
-  const CreateEvent({super.key});
+  final IndivEvents? eventData;
+  const CreateEvent({super.key, this.eventData});
 
   @override
   State<CreateEvent> createState() => _CreateEventState();
@@ -21,6 +24,8 @@ class _CreateEventState extends State<CreateEvent> {
   DateTime? selectedDateTime;
   TimeOfDay? selectedTime;
   String? selectedGroup;
+
+  bool isLoading = false;
 
   final List<Color> colors = [
     Colors.grey.shade300,
@@ -40,56 +45,116 @@ class _CreateEventState extends State<CreateEvent> {
   @override
   void initState() {
     super.initState();
-    Provider.of<CreateEventModel>(context, listen: false).fetchGroups();
+
+    final profileModel = Provider.of<ProfileModel>(context, listen: false);
+    final createEventModel =
+        Provider.of<CreateEventModel>(context, listen: false);
+
+    if (profileModel.userDetails['role'] == 'admin') {
+      createEventModel.fetchAllGroups();
+    } else {
+      createEventModel.fetchGroups();
+    }
+
+    if (widget.eventData != null) {
+      nameController.text = widget.eventData!.eventName;
+      selectedDateTime = widget.eventData!.eventDate;
+      selectedTime = parseTimeOfDay(widget.eventData!.eventTime);
+      locationController.text = widget.eventData!.location;
+      selectedGroup = widget.eventData!.groupName;
+      descriptionController.text = widget.eventData!.description;
+      currentColorIndex =
+          colors.indexWhere((color) => color.value == widget.eventData!.color);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text(widget.eventData != null ? "Edit Event" : "Create Event"),
         actions: [
           GestureDetector(
             onTap: () {
+              setState(() {
+                isLoading = true;
+              });
               if (nameController.text.isNotEmpty &&
                   locationController.text.isNotEmpty &&
                   descriptionController.text.isNotEmpty &&
                   selectedDateTime != null &&
                   selectedTime != null &&
                   selectedGroup != null) {
-                Provider.of<CreateEventModel>(context, listen: false)
-                    .insertEvent(
-                        nameController.text,
-                        selectedDateTime!,
-                        formatTimeOfDay(selectedTime!),
-                        locationController.text,
-                        selectedGroup!,
-                        descriptionController.text,
-                        colors[currentColorIndex].value)
-                    .then((docId) {
+                if (widget.eventData != null) {
                   Provider.of<CreateEventModel>(context, listen: false)
-                      .newEventNotification(IndivEvents(
-                          description: descriptionController.text,
-                          eventDate: selectedDateTime!,
-                          eventDocId: docId,
-                          eventName: nameController.text,
-                          eventTime: formatTimeOfDay(selectedTime!),
-                          groupName: selectedGroup!,
-                          location: locationController.text,
-                          color: colors[currentColorIndex].value));
-                  Fluttertoast.showToast(msg: 'Successfully created the event');
+                      .updateEvent(
+                          widget.eventData!.eventDocId,
+                          nameController.text,
+                          selectedDateTime!,
+                          formatTimeOfDay(selectedTime!),
+                          locationController.text,
+                          selectedGroup!,
+                          descriptionController.text,
+                          colors[currentColorIndex].value)
+                      .then((_) {
+                    Fluttertoast.showToast(
+                        msg: 'Successfully updated the event');
 
-                  Navigator.pop(context);
-                  Provider.of<EventsModel>(context, listen: false)
-                      .fetchEvents(DateTime.now());
-                });
+                    setState(() {
+                      isLoading = false;
+                    });
+
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                          builder: (BuildContext context) => MainLayout()),
+                      (route) => false,
+                    );
+                    Provider.of<EventsModel>(context, listen: false)
+                        .fetchEvents(DateTime.now());
+                  });
+                } else {
+                  Provider.of<CreateEventModel>(context, listen: false)
+                      .insertEvent(
+                          nameController.text,
+                          selectedDateTime!,
+                          formatTimeOfDay(selectedTime!),
+                          locationController.text,
+                          selectedGroup!,
+                          descriptionController.text,
+                          colors[currentColorIndex].value)
+                      .then((docId) {
+                    Provider.of<CreateEventModel>(context, listen: false)
+                        .newEventNotification(IndivEvents(
+                            description: descriptionController.text,
+                            eventDate: selectedDateTime!,
+                            eventDocId: docId,
+                            eventName: nameController.text,
+                            eventTime: formatTimeOfDay(selectedTime!),
+                            groupName: selectedGroup!,
+                            location: locationController.text,
+                            color: colors[currentColorIndex].value));
+                    Fluttertoast.showToast(
+                        msg: 'Successfully created the event');
+
+                    setState(() {
+                      isLoading = false;
+                    });
+
+                    Navigator.pop(context);
+                    Provider.of<EventsModel>(context, listen: false)
+                        .fetchEvents(DateTime.now());
+                  });
+                }
               }
             },
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.only(right: 16.0),
-              child: Text(
-                "SAVE",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              child: isLoading
+                  ? CircularProgressIndicator()
+                  : Text(
+                      "SAVE",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
             ),
           )
         ],
@@ -385,5 +450,11 @@ class _CreateEventState extends State<CreateEvent> {
     final format = DateFormat.jm(); // 12-hour format with AM/PM
     return format.format(DateTime(
         now.year, now.month, now.day, timeOfDay.hour, timeOfDay.minute));
+  }
+
+  TimeOfDay parseTimeOfDay(String time) {
+    final format = DateFormat.jm(); // Same as how you format in formatTimeOfDay
+    final DateTime dateTime = format.parse(time);
+    return TimeOfDay(hour: dateTime.hour, minute: dateTime.minute);
   }
 }

@@ -70,7 +70,26 @@ class _SpashScreenState extends State<SpashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset('lib/assets/home_nobg_cropped.png'),
+            Image.asset('lib/assets/newlogo.png'),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Uni',
+                  style: TextStyle(
+                      color: Color(0xff0072A5),
+                      fontSize: 50,
+                      fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Bond',
+                  style: TextStyle(
+                      color: Color(0xffFF6E00),
+                      fontSize: 50,
+                      fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
             const SizedBox(
               height: 20,
             ),

@@ -5,9 +5,11 @@ import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:unibond/model/EventsData.dart';
 import 'package:unibond/pages/Events/CreateEvent.dart';
+import 'package:unibond/pages/Events/EventCard.dart';
 import 'package:unibond/pages/Events/EventDetails.dart';
 import 'package:unibond/pages/Events/utils.dart';
 import 'package:unibond/provider/EventsModel.dart';
+import 'package:unibond/provider/ProfileModel.dart';
 import 'package:unibond/widgets/styledButton.dart';
 
 class Events extends StatefulWidget {
@@ -37,7 +39,8 @@ class _EventsState extends State<Events> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Consumer<EventsModel>(builder: (context, eventsModel, child) {
+      body: Consumer2<EventsModel, ProfileModel>(
+          builder: (context, eventsModel, profileModel, child) {
         return SafeArea(
             child: Padding(
           padding: const EdgeInsets.all(16),
@@ -253,97 +256,7 @@ class _EventsState extends State<Events> {
                           ),
                           const SizedBox(width: 16),
                           // EVENT CARD
-                          Expanded(
-                            child: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    border: Border(
-                                      left: BorderSide(color: Colors.black),
-                                    ),
-                                  ),
-                                  padding: EdgeInsets.only(left: 16),
-                                  child: Column(
-                                    children: List.generate(
-                                      event.events.length,
-                                      (eventIndex) {
-                                        final indivEvent =
-                                            event.events[eventIndex];
-                                        return Column(
-                                          children: [
-                                            InkWell(
-                                              onTap: () {
-                                                Navigator.of(context).push(
-                                                  MaterialPageRoute(
-                                                    builder: (BuildContext
-                                                            context) =>
-                                                        EventDetails(
-                                                            eventData:
-                                                                indivEvent),
-                                                  ),
-                                                );
-                                              },
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              child: Container(
-                                                padding: EdgeInsets.all(8),
-                                                decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                      color: Colors.black),
-                                                  color:
-                                                      Color(indivEvent.color),
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                ),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        '${indivEvent.eventName} (${indivEvent.eventTime})',
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ),
-                                                    Icon(Icons.chevron_right)
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                            if ((eventsModel.eventsList
-                                                        .indexOf(event) !=
-                                                    eventsModel
-                                                            .eventsList.length -
-                                                        1) ||
-                                                (event.events
-                                                        .indexOf(indivEvent) !=
-                                                    event.events.length - 1))
-                                              const SizedBox(height: 20)
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                ),
-                                // DOT
-                                Positioned(
-                                  top: 10, // Adjusted position from top
-                                  left: -2, // Adjusted position from left
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Colors.black,
-                                      borderRadius: BorderRadius.circular(50),
-                                    ),
-                                    height: 5,
-                                    width: 5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          EventCard(event: event)
                         ],
                       );
                     },
@@ -430,20 +343,55 @@ class _EventsState extends State<Events> {
               if (eventsModel.isCalendar)
                 Expanded(
                   child: ListView.builder(
+                    padding: EdgeInsets.only(top: 10),
                     itemCount: _selectedDay != null
                         ? eventsModel.eventLoader(_selectedDay!).length
                         : [].length,
                     itemBuilder: (context, index) {
                       return InkWell(
                         borderRadius: BorderRadius.circular(8),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (BuildContext context) => EventDetails(
-                                  eventData: eventsModel
-                                      .eventLoader(_selectedDay!)[index]),
-                            ),
-                          );
+                        onTap: () async {
+                          try {
+                            final result = await FirebaseFirestore.instance
+                                .collection('groups')
+                                .where('group_name',
+                                    isEqualTo: eventsModel
+                                        .eventLoader(_selectedDay!)[index]
+                                        .groupName)
+                                .get();
+
+                            if (result.docs.isNotEmpty) {
+                              final data = result.docs.first.data();
+
+                              if ((data['admin'] as List<dynamic>).contains(
+                                      profileModel.userDetails['uid']) ||
+                                  profileModel.userDetails['role'] == 'admin') {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        EventDetails(
+                                      eventData: eventsModel
+                                          .eventLoader(_selectedDay!)[index],
+                                      isAdmin: true,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (BuildContext context) =>
+                                        EventDetails(
+                                      eventData: eventsModel
+                                          .eventLoader(_selectedDay!)[index],
+                                      isAdmin: false,
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            print(e);
+                          }
                         },
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 15),
@@ -461,8 +409,12 @@ class _EventsState extends State<Events> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                  '${eventsModel.eventLoader(_selectedDay!)[index].eventName} (${eventsModel.eventLoader(_selectedDay!)[index].eventTime})'),
+                              Expanded(
+                                child: Text(
+                                  '${eventsModel.eventLoader(_selectedDay!)[index].eventName} (${eventsModel.eventLoader(_selectedDay!)[index].eventTime})',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
                               Icon(Icons.chevron_right)
                             ],
                           ),

@@ -58,6 +58,8 @@ dependencies:
   flutter_callkit_incoming: ^2.0.4+1
   uuid: ^4.4.2
   badges: ^3.1.2
+  profanity_filter: ^2.0.0
+  flutter_nude_detector: ^0.0.4+1
 
 dev_dependencies:
   flutter_test:
@@ -67,7 +69,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "lib/assets/unibond_logo.png"
+  image_path: "lib/assets/play_store_512.png"
   min_sdk_android:
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -91,6 +93,7 @@ flutter:
   assets:
     - lib/assets/
     - .env
+    - assets/ml_models/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

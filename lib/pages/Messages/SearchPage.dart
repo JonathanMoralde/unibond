@@ -27,6 +27,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   final searchController = TextEditingController();
   String searchText = '';
   bool isLoading = false;
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _groupsNotJoined = [];
 
   late TabController? _tabController;
 
@@ -40,6 +41,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         length: 3, vsync: this, initialIndex: widget.initialIndex);
 
     _tabController?.addListener(_handleTabSelection);
+    fetchGroupsNotJoined();
   }
 
   void _handleTabSelection() {
@@ -78,6 +80,26 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> fetchGroupsNotJoined() async {
+    try {
+      final result =
+          await FirebaseFirestore.instance.collection('groups').get();
+
+      final data = result.docs;
+
+      final groupsNotJoined = data.where((doc) {
+        return !(doc.data()['members'] as List<dynamic>)
+            .contains(FirebaseAuth.instance.currentUser!.uid);
+      }).toList();
+
+      setState(() {
+        _groupsNotJoined = groupsNotJoined;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   void dispose() {
     _tabController?.dispose();
@@ -89,7 +111,7 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final aspectRatio = screenWidth / (screenHeight / 1.2); // Adjust as needed
+    final aspectRatio = screenWidth / (screenHeight / 1.4); // Adjust as needed
 
     return Consumer<NavigationModel>(
         builder: (context, navigationModel, child) {
@@ -217,44 +239,27 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                                           List<Widget> chatWidgets = [];
                                           for (final chatDoc
                                               in chatSnapshot.data!.docs) {
-                                            bool isRead = false;
-
-                                            final latestMessageQuery =
-                                                FirebaseFirestore
-                                                    .instance
-                                                    .collection('chats')
-                                                    .doc(chatDoc.id)
-                                                    .collection('messages')
-                                                    .where(
-                                                        'sender_id',
-                                                        isNotEqualTo: Provider.of<
-                                                                    ProfileModel>(
-                                                                context,
-                                                                listen: false)
-                                                            .userDetails['uid'])
-                                                    .orderBy('timestamp',
-                                                        descending: true)
-                                                    .limit(1)
-                                                    .get();
-
-                                            latestMessageQuery.then((_) {
-                                              if (_.docs.isNotEmpty) {
-                                                final latestMessageData =
-                                                    _.docs.first.data();
-                                                isRead = latestMessageData[
-                                                        'is_read'] ??
-                                                    false;
-                                              }
-                                            });
-
                                             chatWidgets.add(
                                               MessageCard(
-                                                isRead: isRead,
-                                                onTap: () {
+                                                isRead:
+                                                    chatDoc['latest_chat_read'],
+                                                onTap: () async {
                                                   Provider.of<ConversationModel>(
                                                           context,
                                                           listen: false)
                                                       .setChatDocId(chatDoc.id);
+
+                                                  try {
+                                                    await FirebaseFirestore
+                                                        .instance
+                                                        .collection('chats')
+                                                        .doc(chatDoc.id)
+                                                        .update({
+                                                      'latest_chat_read': true
+                                                    });
+                                                  } catch (e) {
+                                                    print(e);
+                                                  }
 
                                                   Navigator.of(context).push(
                                                     MaterialPageRoute(
@@ -475,11 +480,38 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
                         ),
                       ),
                     ),
-                  if (searchText.isEmpty && _tabController != null)
+                  if (searchText.isEmpty &&
+                      _tabController != null &&
+                      _tabController!.index != 1)
                     Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Center(child: Text(initialDisplay)),
                     ),
+                  if (searchText.isEmpty &&
+                      _tabController != null &&
+                      _tabController!.index == 1)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: GridView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: aspectRatio,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                          itemCount: _groupsNotJoined.length,
+                          itemBuilder: (context, index) {
+                            return GroupCard(
+                                groupData: _groupsNotJoined[index].data(),
+                                groupDocId: _groupsNotJoined[index].id);
+                          },
+                        ),
+                      ),
+                    )
                 ],
               ));
             }),

@@ -9,6 +9,28 @@ class CreateEventModel extends ChangeNotifier {
 
   List<DropdownMenuItem<String>> get groupOptions => _groupOptions;
 
+  Future<void> fetchAllGroups() async {
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('groups').get();
+
+      if (querySnapshot.docs.length > 0) {
+        final groups = querySnapshot.docs.map((doc) {
+          return DropdownMenuItem<String>(
+            value: doc['group_name'],
+            child: Text(doc[
+                'group_name']), // Assuming the group name is stored under the 'groupName' field
+          );
+        }).toList();
+
+        _groupOptions = groups;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('Failed to fetch groups: $e');
+    }
+  }
+
   Future<void> fetchGroups() async {
     try {
       final userUid = FirebaseAuth.instance.currentUser!.uid;
@@ -55,6 +77,7 @@ class CreateEventModel extends ChangeNotifier {
         'group_name': groupName,
         'description': description,
         'color': selectedColorValue,
+        'views': []
       });
 
       // Get the generated document ID
@@ -66,6 +89,30 @@ class CreateEventModel extends ChangeNotifier {
     }
 
     return '';
+  }
+
+  Future<void> updateEvent(
+      String documentId,
+      String name,
+      DateTime date,
+      String time,
+      String location,
+      String group,
+      String description,
+      int color) async {
+    // Your update logic here, e.g., updating Firestore document
+    await FirebaseFirestore.instance
+        .collection('events')
+        .doc(documentId)
+        .update({
+      'event_name': name,
+      'event_date': date,
+      'event_time': time,
+      'location': location,
+      'group_name': group,
+      'description': description,
+      'color': color,
+    });
   }
 
   Future<void> newEventNotification(IndivEvents eventData) async {

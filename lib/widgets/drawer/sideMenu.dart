@@ -81,7 +81,7 @@ class SideMenu extends StatelessWidget {
                         Text(
                           userDetails['full_name'] ?? 'Loading...',
                           style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                              fontSize: 16, fontWeight: FontWeight.bold),
                           softWrap: true,
                           overflow: TextOverflow.visible,
                         ),
