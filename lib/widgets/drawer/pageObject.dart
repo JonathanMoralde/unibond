@@ -28,7 +28,9 @@ List<SideMenuPage> pages = [
       page: const Notifications(),
       icon: const Icon(Icons.notifications)),
   SideMenuPage(
-      name: "Events", page: const Events(), icon: const Icon(Icons.event)),
+      name: "News & Events",
+      page: const Events(),
+      icon: const Icon(Icons.event)),
   SideMenuPage(
       name: "Settings",
       page: const Settings(),

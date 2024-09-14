@@ -108,6 +108,7 @@ class _PostCardState extends State<PostCard> {
     return Consumer<ProfileModel>(builder: (context, profileModel, child) {
       return Container(
         decoration: BoxDecoration(
+            color: Colors.white,
             border: Border.all(
               color: Colors.black,
               width: 1,

@@ -6,6 +6,7 @@ import 'package:unibond/model/MessageData.dart';
 import 'package:unibond/pages/Messages/Conversation.dart';
 import 'package:unibond/provider/ChatsModel.dart';
 import 'package:unibond/provider/ConversationModel.dart';
+import 'package:unibond/provider/ProfileModel.dart';
 import 'package:unibond/widgets/Chat/MessageCard.dart';
 
 class Chats extends StatefulWidget {
@@ -78,6 +79,16 @@ class _ChatsState extends State<Chats> {
                               return const Center(
                                 child: Text('User data not available.'),
                               );
+                            }
+
+                            if (!(userSnapshot.data!.data()!['friends']
+                                    as List<dynamic>)
+                                .map((e) => e.toString())
+                                .toList()
+                                .contains(Provider.of<ProfileModel>(context,
+                                        listen: false)
+                                    .userDetails['uid'])) {
+                              return SizedBox.shrink();
                             }
                             return MessageCard(
                               isRead: (doc.data()
