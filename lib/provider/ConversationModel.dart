@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
@@ -11,6 +12,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:gallery_saver/gallery_saver.dart';
 import 'package:intl/intl.dart';
 import 'package:profanity_filter/profanity_filter.dart';
+import 'package:http/http.dart' as http;
 
 class ConversationModel extends ChangeNotifier {
   String? _chatDocId;
@@ -76,7 +78,8 @@ class ConversationModel extends ChangeNotifier {
         .snapshots();
   }
 
-  Future<void> sendMessage(String message, String friendUid) async {
+  Future<void> sendMessage(String message, String friendUid,
+      String currentUserName, String? currentUserPic) async {
     if (message.isNotEmpty) {
       final uid = FirebaseAuth.instance.currentUser!.uid;
       final filter = ProfanityFilter.filterAdditionally([
@@ -207,6 +210,7 @@ class ConversationModel extends ChangeNotifier {
             'latest_chat_message': cleanString,
             'latest_chat_user': uid,
             'latest_timestamp': timeSent,
+            'latest_chat_read': false
           });
 
           print('message sent successfully');
@@ -226,6 +230,7 @@ class ConversationModel extends ChangeNotifier {
               'latest_chat_message': cleanString,
               'latest_chat_user': uid,
               'latest_timestamp': timeSent,
+              'latest_chat_read': false
             });
 
             // Get the ID of the newly created chat document
@@ -253,6 +258,9 @@ class ConversationModel extends ChangeNotifier {
             print("error sending message, line 81: $e");
           }
         }
+
+        sendPushMessage(
+            friendUid, currentUserName, cleanString, currentUserPic);
       } catch (e) {
         print("error sending msg, line 85 $e");
       }
@@ -263,7 +271,8 @@ class ConversationModel extends ChangeNotifier {
     }
   }
 
-  Future<void> sendImage(File image, String friendUid) async {
+  Future<void> sendImage(File image, String friendUid, String currentUserName,
+      String? currentUserPic) async {
     try {
       print(image.path);
       final hasNudity =
@@ -356,8 +365,180 @@ class ConversationModel extends ChangeNotifier {
 
         // sendNotification('message');
       }
+      sendPushMessage(
+          friendUid, currentUserName, 'Send a photo', currentUserPic);
     } catch (e) {
       print('unable to send image: $e');
+    }
+  }
+
+  Future<void> sendCallDurationMessage(String message, String friendUid) async {
+    if (message.isNotEmpty) {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      try {
+        if (chatDocId != null) {
+          // ! =========== IF CHAT ALREADY EXIST ==================
+          DocumentReference chatDoc =
+              FirebaseFirestore.instance.collection('chats').doc(chatDocId);
+
+          CollectionReference messagesCollection =
+              chatDoc.collection('messages');
+
+          Timestamp timeSent = Timestamp.now();
+
+          await messagesCollection.add({
+            'is_read': true,
+            'content': message,
+            'receiver_id': friendUid,
+            'sender_id': uid,
+            'timestamp': timeSent,
+            'type': 'notify'
+          });
+
+          await chatDoc.update({
+            'latest_chat_message': message,
+            'latest_chat_user': uid,
+            'latest_timestamp': timeSent,
+            'latest_chat_read': true
+          });
+
+          print('message sent successfully');
+          // sendNotification('message');
+        } else {
+          // ! ========== IF CHAT IS A NEW CONVERSATION ==========
+          try {
+            CollectionReference chatsCollection =
+                FirebaseFirestore.instance.collection('chats');
+
+            Timestamp timeSent = Timestamp.now();
+
+            // Create a new chat document and get its reference
+            DocumentReference newChatDocRef = await chatsCollection.add({
+              'users_id': [uid, friendUid],
+              'composite_id': generateConversationId(uid, friendUid),
+              'latest_chat_message': message,
+              'latest_chat_user': uid,
+              'latest_timestamp': timeSent,
+              'latest_chat_read': true
+            });
+
+            // Get the ID of the newly created chat document
+            String newChatDocId = newChatDocRef.id;
+
+            // Create a messages subcollection for the new chat
+            CollectionReference messagesCollection =
+                newChatDocRef.collection('messages');
+
+            // Add the initial message to the messages subcollection
+            await messagesCollection.add({
+              'is_read': true,
+              'content': message,
+              'receiver_id': friendUid,
+              'sender_id': uid,
+              'timestamp': timeSent,
+              'type': 'notify'
+            });
+
+            _chatDocId = newChatDocId;
+            notifyListeners();
+
+            // sendNotification('message');
+          } catch (e) {
+            print("error sending message, line 81: $e");
+          }
+        }
+      } catch (e) {
+        print("error sending msg, line 85 $e");
+      }
+
+      // chatTextFieldController.clear();
+
+      // !======== SEND A NOTIF=================
+    }
+  }
+
+  Future<void> sendMissedCall(String message, String friendUid) async {
+    if (message.isNotEmpty) {
+      final uid = FirebaseAuth.instance.currentUser!.uid;
+      try {
+        if (chatDocId != null) {
+          // ! =========== IF CHAT ALREADY EXIST ==================
+          DocumentReference chatDoc =
+              FirebaseFirestore.instance.collection('chats').doc(chatDocId);
+
+          CollectionReference messagesCollection =
+              chatDoc.collection('messages');
+
+          Timestamp timeSent = Timestamp.now();
+
+          await messagesCollection.add({
+            'is_read': true,
+            'content': message,
+            'receiver_id': friendUid,
+            'sender_id': uid,
+            'timestamp': timeSent,
+            'type': 'call'
+          });
+
+          await chatDoc.update({
+            'latest_chat_message': message,
+            'latest_chat_user': uid,
+            'latest_timestamp': timeSent,
+            'latest_chat_read': false
+          });
+
+          print('message sent successfully');
+          // sendNotification('message');
+        } else {
+          // ! ========== IF CHAT IS A NEW CONVERSATION ==========
+          try {
+            CollectionReference chatsCollection =
+                FirebaseFirestore.instance.collection('chats');
+
+            Timestamp timeSent = Timestamp.now();
+
+            // Create a new chat document and get its reference
+            DocumentReference newChatDocRef = await chatsCollection.add({
+              'users_id': [uid, friendUid],
+              'composite_id': generateConversationId(uid, friendUid),
+              'latest_chat_message': message,
+              'latest_chat_user': uid,
+              'latest_timestamp': timeSent,
+              'latest_chat_read': false
+            });
+
+            // Get the ID of the newly created chat document
+            String newChatDocId = newChatDocRef.id;
+
+            // Create a messages subcollection for the new chat
+            CollectionReference messagesCollection =
+                newChatDocRef.collection('messages');
+
+            // Add the initial message to the messages subcollection
+            await messagesCollection.add({
+              'is_read': false,
+              'content': message,
+              'receiver_id': friendUid,
+              'sender_id': uid,
+              'timestamp': timeSent,
+              'type': 'call'
+            });
+
+            _chatDocId = newChatDocId;
+            notifyListeners();
+
+            // sendNotification('message');
+          } catch (e) {
+            print("error sending message, line 81: $e");
+          }
+        }
+      } catch (e) {
+        print("error sending msg, line 85 $e");
+      }
+
+      // chatTextFieldController.clear();
+
+      // !======== SEND A NOTIF=================
     }
   }
 
@@ -382,6 +563,49 @@ class ConversationModel extends ChangeNotifier {
           .update({'is_read': true});
     } catch (e) {
       print("Error marking message as read: $e");
+    }
+  }
+
+  Future<void> sendPushMessage(String friendId, String currentUserName,
+      String message, String? currentUserPic) async {
+    final String notificationTitle = currentUserName;
+    final String notificationBody = message;
+
+    final result = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(friendId)
+        .collection('fcm_tokens')
+        .get();
+
+    if (result.docs.isNotEmpty) {
+      // get fcm tokens of the user
+      final List<String> fcmTokens =
+          result.docs.map((doc) => doc.data()['fcm_token'] as String).toList();
+
+      for (final fcmToken in fcmTokens) {
+        final response = await http.post(
+          Uri.parse('https://unibond-token-server.onrender.com/send_message'),
+          headers: <String, String>{
+            'Content-Type': 'application/json; charset=UTF-8',
+          },
+          body: jsonEncode(<String, dynamic>{
+            'token': fcmToken,
+            'title': notificationTitle,
+            'body': notificationBody,
+            'userId': friendId,
+            'chatDocId': chatDocId,
+            'senderName': currentUserName,
+            'senderId': FirebaseAuth.instance.currentUser!.uid,
+            'senderPic': currentUserPic ?? '',
+          }),
+        );
+
+        if (response.statusCode == 200) {
+          print("Notification sent successfully");
+        } else {
+          print("Failed to send notification: ${response.body}");
+        }
+      }
     }
   }
 

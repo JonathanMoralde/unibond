@@ -68,253 +68,208 @@ class _NotifcationCardState extends State<NotifcationCard> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(FirebaseAuth.instance.currentUser!.uid)
-            .snapshots(),
-        builder: (context, currentUserSnapshot) {
-          if (currentUserSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (currentUserSnapshot.hasError) {
-            return Center(child: Text('Error: ${currentUserSnapshot.error}'));
-          }
-
-          if (!currentUserSnapshot.hasData &&
-              currentUserSnapshot.data != null) {
-            return const Center(child: Text('No user data'));
-          }
-
-          final currentUserData =
-              currentUserSnapshot.data!.data() as Map<String, dynamic>;
-          final currentUserUid = currentUserData['uid'];
-          final currentUserFullName = currentUserData['full_name'];
-          final currentUserRequestList =
-              (currentUserData['requests'] as List<dynamic>)
-                  .map((e) => e.toString())
-                  .toList();
-          final currentUserFriendList =
-              (currentUserData['friends'] as List<dynamic>)
-                  .map((e) => e.toString())
-                  .toList();
-
-          return Column(
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: notifRead ? Colors.transparent : Colors.blue[100],
+          ),
+          child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: notifRead ? Colors.transparent : Colors.blue[100],
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        Provider.of<NotificationModel>(context, listen: false)
-                            .updateReadStatus(widget.docId)
-                            .then((_) async {
-                          setState(() {
-                            notifRead = true;
-                          });
-                        });
+              const SizedBox(
+                height: 10,
+              ),
+              GestureDetector(
+                onTap: () async {
+                  Provider.of<NotificationModel>(context, listen: false)
+                      .updateReadStatus(widget.docId)
+                      .then((_) async {
+                    setState(() {
+                      notifRead = true;
+                    });
+                  });
 
-                        if (widget.isEvent == true &&
-                            widget.isGroup == false &&
-                            widget.isMessage == false &&
-                            widget.isFriendRequest == false &&
-                            widget.isFriendAccept == false) {
-                          final profileModel =
-                              Provider.of<ProfileModel>(context, listen: false);
-                          try {
-                            final result = await FirebaseFirestore.instance
-                                .collection('groups')
-                                .where('group_name',
-                                    isEqualTo: widget.eventData!.groupName)
-                                .get();
+                  if (widget.isEvent == true &&
+                      widget.isGroup == false &&
+                      widget.isMessage == false &&
+                      widget.isFriendRequest == false &&
+                      widget.isFriendAccept == false) {
+                    final profileModel =
+                        Provider.of<ProfileModel>(context, listen: false);
+                    try {
+                      final result = await FirebaseFirestore.instance
+                          .collection('groups')
+                          .where('group_name',
+                              isEqualTo: widget.eventData!.groupName)
+                          .get();
 
-                            if (result.docs.isNotEmpty) {
-                              final data = result.docs.first.data();
+                      if (result.docs.isNotEmpty) {
+                        final data = result.docs.first.data();
 
-                              print('this executed');
+                        print('this executed');
 
-                              if ((data['admin'] as List<dynamic>).contains(
-                                      profileModel.userDetails['uid']) ||
-                                  profileModel.userDetails['role'] == 'admin') {
-                                print('admin');
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (BuildContext context) =>
-                                        EventDetails(
-                                      eventData: widget.eventData!,
-                                      isAdmin: true,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                print('not admin');
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (BuildContext context) =>
-                                        EventDetails(
-                                      eventData: widget.eventData!,
-                                      isAdmin: false,
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-                          } catch (e) {
-                            print(e);
-                          }
-                        } else if (widget.isEvent == false &&
-                            widget.isGroup == true &&
-                            widget.isMessage == false &&
-                            widget.isFriendRequest == false &&
-                            widget.isFriendAccept == false) {
+                        if ((data['admin'] as List<dynamic>)
+                                .contains(profileModel.userDetails['uid']) ||
+                            profileModel.userDetails['role'] == 'admin') {
+                          print('admin');
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (BuildContext context) =>
-                                  GroupConversation(
-                                      groupDocId: widget.groupDocId!),
-                            ),
-                          );
-                        } else if (widget.isEvent == false &&
-                            widget.isGroup == false &&
-                            widget.isMessage == true &&
-                            widget.isFriendRequest == false &&
-                            widget.isFriendAccept == false) {
-                          Provider.of<ConversationModel>(context, listen: false)
-                              .setChatDocId(widget.chatDocId);
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (BuildContext context) => Conversation(
-                                friendName: widget.fromName,
-                                friendUid: widget.fromUid!,
-                                friendProfilePic: widget.img,
+                              builder: (BuildContext context) => EventDetails(
+                                eventData: widget.eventData!,
+                                isAdmin: true,
                               ),
                             ),
                           );
-                        } else if (widget.isEvent == false &&
-                            widget.isGroup == false &&
-                            widget.isMessage == false &&
-                            widget.isFriendRequest == true &&
-                            widget.isFriendAccept == false) {
-                          Provider.of<NotificationModel>(context, listen: false)
-                              .fetchUserData(widget.fromUid!)
-                              .then((userData) {
-                            Provider.of<FriendsModel>(context, listen: false)
-                                .viewProfile(userData);
-
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (BuildContext context) => ProfileView(
-                                      currentUserFriendsList:
-                                          currentUserFriendList,
-                                      currentUserFullName: currentUserFullName,
-                                      currentUserRequestsList:
-                                          currentUserRequestList,
-                                      currentUserUid: currentUserUid,
-                                      uid: widget.fromUid!,
-                                    )));
-                          });
                         } else {
-                          Provider.of<NotificationModel>(context, listen: false)
-                              .fetchUserData(widget.fromUid!)
-                              .then((userData) {
-                            Provider.of<FriendsModel>(context, listen: false)
-                                .viewProfile(userData);
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (BuildContext context) => ProfileView(
-                                      currentUserFriendsList:
-                                          currentUserFriendList,
-                                      currentUserFullName: currentUserFullName,
-                                      currentUserRequestsList:
-                                          currentUserRequestList,
-                                      currentUserUid: currentUserUid,
-                                      uid: widget.fromUid!,
-                                    )));
-                          });
+                          print('not admin');
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (BuildContext context) => EventDetails(
+                                eventData: widget.eventData!,
+                                isAdmin: false,
+                              ),
+                            ),
+                          );
                         }
-                      },
-                      child: Row(
+                      }
+                    } catch (e) {
+                      print(e);
+                    }
+                  } else if (widget.isEvent == false &&
+                      widget.isGroup == true &&
+                      widget.isMessage == false &&
+                      widget.isFriendRequest == false &&
+                      widget.isFriendAccept == false) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) =>
+                            GroupConversation(groupDocId: widget.groupDocId!),
+                      ),
+                    );
+                  } else if (widget.isEvent == false &&
+                      widget.isGroup == false &&
+                      widget.isMessage == true &&
+                      widget.isFriendRequest == false &&
+                      widget.isFriendAccept == false) {
+                    Provider.of<ConversationModel>(context, listen: false)
+                        .setChatDocId(widget.chatDocId);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => Conversation(
+                          friendName: widget.fromName,
+                          friendUid: widget.fromUid!,
+                          friendProfilePic: widget.img,
+                        ),
+                      ),
+                    );
+                  } else if (widget.isEvent == false &&
+                      widget.isGroup == false &&
+                      widget.isMessage == false &&
+                      widget.isFriendRequest == true &&
+                      widget.isFriendAccept == false) {
+                    Provider.of<NotificationModel>(context, listen: false)
+                        .fetchUserData(widget.fromUid!)
+                        .then((userData) {
+                      Provider.of<FriendsModel>(context, listen: false)
+                          .viewProfile(userData);
+
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) => ProfileView(
+                                currentUserUid:
+                                    FirebaseAuth.instance.currentUser!.uid,
+                                uid: widget.fromUid!,
+                              )));
+                    });
+                  } else {
+                    Provider.of<NotificationModel>(context, listen: false)
+                        .fetchUserData(widget.fromUid!)
+                        .then((userData) {
+                      Provider.of<FriendsModel>(context, listen: false)
+                          .viewProfile(userData);
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (BuildContext context) => ProfileView(
+                                currentUserUid:
+                                    FirebaseAuth.instance.currentUser!.uid,
+                                uid: widget.fromUid!,
+                              )));
+                    });
+                  }
+                },
+                child: Row(
+                  children: [
+                    // Image/Icon
+                    widget.img != null && (widget.img as String).isNotEmpty
+                        ? CircleAvatar(
+                            backgroundImage: NetworkImage(widget.img!),
+                            maxRadius: 30,
+                          )
+                        : const CircleAvatar(
+                            backgroundImage: AssetImage(
+                                'lib/assets/default_profile_pic.png'),
+                            maxRadius: 30,
+                          ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+
+                    // Column
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Image/Icon
-                          widget.img != null &&
-                                  (widget.img as String).isNotEmpty
-                              ? CircleAvatar(
-                                  backgroundImage: NetworkImage(widget.img!),
-                                  maxRadius: 30,
-                                )
-                              : const CircleAvatar(
-                                  backgroundImage: AssetImage(
-                                      'lib/assets/default_profile_pic.png'),
-                                  maxRadius: 30,
+                          // SHOP NAME
+                          RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: widget.fromName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors
+                                        .black, // Add color to match theme
+                                  ),
                                 ),
-                          const SizedBox(
-                            width: 10,
+                                TextSpan(
+                                  text: ' ${widget.notifMsg}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: Colors
+                                        .black, // Add color to match theme
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
 
-                          // Column
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // SHOP NAME
-                                RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: widget.fromName,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors
-                                              .black, // Add color to match theme
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: ' ${widget.notifMsg}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          color: Colors
-                                              .black, // Add color to match theme
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                          const SizedBox(
+                            height: 5,
+                          ),
 
-                                const SizedBox(
-                                  height: 5,
-                                ),
-
-                                // timestamp
-                                Text(
-                                  Provider.of<NotificationModel>(context,
-                                          listen: false)
-                                      .formatDateTime(widget.dateTime),
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Colors.grey.shade700,
-                                  ),
-                                )
-                              ],
+                          // timestamp
+                          Text(
+                            Provider.of<NotificationModel>(context,
+                                    listen: false)
+                                .formatDateTime(widget.dateTime),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey.shade700,
                             ),
                           )
                         ],
                       ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
+                    )
                   ],
                 ),
               ),
+              const SizedBox(
+                height: 10,
+              ),
             ],
-          );
-        });
+          ),
+        ),
+      ],
+    );
   }
 }

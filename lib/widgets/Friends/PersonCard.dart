@@ -72,6 +72,7 @@ class _PersonCardState extends State<PersonCard> {
             return Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
+                color: Color(0xFFF5F5F5),
                 border: Border.all(color: const Color(0xFFBBBBBB)),
                 borderRadius: const BorderRadius.all(
                   Radius.circular(35),

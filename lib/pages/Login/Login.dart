@@ -135,13 +135,16 @@ class _LoginState extends State<Login> {
                         child: const Text(
                           'Let\'s help you find friends!',
                           textAlign: TextAlign.center,
-                          style: TextStyle(shadows: [
-                            Shadow(
-                              offset: Offset(0.0, 0.0),
-                              blurRadius: 2.0,
-                              color: Color.fromARGB(255, 255, 255, 255),
-                            ),
-                          ], fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(
+                                  offset: Offset(0.0, 0.0),
+                                  blurRadius: 2.0,
+                                  color: Color.fromARGB(255, 255, 255, 255),
+                                ),
+                              ],
+                              fontWeight: FontWeight.w600),
                         ),
                       ),
                       const SizedBox(

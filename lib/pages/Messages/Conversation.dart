@@ -305,135 +305,315 @@ class _ConversationState extends State<Conversation> {
                             }
 
                             final List<Widget> listTileContent = [
-                              isCurrentUser
-                                  ? (profileModel.userDetails['profile_pic'] !=
-                                              null &&
-                                          (profileModel.userDetails[
-                                                  'profile_pic'] as String)
-                                              .isNotEmpty
-                                      ? CircleAvatar(
-                                          backgroundImage: NetworkImage(
-                                              profileModel
-                                                  .userDetails['profile_pic']),
-                                          maxRadius: 20,
-                                        )
-                                      : const CircleAvatar(
-                                          backgroundImage: AssetImage(
-                                              'lib/assets/default_profile_pic.png'),
-                                          maxRadius: 20,
-                                        ))
-                                  : widget.friendProfilePic != null &&
-                                          (widget.friendProfilePic as String)
-                                              .isNotEmpty
-                                      ? CircleAvatar(
-                                          backgroundImage: NetworkImage(
-                                              widget.friendProfilePic!),
-                                          maxRadius: 20,
-                                        )
-                                      : const CircleAvatar(
-                                          backgroundImage: AssetImage(
-                                              'lib/assets/default_profile_pic.png'),
-                                          maxRadius: 20,
-                                        ),
-                              const SizedBox(
-                                width: 5,
-                              ),
-                              Column(
-                                crossAxisAlignment: isCurrentUser
-                                    ? CrossAxisAlignment.end
-                                    : CrossAxisAlignment.start,
-                                children: [
-                                  ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      maxWidth:
-                                          MediaQuery.sizeOf(context).width *
-                                              0.60,
-                                      // 0.80,
-                                    ),
-                                    child: msg[index].type == 'text'
-                                        ? Container(
-                                            decoration: BoxDecoration(
-                                              color: isCurrentUser
-                                                  ? const Color(0xffFF8C36)
-                                                  : const Color(0xff6ECDF7),
-                                              borderRadius: BorderRadius.only(
-                                                  topLeft: !isCurrentUser
-                                                      ? const Radius.circular(0)
-                                                      : const Radius.circular(
-                                                          32),
-                                                  topRight: isCurrentUser
-                                                      ? const Radius.circular(0)
-                                                      : const Radius.circular(
-                                                          32),
-                                                  bottomLeft:
-                                                      const Radius.circular(32),
-                                                  bottomRight:
-                                                      const Radius.circular(
-                                                          32)),
+                              msg[index].type == 'notify'
+                                  ? Expanded(
+                                      child: Text(
+                                      msg[index].content,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey.shade600),
+                                    ))
+                                  : isCurrentUser
+                                      ? (profileModel.userDetails[
+                                                      'profile_pic'] !=
+                                                  null &&
+                                              (profileModel.userDetails[
+                                                      'profile_pic'] as String)
+                                                  .isNotEmpty
+                                          ? CircleAvatar(
+                                              backgroundImage: NetworkImage(
+                                                  profileModel.userDetails[
+                                                      'profile_pic']),
+                                              maxRadius: 20,
+                                            )
+                                          : const CircleAvatar(
+                                              backgroundImage: AssetImage(
+                                                  'lib/assets/default_profile_pic.png'),
+                                              maxRadius: 20,
+                                            ))
+                                      : widget.friendProfilePic != null &&
+                                              (widget.friendProfilePic
+                                                      as String)
+                                                  .isNotEmpty
+                                          ? CircleAvatar(
+                                              backgroundImage: NetworkImage(
+                                                  widget.friendProfilePic!),
+                                              maxRadius: 20,
+                                            )
+                                          : const CircleAvatar(
+                                              backgroundImage: AssetImage(
+                                                  'lib/assets/default_profile_pic.png'),
+                                              maxRadius: 20,
                                             ),
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 8, horizontal: 16),
-                                            child: Text(
-                                              msg[index].content,
-                                              style: const TextStyle(
-                                                color: Colors.black,
+                              if (msg[index].type != 'notify')
+                                const SizedBox(
+                                  width: 5,
+                                ),
+                              if (msg[index].type != 'notify')
+                                Column(
+                                  crossAxisAlignment: isCurrentUser
+                                      ? CrossAxisAlignment.end
+                                      : CrossAxisAlignment.start,
+                                  children: [
+                                    ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth:
+                                            MediaQuery.sizeOf(context).width *
+                                                0.60,
+                                        // 0.80,
+                                      ),
+                                      child: msg[index].type == 'text'
+                                          ? Container(
+                                              decoration: BoxDecoration(
+                                                color: isCurrentUser
+                                                    ? const Color(0xffFF8C36)
+                                                    : const Color(0xff6ECDF7),
+                                                borderRadius: BorderRadius.only(
+                                                    topLeft: !isCurrentUser
+                                                        ? const Radius.circular(
+                                                            0)
+                                                        : const Radius.circular(
+                                                            32),
+                                                    topRight: isCurrentUser
+                                                        ? const Radius.circular(
+                                                            0)
+                                                        : const Radius.circular(
+                                                            32),
+                                                    bottomLeft:
+                                                        const Radius.circular(
+                                                            32),
+                                                    bottomRight:
+                                                        const Radius.circular(
+                                                            32)),
                                               ),
-                                            ),
-                                          )
-                                        : GestureDetector(
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      Scaffold(
-                                                    appBar: AppBar(
-                                                      leading: GestureDetector(
-                                                          onTap: () {
-                                                            Navigator.pop(
-                                                                context);
-                                                          },
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 8,
+                                                      horizontal: 16),
+                                              child: Text(
+                                                msg[index].content,
+                                                style: const TextStyle(
+                                                  color: Colors.black,
+                                                ),
+                                              ),
+                                            )
+                                          : msg[index].type == 'call'
+                                              ? GestureDetector(
+                                                  onTap: () async {
+                                                    final result =
+                                                        await FirebaseFirestore
+                                                            .instance
+                                                            .collection('users')
+                                                            .doc(widget
+                                                                .friendUid)
+                                                            .collection(
+                                                                'fcm_tokens')
+                                                            .get();
+
+                                                    if (result
+                                                        .docs.isNotEmpty) {
+                                                      // get fcm tokens of the user
+                                                      final List<String>
+                                                          fcmTokens = result
+                                                              .docs
+                                                              .map((doc) => doc
+                                                                          .data()[
+                                                                      'fcm_token']
+                                                                  as String)
+                                                              .toList();
+
+                                                      // VIDEO CALL
+                                                      await Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder:
+                                                                (BuildContext
+                                                                    context) {
+                                                          return CallPage(
+                                                            fcmTokens:
+                                                                fcmTokens,
+                                                            call: CallModel(
+                                                                accepted: null,
+                                                                active: null,
+                                                                called: widget
+                                                                    .friendUid,
+                                                                caller: Provider.of<ProfileModel>(context, listen: false)
+                                                                        .userDetails[
+                                                                    'uid'],
+                                                                callerName: Provider.of<ProfileModel>(
+                                                                            context,
+                                                                            listen:
+                                                                                false)
+                                                                        .userDetails[
+                                                                    'full_name'],
+                                                                callerPic: Provider.of<ProfileModel>(
+                                                                            context,
+                                                                            listen:
+                                                                                false)
+                                                                        .userDetails[
+                                                                    'profile_pic'],
+                                                                channel:
+                                                                    '${Provider.of<ProfileModel>(context, listen: false).userDetails['uid']}-${widget.friendUid}', //localuseruid-frienduid
+                                                                // channel: 'test', //localuseruid-frienduid
+                                                                connected: null,
+                                                                id: null,
+                                                                rejected: null,
+                                                                isVideoCall: msg[index]
+                                                                    .content
+                                                                    .contains('video')),
+                                                          );
+                                                        }),
+                                                      );
+                                                    }
+                                                  },
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: isCurrentUser
+                                                          ? const Color(
+                                                              0xffFF8C36)
+                                                          : const Color(
+                                                              0xff6ECDF7),
+                                                      borderRadius: BorderRadius.only(
+                                                          topLeft:
+                                                              !isCurrentUser
+                                                                  ? const Radius
+                                                                      .circular(
+                                                                      0)
+                                                                  : const Radius
+                                                                      .circular(
+                                                                      32),
+                                                          topRight:
+                                                              isCurrentUser
+                                                                  ? const Radius
+                                                                      .circular(
+                                                                      0)
+                                                                  : const Radius
+                                                                      .circular(
+                                                                      32),
+                                                          bottomLeft:
+                                                              const Radius
+                                                                  .circular(32),
+                                                          bottomRight:
+                                                              const Radius
+                                                                  .circular(
+                                                                  32)),
+                                                    ),
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 8,
+                                                        horizontal: 16),
+                                                    child: Row(
+                                                      children: [
+                                                        Container(
+                                                          padding:
+                                                              EdgeInsets.all(
+                                                                  10),
+                                                          decoration: BoxDecoration(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          50),
+                                                              color:
+                                                                  isCurrentUser
+                                                                      ? Colors
+                                                                          .grey
+                                                                      : Colors
+                                                                          .red),
                                                           child: Icon(
-                                                              Icons.close)),
-                                                      actions: [
-                                                        IconButton(
-                                                            icon: const Icon(
-                                                                Icons.save_alt),
-                                                            onPressed: () {
-                                                              conversationModel
-                                                                  .saveImage(msg[
-                                                                          index]
-                                                                      .content);
-                                                            }),
+                                                            Icons.phone_missed,
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 5,
+                                                        ),
+                                                        Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .start,
+                                                          children: [
+                                                            Text(
+                                                              msg[index]
+                                                                  .content,
+                                                              style:
+                                                                  const TextStyle(
+                                                                color: Colors
+                                                                    .black,
+                                                              ),
+                                                            ),
+                                                            Text(
+                                                                isCurrentUser
+                                                                    ? "Tap to call again"
+                                                                    : "Tap to call back",
+                                                                style: TextStyle(
+                                                                    fontSize:
+                                                                        12))
+                                                          ],
+                                                        ),
                                                       ],
                                                     ),
-                                                    body: PhotoView(
-                                                      imageProvider:
-                                                          NetworkImage(
-                                                              msg[index]
-                                                                  .content),
-                                                    ),
+                                                  ),
+                                                )
+                                              : GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            Scaffold(
+                                                          appBar: AppBar(
+                                                            leading:
+                                                                GestureDetector(
+                                                                    onTap: () {
+                                                                      Navigator.pop(
+                                                                          context);
+                                                                    },
+                                                                    child: Icon(
+                                                                        Icons
+                                                                            .close)),
+                                                            actions: [
+                                                              IconButton(
+                                                                  icon: const Icon(
+                                                                      Icons
+                                                                          .save_alt),
+                                                                  onPressed:
+                                                                      () {
+                                                                    conversationModel
+                                                                        .saveImage(
+                                                                            msg[index].content);
+                                                                  }),
+                                                            ],
+                                                          ),
+                                                          body: PhotoView(
+                                                            imageProvider:
+                                                                NetworkImage(msg[
+                                                                        index]
+                                                                    .content),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                        border: Border.all(
+                                                            color: const Color(
+                                                                0xff00B0FF))),
+                                                    child: CachedNetworkImage(
+                                                        imageUrl:
+                                                            msg[index].content),
                                                   ),
                                                 ),
-                                              );
-                                            },
-                                            child: Container(
-                                              decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                      color: const Color(
-                                                          0xff00B0FF))),
-                                              child: CachedNetworkImage(
-                                                  imageUrl: msg[index].content),
-                                            ),
-                                          ),
-                                  ),
-                                  const SizedBox(
-                                    height: 4.0,
-                                  ),
-                                  Text(formattedDateTime,
-                                      style: GoogleFonts.dmSans(fontSize: 11))
-                                ],
-                              ),
+                                    ),
+                                    const SizedBox(
+                                      height: 4.0,
+                                    ),
+                                    Text(formattedDateTime,
+                                        style: GoogleFonts.dmSans(fontSize: 11))
+                                  ],
+                                ),
                             ];
 
                             return ListTile(
@@ -464,7 +644,10 @@ class _ConversationState extends State<Conversation> {
 
                                 if (image != null) {
                                   conversationModel.sendImage(
-                                      File(image.path), widget.friendUid);
+                                      File(image.path),
+                                      widget.friendUid,
+                                      profileModel.userDetails['full_name'],
+                                      profileModel.userDetails['profile_pic']);
                                 }
                               },
                               icon: const Icon(Icons.camera_alt),
@@ -478,16 +661,19 @@ class _ConversationState extends State<Conversation> {
                                     .pickMultiImage(imageQuality: 70);
                                 if (images.isNotEmpty) {
                                   for (final image in images) {
-                                    conversationModel
-                                        .sendImage(
-                                            File(image.path), widget.friendUid)
-                                        .then((_) {
-                                      conversationModel.messageNotification(
-                                          profileModel.userDetails['uid'],
-                                          profileModel.userDetails['full_name'],
-                                          widget.friendUid,
-                                          true);
-                                    });
+                                    conversationModel.sendImage(
+                                        File(image.path),
+                                        widget.friendUid,
+                                        profileModel.userDetails['full_name'],
+                                        profileModel
+                                            .userDetails['profile_pic']);
+                                    //     .then((_) {
+                                    //   conversationModel.messageNotification(
+                                    //       profileModel.userDetails['uid'],
+                                    //       profileModel.userDetails['full_name'],
+                                    //       widget.friendUid,
+                                    //       true);
+                                    // });
                                   }
                                 }
                               },
@@ -507,16 +693,18 @@ class _ConversationState extends State<Conversation> {
                             ),
                             IconButton(
                               onPressed: () {
-                                conversationModel
-                                    .sendMessage(
-                                        chatController.text, widget.friendUid)
-                                    .then((_) {
-                                  conversationModel.messageNotification(
-                                      profileModel.userDetails['uid'],
-                                      profileModel.userDetails['full_name'],
-                                      widget.friendUid,
-                                      false);
-                                });
+                                conversationModel.sendMessage(
+                                    chatController.text,
+                                    widget.friendUid,
+                                    profileModel.userDetails['full_name'],
+                                    profileModel.userDetails['profile_pic']);
+                                //     .then((_) {
+                                //   conversationModel.messageNotification(
+                                //       profileModel.userDetails['uid'],
+                                //       profileModel.userDetails['full_name'],
+                                //       widget.friendUid,
+                                //       false);
+                                // });
                                 chatController.clear();
                               },
                               icon: const Icon(Icons.send),

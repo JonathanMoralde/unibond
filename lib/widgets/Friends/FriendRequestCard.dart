@@ -25,6 +25,7 @@ class FriendRequestCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        // decoration: BoxDecoration(color: Color(0xFFF5F5F5)),
         padding: const EdgeInsets.only(bottom: 8),
         child: Row(
           children: [

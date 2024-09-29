@@ -10,11 +10,13 @@ import 'package:flutter_callkit_incoming/entities/call_event.dart';
 import 'package:flutter_callkit_incoming/entities/call_kit_params.dart';
 import 'package:flutter_callkit_incoming/entities/notification_params.dart';
 import 'package:flutter_callkit_incoming/flutter_callkit_incoming.dart';
+import 'package:provider/provider.dart';
 import 'package:unibond/main.dart';
 import 'package:unibond/model/CallModel.dart';
 import 'package:unibond/model/GroupCallModel.dart';
 import 'package:unibond/pages/Messages/CallPage.dart';
 import 'package:unibond/pages/Messages/GroupCallPage.dart';
+import 'package:unibond/provider/NavigationModel.dart';
 import 'package:unibond/utils/NotificationService.dart';
 import 'package:uuid/uuid.dart';
 
@@ -44,6 +46,32 @@ class FirebaseMessagingApi {
     if (message == null) return;
 
     User? currentUser = FirebaseAuth.instance.currentUser;
+    // HANDLE MESSAGE PUSH NOTIFICATION
+    if (currentUser != null &&
+        message.data['userId'] == currentUser.uid &&
+        message.data['chatDocId'] != null) {
+      print('${message.notification!.body}');
+      if (Provider.of<NavigationModel>(navigatorKey.currentContext!,
+                  listen: false)
+              .currentIndex !=
+          0) {
+        int notificationId = generateUniqueNotificationId();
+        NotificationService.showMessageNotification(
+          id: notificationId,
+          title: message.notification?.title ?? '',
+          body: message.notification?.body ?? '',
+          payload: {
+            'chatDocId': message.data['chatDocId'],
+            'senderName': message.data['senderName'],
+            'senderId': message.data['senderId'],
+            'senderPic': message.data['senderPic']
+          },
+        );
+      }
+      return;
+    }
+
+    // HANDLE CALL PUSH NOTIFICATION
     if (currentUser != null && message.data['userId'] == currentUser.uid) {
       Map<String, dynamic> callData = jsonDecode(message.data['callData']);
       print("CALL DATA: $callData");

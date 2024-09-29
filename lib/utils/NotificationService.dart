@@ -5,11 +5,14 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 import 'package:unibond/model/CallModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:unibond/model/GroupCallModel.dart';
 import 'package:unibond/pages/Messages/CallPage.dart';
+import 'package:unibond/pages/Messages/Conversation.dart';
 import 'package:unibond/pages/Messages/GroupCallPage.dart';
+import 'package:unibond/provider/ConversationModel.dart';
 
 import '../main.dart'; // Import the file where the GlobalKey is defined
 
@@ -18,7 +21,7 @@ class NotificationService {
 
   static Future<void> initializeNotification() async {
     await AwesomeNotifications().initialize(
-      null,
+      'resource://mipmap/launcher_icon',
       [
         NotificationChannel(
           channelGroupKey: 'sound_channel',
@@ -39,6 +42,22 @@ class NotificationService {
           defaultPrivacy: NotificationPrivacy.Public,
 
           locked: true,
+          enableVibration: true,
+        ),
+        NotificationChannel(
+          channelGroupKey: 'basic_channel',
+          channelKey: 'basic_channel',
+          channelName: 'Message notifications',
+          channelDescription: 'Notification channel for incoming messages',
+          defaultColor: const Color(0xFF9D50DD),
+          ledColor: Colors.white,
+          importance: NotificationImportance.Default,
+          channelShowBadge: true,
+          // onlyAlertOnce: true,
+          vibrationPattern: Int64List.fromList(
+            [0, 500, 200, 500, 200, 500, 200, 500],
+          ),
+          playSound: true,
           enableVibration: true,
         ),
       ],
@@ -175,6 +194,24 @@ class NotificationService {
         }
       }
     }
+
+    // handle message notification
+    if (payload['chatDocId'] != null) {
+      print("profilePic: ${payload['senderPic']}");
+      // Navigate to CallPage using the global navigator key
+      Provider.of<ConversationModel>(navigatorKey.currentContext!,
+              listen: false)
+          .setChatDocId(payload['chatDocId']);
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (context) => Conversation(
+            friendName: payload['senderName'] ?? '',
+            friendUid: payload['senderId'] ?? '',
+            friendProfilePic: payload['senderPic'] ?? null,
+          ),
+        ),
+      );
+    }
   }
 
   static Future<void> showNotification({
@@ -208,6 +245,49 @@ class NotificationService {
         wakeUpScreen: true,
         autoDismissible: false,
         locked: true,
+      ),
+      actionButtons: actionButtons,
+      schedule: scheduled
+          ? NotificationInterval(
+              interval: interval,
+              timeZone:
+                  await AwesomeNotifications().getLocalTimeZoneIdentifier(),
+              preciseAlarm: true,
+            )
+          : null,
+    );
+  }
+
+  static Future<void> showMessageNotification({
+    required final int id,
+    required final String title,
+    required final String body,
+    final String? summary,
+    final Map<String, String>? payload,
+    final ActionType actionType = ActionType.Default,
+    final NotificationLayout notificationLayout = NotificationLayout.Default,
+    final NotificationCategory? category,
+    final String? bigPicture,
+    final List<NotificationActionButton>? actionButtons,
+    final bool scheduled = false,
+    final int? interval,
+  }) async {
+    assert(!scheduled || (scheduled && interval != null));
+
+    await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: id,
+        channelKey: 'basic_channel',
+        title: title,
+        body: body,
+        actionType: actionType,
+        notificationLayout: notificationLayout,
+        summary: summary,
+        category: category,
+        payload: payload,
+        bigPicture: bigPicture,
+        wakeUpScreen: true,
+        autoDismissible: true,
       ),
       actionButtons: actionButtons,
       schedule: scheduled

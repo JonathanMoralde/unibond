@@ -55,7 +55,7 @@ class _MainLayoutState extends State<MainLayout> with TickerProviderStateMixin {
     // Initialize the TabController with the initial length and vsync
     _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
     _eventsTabController =
-        TabController(length: 2, vsync: this, initialIndex: 0);
+        TabController(length: 2, vsync: this, initialIndex: 1);
 
     _tabController?.addListener(_handleTabSelection);
     _eventsTabController?.addListener(_handleEventsTabSelection);

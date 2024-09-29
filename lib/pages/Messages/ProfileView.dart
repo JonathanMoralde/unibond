@@ -13,17 +13,12 @@ import 'package:unibond/widgets/styledButton.dart';
 class ProfileView extends StatefulWidget {
   final String uid;
   final String currentUserUid;
-  final String currentUserFullName;
-  final List<String> currentUserRequestsList;
-  final List<String> currentUserFriendsList;
 
-  const ProfileView(
-      {super.key,
-      required this.currentUserRequestsList,
-      required this.currentUserUid,
-      required this.currentUserFullName,
-      required this.uid,
-      required this.currentUserFriendsList});
+  const ProfileView({
+    super.key,
+    required this.currentUserUid,
+    required this.uid,
+  });
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
@@ -84,6 +79,9 @@ class _ProfileViewState extends State<ProfileView> {
                   if (!currentUserSnapshot.hasData) {
                     return const Center(child: Text('No user data'));
                   }
+
+                  final currentUserFullName = (currentUserSnapshot.data!.data()
+                      as Map<String, dynamic>)['full_name'];
 
                   final currentUserRequests = ((currentUserSnapshot.data!.data()
                           as Map<String, dynamic>)['requests'] as List<dynamic>)
@@ -248,7 +246,7 @@ class _ProfileViewState extends State<ProfileView> {
                                           .then((_) {
                                         friendsModel.confirmFriendNofitication(
                                             widget.currentUserUid,
-                                            widget.currentUserFullName,
+                                            currentUserFullName,
                                             (userData['uid'] ?? ''));
                                       });
                                     },
@@ -283,7 +281,7 @@ class _ProfileViewState extends State<ProfileView> {
                                           .then((_) {
                                         friendsModel.addFriendNofitication(
                                             widget.currentUserUid,
-                                            widget.currentUserFullName,
+                                            currentUserFullName,
                                             userData['uid']);
                                       });
                                     },

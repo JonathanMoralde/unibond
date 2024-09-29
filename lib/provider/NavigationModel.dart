@@ -5,7 +5,7 @@ import 'package:unibond/model/CallModel.dart';
 import 'package:uuid/uuid.dart';
 
 class NavigationModel extends ChangeNotifier {
-  int currentIndex = 4;
+  int currentIndex = 2;
 
   void changeIndex(int newIndex) {
     currentIndex = newIndex;
@@ -13,7 +13,7 @@ class NavigationModel extends ChangeNotifier {
   }
 
   void resetState() {
-    currentIndex = 4;
+    currentIndex = 2;
     notifyListeners();
   }
 

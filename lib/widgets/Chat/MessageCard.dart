@@ -34,7 +34,7 @@ class MessageCard extends StatelessWidget {
       Duration difference = now.difference(lastChatDateTime);
 
       if (difference.inSeconds < 60) {
-        return '${difference.inSeconds}s ago';
+        return 'just now';
       } else if (difference.inMinutes < 60) {
         return '${difference.inMinutes}m ago';
       } else if (difference.inHours < 24) {

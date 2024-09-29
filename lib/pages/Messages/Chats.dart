@@ -90,15 +90,27 @@ class _ChatsState extends State<Chats> {
                                     .userDetails['uid'])) {
                               return SizedBox.shrink();
                             }
+
                             return MessageCard(
-                              isRead: (doc.data()
-                                  as Map<String, dynamic>)['latest_chat_read'],
+                              isRead: (doc.data() as Map<String, dynamic>)[
+                                          'latest_chat_user'] ==
+                                      Provider.of<ProfileModel>(context,
+                                              listen: false)
+                                          .userDetails['uid']
+                                  ? true
+                                  : (doc.data() as Map<String, dynamic>)[
+                                      'latest_chat_read'],
                               onTap: () async {
                                 Provider.of<ConversationModel>(context,
                                         listen: false)
                                     .setChatDocId(doc.id);
 
                                 try {
+                                  if ((doc.data() as Map<String, dynamic>)[
+                                          'latest_chat_user'] !=
+                                      Provider.of<ProfileModel>(context,
+                                              listen: false)
+                                          .userDetails['uid']) {}
                                   await FirebaseFirestore.instance
                                       .collection('chats')
                                       .doc(doc.id)

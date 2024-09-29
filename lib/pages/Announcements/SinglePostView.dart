@@ -69,23 +69,26 @@ class _SinglePostViewState extends State<SinglePostView> {
         }
 
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: PostCard(
-              fromLink: true,
-              postDetails:
-                  postDetail!['post_details'] ?? '', // Ensure fallback if null
-              postPic: postDetail!['post_pic'] ?? '', // Default to empty string
-              likes: (postDetail!['likes'] as List<dynamic>)
-                  .map((e) => e.toString())
-                  .toList(), // Handle null 'likes' with default 0
-              postId: widget.postId,
-              currentUserId: profileModel.userDetails['uid'] ?? '',
-              profilePic: postDetail!['posted_by_profile_pic'] ?? '',
-              fullName: postDetail!['posted_by'] ?? 'Unknown',
-              datePosted: postDetail!['date_posted'] != null
-                  ? (postDetail!['date_posted'] as Timestamp)
-                  : Timestamp.now(), // Handle null date
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: PostCard(
+                fromLink: true,
+                postDetails: postDetail!['post_details'] ??
+                    '', // Ensure fallback if null
+                postPic:
+                    postDetail!['post_pic'] ?? '', // Default to empty string
+                likes: (postDetail!['likes'] as List<dynamic>)
+                    .map((e) => e.toString())
+                    .toList(), // Handle null 'likes' with default 0
+                postId: widget.postId,
+                currentUserId: profileModel.userDetails['uid'] ?? '',
+                profilePic: postDetail!['posted_by_profile_pic'] ?? '',
+                fullName: postDetail!['posted_by'] ?? 'Unknown',
+                datePosted: postDetail!['date_posted'] != null
+                    ? (postDetail!['date_posted'] as Timestamp)
+                    : Timestamp.now(), // Handle null date
+              ),
             ),
           ),
         );

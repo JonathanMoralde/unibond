@@ -93,48 +93,53 @@ class _AnnouncementsState extends State<Announcements> {
                       ],
                     ),
                   // Text('announcements'),
-                  StreamBuilder(
-                    stream: FirebaseFirestore.instance
-                        .collection('announcements')
-                        .orderBy('date_posted', descending: true)
-                        .snapshots(),
-                    builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return const Center(child: Text('Error loading posts'));
-                      }
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return const Center(
-                            child: Text('No announcements available'));
-                      }
+                  if (profileModel.userDetails['uid'] != null)
+                    StreamBuilder(
+                      stream: FirebaseFirestore.instance
+                          .collection('announcements')
+                          .orderBy('date_posted', descending: true)
+                          .snapshots(),
+                      builder:
+                          (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        }
+                        if (snapshot.hasError) {
+                          return const Center(
+                              child: Text('Error loading posts'));
+                        }
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return const Center(
+                              child: Text('No announcements available'));
+                        }
 
-                      // Display the list of posts
-                      return ListView.builder(
-                        padding: EdgeInsets.only(top: 8),
-                        physics:
-                            const NeverScrollableScrollPhysics(), // For proper scrolling in Column
-                        shrinkWrap: true,
-                        itemCount: snapshot.data!.docs.length,
-                        itemBuilder: (context, index) {
-                          DocumentSnapshot post = snapshot.data!.docs[index];
-                          return PostCard(
-                            fromLink: false,
-                            datePosted: post['date_posted'],
-                            fullName: post['posted_by'],
-                            profilePic: post['posted_by_profile_pic'],
-                            postDetails: post['post_details'],
-                            postPic: post['post_pic'],
-                            likes: List<String>.from(post['likes']),
-                            postId: post.id,
-                            currentUserId: profileModel.userDetails[
-                                'uid'], // Assume user UID is stored here
-                          );
-                        },
-                      );
-                    },
-                  ),
+                        // Display the list of posts
+                        return ListView.builder(
+                          padding: EdgeInsets.only(top: 8),
+                          physics:
+                              const NeverScrollableScrollPhysics(), // For proper scrolling in Column
+                          shrinkWrap: true,
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (context, index) {
+                            DocumentSnapshot post = snapshot.data!.docs[index];
+                            return PostCard(
+                              fromLink: false,
+                              datePosted: post['date_posted'],
+                              fullName: post['posted_by'],
+                              profilePic: post['posted_by_profile_pic'],
+                              postDetails: post['post_details'],
+                              postPic: post['post_pic'],
+                              likes: List<String>.from(post['likes']),
+                              postId: post.id,
+                              currentUserId: profileModel.userDetails[
+                                  'uid'], // Assume user UID is stored here
+                            );
+                          },
+                        );
+                      },
+                    ),
                 ],
               ),
             ));

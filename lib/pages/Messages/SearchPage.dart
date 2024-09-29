@@ -60,21 +60,9 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
         });
         break;
       case 2:
-        final friendsModel = Provider.of<FriendsModel>(context, listen: false);
-
-        if (friendsModel.activeDisplay == 'suggestion') {
-          setState(() {
-            initialDisplay = 'Search Unibond';
-          });
-        } else if (friendsModel.activeDisplay == 'requests') {
-          setState(() {
-            initialDisplay = 'Search requests';
-          });
-        } else {
-          setState(() {
-            initialDisplay = 'Search Uni-Friends';
-          });
-        }
+        setState(() {
+          initialDisplay = 'Search People';
+        });
 
         break;
     }
@@ -150,371 +138,395 @@ class _SearchPageState extends State<SearchPage> with TickerProviderStateMixin {
             ),
           ),
         ),
-        body: StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .doc(FirebaseAuth.instance.currentUser!.uid)
-                .snapshots(),
-            builder: (context, currentUserSnapshot) {
-              if (currentUserSnapshot.connectionState ==
-                  ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              }
+        body: Stack(
+          children: [
+            if (_tabController != null && _tabController!.index != 0)
+              Container(
+                height: MediaQuery.sizeOf(context).height * 1,
+                child: Image.asset(
+                  'lib/assets/announcementbg.png',
+                  alignment: AlignmentDirectional.bottomEnd,
+                ),
+              ),
+            StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .snapshots(),
+                builder: (context, currentUserSnapshot) {
+                  if (currentUserSnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
 
-              if (currentUserSnapshot.hasError) {
-                return Center(
-                    child: Text('Error: ${currentUserSnapshot.error}'));
-              }
+                  if (currentUserSnapshot.hasError) {
+                    return Center(
+                        child: Text('Error: ${currentUserSnapshot.error}'));
+                  }
 
-              if (!currentUserSnapshot.hasData &&
-                  currentUserSnapshot.data != null) {
-                return const Center(child: Text('No user data'));
-              }
+                  if (!currentUserSnapshot.hasData &&
+                      currentUserSnapshot.data != null) {
+                    return const Center(child: Text('No user data'));
+                  }
 
-              final currentUserData =
-                  currentUserSnapshot.data!.data() as Map<String, dynamic>;
-              final currentUserUid = currentUserData['uid'];
-              final currentUserFullName = currentUserData['full_name'];
-              final currentUserRequestList =
-                  (currentUserData['requests'] as List<dynamic>)
-                      .map((e) => e.toString())
-                      .toList();
-              final currentUserFriendList =
-                  (currentUserData['friends'] as List<dynamic>)
-                      .map((e) => e.toString())
-                      .toList();
+                  final currentUserData =
+                      currentUserSnapshot.data!.data() as Map<String, dynamic>;
+                  final currentUserUid = currentUserData['uid'];
+                  final currentUserFullName = currentUserData['full_name'];
+                  final currentUserRequestList =
+                      (currentUserData['requests'] as List<dynamic>)
+                          .map((e) => e.toString())
+                          .toList();
+                  final currentUserFriendList =
+                      (currentUserData['friends'] as List<dynamic>)
+                          .map((e) => e.toString())
+                          .toList();
 
-              return SafeArea(
-                  child: Column(
-                children: [
-                  if (searchText.isNotEmpty &&
-                      _tabController != null &&
-                      _tabController!.index == 0)
-                    SingleChildScrollView(
+                  return SafeArea(
                       child: Column(
-                        children: [
-                          FutureBuilder(
-                            future: FirebaseFirestore.instance
-                                .collection('users')
-                                .where('full_name_lowercase',
-                                    isGreaterThanOrEqualTo:
-                                        searchText.toLowerCase())
-                                .where('full_name_lowercase',
-                                    isLessThan: searchText.toLowerCase() + 'z')
-                                .get(),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return Center(
-                                    child: CircularProgressIndicator());
-                              }
+                    children: [
+                      if (searchText.isNotEmpty &&
+                          _tabController != null &&
+                          _tabController!.index == 0)
+                        SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              FutureBuilder(
+                                future: FirebaseFirestore.instance
+                                    .collection('users')
+                                    .where('full_name_lowercase',
+                                        isGreaterThanOrEqualTo:
+                                            searchText.toLowerCase())
+                                    .where('full_name_lowercase',
+                                        isLessThan:
+                                            searchText.toLowerCase() + 'z')
+                                    .get(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Center(
+                                        child: CircularProgressIndicator());
+                                  }
 
-                              if (snapshot.hasData &&
-                                  snapshot.data!.docs.isNotEmpty) {
-                                print(snapshot.data!.docs);
-                                print(snapshot.data!.docs.first.data()['uid']);
+                                  if (snapshot.hasData &&
+                                      snapshot.data!.docs.isNotEmpty) {
+                                    print(snapshot.data!.docs);
+                                    print(snapshot.data!.docs.first
+                                        .data()['uid']);
 
-                                List<Widget> userWidgets = [];
-                                for (final doc in snapshot.data!.docs) {
-                                  userWidgets.add(
-                                    FutureBuilder(
-                                      future: FirebaseFirestore.instance
-                                          .collection('chats')
-                                          .where('composite_id',
-                                              isEqualTo: Provider.of<
-                                                          ConversationModel>(
-                                                      context,
-                                                      listen: false)
-                                                  .generateConversationId(
-                                                      doc.data()['uid'],
-                                                      currentUserUid))
-                                          .get(),
-                                      builder: (context, chatSnapshot) {
-                                        if (chatSnapshot.hasData &&
-                                            chatSnapshot
-                                                .data!.docs.isNotEmpty) {
-                                          print('chat snapshot');
-                                          print(chatSnapshot.data!.docs);
-
-                                          List<Widget> chatWidgets = [];
-                                          for (final chatDoc
-                                              in chatSnapshot.data!.docs) {
-                                            chatWidgets.add(
-                                              MessageCard(
-                                                isRead:
-                                                    chatDoc['latest_chat_read'],
-                                                onTap: () async {
-                                                  Provider.of<ConversationModel>(
+                                    List<Widget> userWidgets = [];
+                                    for (final doc in snapshot.data!.docs) {
+                                      userWidgets.add(
+                                        FutureBuilder(
+                                          future: FirebaseFirestore.instance
+                                              .collection('chats')
+                                              .where('composite_id',
+                                                  isEqualTo: Provider.of<
+                                                              ConversationModel>(
                                                           context,
                                                           listen: false)
-                                                      .setChatDocId(chatDoc.id);
+                                                      .generateConversationId(
+                                                          doc.data()['uid'],
+                                                          currentUserUid))
+                                              .get(),
+                                          builder: (context, chatSnapshot) {
+                                            if (chatSnapshot.hasData &&
+                                                chatSnapshot
+                                                    .data!.docs.isNotEmpty) {
+                                              print('chat snapshot');
+                                              print(chatSnapshot.data!.docs);
 
-                                                  try {
-                                                    await FirebaseFirestore
-                                                        .instance
-                                                        .collection('chats')
-                                                        .doc(chatDoc.id)
-                                                        .update({
-                                                      'latest_chat_read': true
-                                                    });
-                                                  } catch (e) {
-                                                    print(e);
-                                                  }
+                                              List<Widget> chatWidgets = [];
+                                              for (final chatDoc
+                                                  in chatSnapshot.data!.docs) {
+                                                chatWidgets.add(
+                                                  MessageCard(
+                                                    isRead: chatDoc[
+                                                        'latest_chat_read'],
+                                                    onTap: () async {
+                                                      Provider.of<ConversationModel>(
+                                                              context,
+                                                              listen: false)
+                                                          .setChatDocId(
+                                                              chatDoc.id);
 
-                                                  Navigator.of(context).push(
-                                                    MaterialPageRoute(
-                                                      builder: (BuildContext
-                                                              context) =>
-                                                          Conversation(
-                                                        friendName: doc.data()[
-                                                            'full_name'],
-                                                        friendUid:
-                                                            doc.data()['uid'],
-                                                        friendProfilePic:
-                                                            doc.data()[
+                                                      try {
+                                                        await FirebaseFirestore
+                                                            .instance
+                                                            .collection('chats')
+                                                            .doc(chatDoc.id)
+                                                            .update({
+                                                          'latest_chat_read':
+                                                              true
+                                                        });
+                                                      } catch (e) {
+                                                        print(e);
+                                                      }
+
+                                                      Navigator.of(context)
+                                                          .push(
+                                                        MaterialPageRoute(
+                                                          builder: (BuildContext
+                                                                  context) =>
+                                                              Conversation(
+                                                            friendName: doc
+                                                                    .data()[
+                                                                'full_name'],
+                                                            friendUid: doc
+                                                                .data()['uid'],
+                                                            friendProfilePic: doc
+                                                                    .data()[
                                                                 'profile_pic'],
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                                userName:
-                                                    doc.data()['full_name'],
-                                                latestMessage: chatDoc[
-                                                    'latest_chat_message'],
-                                                latestUser:
-                                                    chatDoc['latest_chat_user'],
-                                                latestTimestamp:
-                                                    chatDoc['latest_timestamp'],
-                                                profilePic:
-                                                    doc.data()['profile_pic'],
-                                                friendId: doc.data()['uid'],
-                                              ),
-                                            );
-                                          }
-                                          return Column(children: chatWidgets);
-                                        }
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    userName:
+                                                        doc.data()['full_name'],
+                                                    latestMessage: chatDoc[
+                                                        'latest_chat_message'],
+                                                    latestUser: chatDoc[
+                                                        'latest_chat_user'],
+                                                    latestTimestamp: chatDoc[
+                                                        'latest_timestamp'],
+                                                    profilePic: doc
+                                                        .data()['profile_pic'],
+                                                    friendId: doc.data()['uid'],
+                                                  ),
+                                                );
+                                              }
+                                              return Column(
+                                                  children: chatWidgets);
+                                            }
 
-                                        return SizedBox.shrink();
-                                      },
+                                            return SizedBox.shrink();
+                                          },
+                                        ),
+                                      );
+                                    }
+                                    return Column(children: userWidgets);
+                                  }
+
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (searchText.isNotEmpty &&
+                          _tabController != null &&
+                          _tabController!.index == 1)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: FutureBuilder(
+                              future: FirebaseFirestore.instance
+                                  .collection('groups')
+                                  .where('group_name_lowercase',
+                                      isGreaterThanOrEqualTo:
+                                          searchText.toLowerCase())
+                                  .where('group_name_lowercase',
+                                      isLessThan:
+                                          searchText.toLowerCase() + 'z')
+                                  .get(),
+                              builder: (context, groupSnapshot) {
+                                if (groupSnapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Center(
+                                      child: CircularProgressIndicator());
+                                }
+                                if (groupSnapshot.hasData &&
+                                    groupSnapshot.data!.docs.isNotEmpty) {
+                                  List<Widget> groups = [];
+                                  for (final doc in groupSnapshot.data!.docs) {
+                                    groups.add(GroupCard(
+                                        groupData: doc.data(),
+                                        groupDocId: doc.id));
+                                  }
+
+                                  return GridView.builder(
+                                    controller: scrollController,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      childAspectRatio: aspectRatio,
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 16,
                                     ),
+                                    itemCount: groups.length,
+                                    itemBuilder: (context, index) {
+                                      return groups[index];
+                                    },
+                                  );
+
+                                  // return Wrap(
+                                  //   runSpacing: 10,
+                                  //   spacing: 10,
+                                  //   children: groups,
+                                  // );
+                                }
+
+                                return SizedBox.shrink();
+                              },
+                            ),
+                          ),
+                        ),
+                      if (searchText.isNotEmpty &&
+                          _tabController != null &&
+                          _tabController!.index == 2)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: FutureBuilder(
+                              future: FirebaseFirestore.instance
+                                  .collection('users')
+                                  .where('full_name_lowercase',
+                                      isGreaterThanOrEqualTo:
+                                          searchText.toLowerCase())
+                                  .where('full_name_lowercase',
+                                      isLessThan:
+                                          searchText.toLowerCase() + 'z')
+                                  .get(),
+                              builder: (context, userSnapshot) {
+                                if (userSnapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Center(
+                                    child: CircularProgressIndicator(),
                                   );
                                 }
-                                return Column(children: userWidgets);
-                              }
 
-                              return const SizedBox.shrink();
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (searchText.isNotEmpty &&
-                      _tabController != null &&
-                      _tabController!.index == 1)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: FutureBuilder(
-                          future: FirebaseFirestore.instance
-                              .collection('groups')
-                              .where('group_name_lowercase',
-                                  isGreaterThanOrEqualTo:
-                                      searchText.toLowerCase())
-                              .where('group_name_lowercase',
-                                  isLessThan: searchText.toLowerCase() + 'z')
-                              .get(),
-                          builder: (context, groupSnapshot) {
-                            if (groupSnapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Center(child: CircularProgressIndicator());
-                            }
-                            if (groupSnapshot.hasData &&
-                                groupSnapshot.data!.docs.isNotEmpty) {
-                              List<Widget> groups = [];
-                              for (final doc in groupSnapshot.data!.docs) {
-                                groups.add(GroupCard(
-                                    groupData: doc.data(), groupDocId: doc.id));
-                              }
+                                if (userSnapshot.hasData &&
+                                    userSnapshot.data!.docs.isNotEmpty) {
+                                  print('userSnapshot:');
+                                  print(userSnapshot.data?.docs);
 
-                              return GridView.builder(
-                                controller: scrollController,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: aspectRatio,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                ),
-                                itemCount: groups.length,
-                                itemBuilder: (context, index) {
-                                  return groups[index];
-                                },
-                              );
+                                  List<Widget> userWidgets = [];
 
-                              // return Wrap(
-                              //   runSpacing: 10,
-                              //   spacing: 10,
-                              //   children: groups,
-                              // );
-                            }
+                                  for (final doc in userSnapshot.data!.docs) {
+                                    print(doc.data()['full_name']);
 
-                            return SizedBox.shrink();
-                          },
-                        ),
-                      ),
-                    ),
-                  if (searchText.isNotEmpty &&
-                      _tabController != null &&
-                      _tabController!.index == 2)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: FutureBuilder(
-                          future: FirebaseFirestore.instance
-                              .collection('users')
-                              .where('full_name_lowercase',
-                                  isGreaterThanOrEqualTo:
-                                      searchText.toLowerCase())
-                              .where('full_name_lowercase',
-                                  isLessThan: searchText.toLowerCase() + 'z')
-                              .get(),
-                          builder: (context, userSnapshot) {
-                            if (userSnapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
+                                    if (doc.data()['uid'] ==
+                                        Provider.of<ProfileModel>(context,
+                                                listen: false)
+                                            .userDetails['uid']) {
+                                      continue;
+                                    }
 
-                            if (userSnapshot.hasData &&
-                                userSnapshot.data!.docs.isNotEmpty) {
-                              print('userSnapshot:');
-                              print(userSnapshot.data?.docs);
+                                    userWidgets.add(StreamBuilder<
+                                            QuerySnapshot>(
+                                        stream: Provider.of<ConversationModel>(
+                                                context,
+                                                listen: false)
+                                            .fetchDoc(doc.data()['uid'] ?? ''),
+                                        builder: (context, snapshot) {
+                                          String? chatDocumentId;
 
-                              List<Widget> userWidgets = [];
+                                          if (snapshot.hasData &&
+                                              snapshot.data!.docs.isNotEmpty) {
+                                            chatDocumentId =
+                                                snapshot.data!.docs.first.id;
+                                          }
 
-                              for (final doc in userSnapshot.data!.docs) {
-                                print(doc.data()['full_name']);
+                                          return PersonCard(
+                                            currentUserRequestsList:
+                                                currentUserRequestList,
+                                            currentUserUid: currentUserUid,
+                                            currentUserFullName:
+                                                currentUserFullName,
+                                            uid: doc.data()['uid'] ?? '',
+                                            onTap: () {
+                                              final friendsModel =
+                                                  Provider.of<FriendsModel>(
+                                                      context,
+                                                      listen: false);
+                                              friendsModel
+                                                  .viewProfile(doc.data());
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (BuildContext context) =>
+                                                          ProfileView(
+                                                    uid:
+                                                        doc.data()['uid'] ?? '',
+                                                    currentUserUid:
+                                                        currentUserUid,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        }));
+                                  }
 
-                                if (doc.data()['uid'] ==
-                                    Provider.of<ProfileModel>(context,
-                                            listen: false)
-                                        .userDetails['uid']) {
-                                  continue;
+                                  return GridView.builder(
+                                    controller: scrollController,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      childAspectRatio: aspectRatio,
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 16,
+                                    ),
+                                    itemCount: userWidgets.length,
+                                    itemBuilder: (context, index) {
+                                      return userWidgets[index];
+                                    },
+                                  );
+
+                                  // return Wrap(
+                                  //   runSpacing: 10,
+                                  //   spacing: 10,
+                                  //   children: userWidgets,
+                                  // );
                                 }
 
-                                userWidgets.add(StreamBuilder<QuerySnapshot>(
-                                    stream: Provider.of<ConversationModel>(
-                                            context,
-                                            listen: false)
-                                        .fetchDoc(doc.data()['uid'] ?? ''),
-                                    builder: (context, snapshot) {
-                                      String? chatDocumentId;
-
-                                      if (snapshot.hasData &&
-                                          snapshot.data!.docs.isNotEmpty) {
-                                        chatDocumentId =
-                                            snapshot.data!.docs.first.id;
-                                      }
-
-                                      return PersonCard(
-                                        currentUserRequestsList:
-                                            currentUserRequestList,
-                                        currentUserUid: currentUserUid,
-                                        currentUserFullName:
-                                            currentUserFullName,
-                                        uid: doc.data()['uid'] ?? '',
-                                        onTap: () {
-                                          final friendsModel =
-                                              Provider.of<FriendsModel>(context,
-                                                  listen: false);
-                                          friendsModel.viewProfile(doc.data());
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (BuildContext context) =>
-                                                  ProfileView(
-                                                uid: doc.data()['uid'] ?? '',
-                                                currentUserRequestsList:
-                                                    currentUserRequestList,
-                                                currentUserUid: currentUserUid,
-                                                currentUserFriendsList:
-                                                    currentUserFriendList,
-                                                currentUserFullName:
-                                                    currentUserFullName,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    }));
-                              }
-
-                              return GridView.builder(
-                                controller: scrollController,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 16),
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  childAspectRatio: aspectRatio,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                ),
-                                itemCount: userWidgets.length,
-                                itemBuilder: (context, index) {
-                                  return userWidgets[index];
-                                },
-                              );
-
-                              // return Wrap(
-                              //   runSpacing: 10,
-                              //   spacing: 10,
-                              //   children: userWidgets,
-                              // );
-                            }
-
-                            return SizedBox.shrink();
-                          },
-                        ),
-                      ),
-                    ),
-                  if (searchText.isEmpty &&
-                      _tabController != null &&
-                      _tabController!.index != 1)
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Center(child: Text(initialDisplay)),
-                    ),
-                  if (searchText.isEmpty &&
-                      _tabController != null &&
-                      _tabController!.index == 1)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: GridView.builder(
-                          controller: scrollController,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: aspectRatio,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
+                                return SizedBox.shrink();
+                              },
+                            ),
                           ),
-                          itemCount: _groupsNotJoined.length,
-                          itemBuilder: (context, index) {
-                            return GroupCard(
-                                groupData: _groupsNotJoined[index].data(),
-                                groupDocId: _groupsNotJoined[index].id);
-                          },
                         ),
-                      ),
-                    )
-                ],
-              ));
-            }),
+                      if (searchText.isEmpty &&
+                          _tabController != null &&
+                          _tabController!.index != 1)
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Center(child: Text(initialDisplay)),
+                        ),
+                      if (searchText.isEmpty &&
+                          _tabController != null &&
+                          _tabController!.index == 1)
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: GridView.builder(
+                              controller: scrollController,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: aspectRatio,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                              ),
+                              itemCount: _groupsNotJoined.length,
+                              itemBuilder: (context, index) {
+                                return GroupCard(
+                                    groupData: _groupsNotJoined[index].data(),
+                                    groupDocId: _groupsNotJoined[index].id);
+                              },
+                            ),
+                          ),
+                        )
+                    ],
+                  ));
+                }),
+          ],
+        ),
       );
     });
   }

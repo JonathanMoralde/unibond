@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 
 // import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:agora_uikit/agora_uikit.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -10,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:unibond/model/CallModel.dart';
 import 'package:http/http.dart' as http;
+import 'package:unibond/provider/ConversationModel.dart';
 import 'package:unibond/provider/ProfileModel.dart';
 
 class CallPage extends StatefulWidget {
@@ -29,6 +32,10 @@ class _CallPageState extends State<CallPage> {
 
   String? callId;
 
+  Timer? missedCallTimer;
+
+  DateTime? callStartTime;
+
   // UI KIT IMPLEMENTATION
 
   AgoraClient? client;
@@ -47,7 +54,9 @@ class _CallPageState extends State<CallPage> {
     getToken().then((_) {
       initAgora().then((_) {
         if (callId == null) {
-          makeCall();
+          makeCall().then((_) {
+            startMissedCallTimer();
+          });
         }
 
         if (widget.call.isVideoCall) {
@@ -57,11 +66,27 @@ class _CallPageState extends State<CallPage> {
         }
       });
     });
+
     // initAgora().then((_) {
     //   if (callId == null) {
     //     makeCall();
     //   }
     // });
+  }
+
+  // Function to start the missed call timer
+  void startMissedCallTimer() {
+    missedCallTimer = Timer(Duration(seconds: 30), () {
+      // Trigger the missed call message if the remote user hasn't joined
+      Provider.of<ConversationModel>(context, listen: false).sendMissedCall(
+          'Missed ${widget.call.isVideoCall ? "video " : ''}call',
+          widget.call.called);
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pop(context);
+      });
+      // endCall(); // Optionally end the call if it's missed
+    });
   }
 
   Future<void> initAgora() async {
@@ -95,6 +120,8 @@ class _CallPageState extends State<CallPage> {
             debugPrint("Remote user $remoteUid joined");
 
             if (callId != null) {
+              callStartTime = DateTime.now();
+              print('executed after joined');
               FirebaseFirestore.instance
                   .collection('calls')
                   .doc(callId)
@@ -102,9 +129,10 @@ class _CallPageState extends State<CallPage> {
                 'connected': true,
               });
             }
+            missedCallTimer?.cancel();
           },
           onUserOffline: (connection, remoteUid, reason) {
-            debugPrint("Remote user $remoteUid left channel");
+            debugPrint("Remote user $remoteUid offline");
 
             if (callId != null) {
               FirebaseFirestore.instance
@@ -115,14 +143,37 @@ class _CallPageState extends State<CallPage> {
               });
             }
           },
-          onLeaveChannel: (connection, stats) {
+          onLeaveChannel: (connection, stats) async {
             print('\x1B[31mremote user left the channel\x1B[0m');
 
+            // int callDurationInSeconds = stats.duration ?? 0;
+            // String formattedDuration =
+            //     formatDuration(Duration(seconds: callDurationInSeconds));
+            // print('\x1B[31m$formattedDuration\x1B[0m');
+
             if (callId != null) {
-              FirebaseFirestore.instance
+              final result = await FirebaseFirestore.instance
                   .collection('calls')
                   .doc(callId)
-                  .update({'active': false, 'connected': false});
+                  .get();
+
+              if (widget.call.caller ==
+                      FirebaseAuth.instance.currentUser!.uid &&
+                  (result.data() as Map<String, dynamic>)['accepted'] ==
+                      false) {
+                // send a missed call when caller ends call but called does not accept or reject
+                String missedCallMessage =
+                    'Missed ${widget.call.isVideoCall ? 'video ' : ''}call';
+                Provider.of<ConversationModel>(context, listen: false)
+                    .sendMissedCall(missedCallMessage, widget.call.called)
+                    .then((_) => print("Missed call message sent"));
+              }
+              await FirebaseFirestore.instance
+                  .collection('calls')
+                  .doc(callId)
+                  .update({'active': false, 'connected': false}).then((_) {
+                print("this executed on leave after firestore");
+              });
             }
             // Navigator.pop(context);
           },
@@ -234,7 +285,46 @@ class _CallPageState extends State<CallPage> {
         body: SafeArea(
           child: Stack(
             children: [
-              if (client == null) CircularProgressIndicator(),
+              if (client == null)
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 48),
+                  height: MediaQuery.sizeOf(context).height,
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(),
+                      Column(
+                        children: [
+                          CircularProgressIndicator(),
+                          Text("Loading...")
+                        ],
+                      ),
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(50)),
+                        child: IconButton(
+                          onPressed: () {
+                            if (callId != null) {
+                              FirebaseFirestore.instance
+                                  .collection('calls')
+                                  .doc(callId)
+                                  .update(
+                                      {'active': false, 'connected': false});
+                            }
+                            Navigator.pop(context);
+                          },
+                          icon: Icon(Icons.call_end),
+                          color: Colors.white,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
               if (client != null)
                 AgoraVideoViewer(
                   client: client!,
@@ -346,7 +436,34 @@ class _CallPageState extends State<CallPage> {
                           });
                           return SizedBox.shrink();
                         }
-                        if (data['active'] == false) {
+                        if (data['active'] == false && callStartTime != null) {
+                          // send call ended message
+                          final conversationModel =
+                              Provider.of<ConversationModel>(context,
+                                  listen: false);
+
+                          Duration callDuration =
+                              DateTime.now().difference(callStartTime!);
+
+                          String formattedDuration =
+                              formatDuration(callDuration);
+                          print('\x1B[31m$formattedDuration\x1B[0m');
+
+                          if (widget.call.caller ==
+                                  Provider.of<ProfileModel>(context,
+                                          listen: false)
+                                      .userDetails['uid'] &&
+                              data['accepted'] == true) {
+                            print('time: ${formattedDuration}');
+                            conversationModel
+                                .sendCallDurationMessage(
+                                    '${widget.call.isVideoCall ? 'Video ' : ''}Call has ended. ${formattedDuration}',
+                                    widget.call.called)
+                                .then((_) {
+                              print("sent notify");
+                            });
+                          }
+
                           Fluttertoast.showToast(
                               msg: "Call Ended", gravity: ToastGravity.CENTER);
                           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -377,10 +494,25 @@ class _CallPageState extends State<CallPage> {
     // await _engine!.release(); // Release resources
     client!.release();
     if (callId != null) {
+      print("executed dispose");
       FirebaseFirestore.instance
           .collection('calls')
           .doc(callId)
           .update({'active': false, 'connected': false});
+    }
+  }
+
+  String formatDuration(Duration duration) {
+    int hours = duration.inHours;
+    int minutes = duration.inMinutes.remainder(60);
+    int seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '${hours}h ${minutes}m ${seconds}s';
+    } else if (minutes > 0) {
+      return '${minutes}m ${seconds}s';
+    } else {
+      return '${seconds}s';
     }
   }
 }
